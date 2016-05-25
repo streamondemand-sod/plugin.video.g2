@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-    Genesi2 Add-on
+    G2 Add-on
     Copyright 2015 charsyam@GitHub
 
     Licensed under the Apache License, Version 2.0 (the "License");

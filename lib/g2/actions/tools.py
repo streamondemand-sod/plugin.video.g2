@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-    Genesi2 Add-on
+    G2 Add-on
     Copyright (C) 2016 J0rdyZ65
 
     This program is free software: you can redistribute it and/or modify
@@ -31,11 +31,11 @@ def menu(**kwargs):
     # TODO[func]: insert an explicit link for sections higher than 3: (4=downloads->>library, 5=sottotitoli-->playback?!?)
     ui.addDirectoryItem(_('[B]SETTINGS[/B] : Resolvers'), 'tools.settings&query=6.0', 'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]SETTINGS[/B] : Sources'), 'tools.settings&query=7.0', 'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
-    ui.addDirectoryItem(_('[B]GENESIS[/B] : Clear sources...'), 'sources.clear', 'cache.jpg', 'DefaultAddonProgram.png', isFolder=False)
-    ui.addDirectoryItem(_('[B]GENESIS[/B] : Clear cache...'), 'tools.clearcache', 'cache.jpg', 'DefaultAddonProgram.png', isFolder=False)
-    ui.addDirectoryItem(_('[B]GENESIS[/B] : Library'), 'library.menu', 'tools.jpg', 'DefaultAddonProgram.png')
-    ui.addDirectoryItem(_('[B]GENESIS[/B] : Packages'), 'g2.dialog', 'tools.jpg', 'DefaultAddonProgram.png', isFolder=False)
-    ui.addDirectoryItem(_('[B]GENESIS[/B] : Restart Service'), 'tools.killservice', 'tools.jpg', 'DefaultAddonProgram.png', isFolder=False)
+    ui.addDirectoryItem(_('[B]G2[/B] : Clear sources...'), 'sources.clear', 'cache.jpg', 'DefaultAddonProgram.png', isFolder=False)
+    ui.addDirectoryItem(_('[B]G2[/B] : Clear cache...'), 'tools.clearcache', 'cache.jpg', 'DefaultAddonProgram.png', isFolder=False)
+    ui.addDirectoryItem(_('[B]G2[/B] : Library'), 'library.menu', 'tools.jpg', 'DefaultAddonProgram.png')
+    ui.addDirectoryItem(_('[B]G2[/B] : Packages'), 'g2.dialog', 'tools.jpg', 'DefaultAddonProgram.png', isFolder=False)
+    ui.addDirectoryItem(_('[B]G2[/B] : Restart Service'), 'tools.killservice', 'tools.jpg', 'DefaultAddonProgram.png', isFolder=False)
     ui.endDirectory()
 
 

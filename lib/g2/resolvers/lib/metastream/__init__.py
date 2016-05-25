@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-    Genesi2 Add-on
+    G2 Add-on
     Based on the original idea/code of boogiekodi@GitHub for his ump plugin
     Copyright (C) 2016 J0rdyZ65
 

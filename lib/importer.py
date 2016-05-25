@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-    Genesi2 Add-on
+    G2 Add-on
     Copyright (C) 2016 J0rdyZ65
 
     This program is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@ import xbmc
 # the importer in way that the addon itself cannot be directly imported and used.
 #
 # For example:
-#   [plugin.video.genesis/addon.xml]
+#   [plugin.video.g2/addon.xml]
 #           <requires>
 #               ...
 #               <import addon="script.module.metahandler" optional="true" />
