@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<category label="30800">
+		<setting id="top_menu" visible="false" default="top.menu" />
+		<setting id="packages_urls" visible="false" default="['https://github.com/J0rdyZ65/plugin.video.genesi2/wiki']" />
+		<setting id="appearance" type="select" label="30801" values="-|4orbs|Clean|Embossed|GOne|Metro" default="GOne" />
+		<setting id="fanart" type="bool" label="30802" default="true" />
+		<setting id="infoLang" type="select" label="30803" values="bg|cs|da|de|el|en|es|fi|fr|he|hr|hu|it|ja|ko|nl|no|pl|pt|ru|sl|sv|tr|zh" default="en" />
+		<setting type="lsep" label="30805" />
+		<setting id="movie_widget" type="enum" label="30806" lvalues="30807|30808|30809|30810" default="1" />
+	</category>
+	<category label="30830">
+		<setting id="resume_playback" type="bool" label="30844" default="true" />
+	</category>
+	<category label="30910">
+		<setting type="lsep" label="Trakt" />
+		<setting id="trakt_enabled" type="bool" label="Trakt Account" default="false" />
+		<setting id="trakt_user" type="text" label="30911" default="" enable="false" visible="eq(-1,true)" />
+		<setting type="lsep" label="Enabling Trakt will pop up the device authorization dialog" visible="eq(-2,true)" />
+		<setting type="lsep" label="[CR]" />
+		<setting type="lsep" label="IMDb" />
+		<setting id="imdb_user" type="text" label="30911" default="" />
+		<setting type="lsep" label="[CR]" />
+		<setting type="lsep" label="Pushbullet" />
+		<setting id="pushbullet_apikey" type="text" label="Pushbullet API key" default="" />
+	</category>
+	<category label="30920">
+		<setting id="movie_library" type="folder" label="30922" default="special://userdata/addon_data/plugin.video.genesi2/Movies" />
+		<setting type="sep" />
+		<setting id="update_library" type="bool" label="30926" default="true" />
+		<setting id="check_library" type="bool" label="30927" default="true" />
+		<setting type="sep" />
+		<setting id="check_movie_link" type="bool" label="30928" default="false" />
+	</category>
+	<category label="30950">
+		<setting id="downloads" type="folder" label="30951" default="special://profile/addon_data/plugin.video.genesi2/Downloads" />
+	</category>
+	<category label="30940">
+		<setting id="subtitles" type="bool" label="30943" default="false" />
+		<setting type="sep" />
+		<setting id="autoconvert_utf8" type="bool" label="30944" enable="!eq(-2,false)" default="false" />
+		<setting type="sep" />
+		<setting id="sublang1" type="select" label="30945" values="Afrikaans|Albanian|Arabic|Armenian|Basque|Bengali|Bosnian|Breton|Bulgarian|Burmese|Catalan|Chinese|Croatian|Czech|Danish|Dutch|English|Esperanto|Estonian|Finnish|French|Galician|Georgian|German|Greek|Hebrew|Hindi|Hungarian|Icelandic|Indonesian|Italian|Japanese|Kazakh|Khmer|Korean|Latvian|Lithuanian|Luxembourgish|Macedonian|Malay|Malayalam|Manipuri|Mongolian|Montenegrin|Norwegian|Occitan|Persian|Polish|Portuguese|Portuguese(Brazil)|Romanian|Russian|Serbian|Sinhalese|Slovak|Slovenian|Spanish|Swahili|Swedish|Syriac|Tagalog|Tamil|Telugu|Thai|Turkish|Ukrainian|Urdu" enable="!eq(-4,false)" default="English" />
+		<setting id="sublang2" type="select" label="30946" values="Afrikaans|Albanian|Arabic|Armenian|Basque|Bengali|Bosnian|Breton|Bulgarian|Burmese|Catalan|Chinese|Croatian|Czech|Danish|Dutch|English|Esperanto|Estonian|Finnish|French|Galician|Georgian|German|Greek|Hebrew|Hindi|Hungarian|Icelandic|Indonesian|Italian|Japanese|Kazakh|Khmer|Korean|Latvian|Lithuanian|Luxembourgish|Macedonian|Malay|Malayalam|Manipuri|Mongolian|Montenegrin|Norwegian|Occitan|Persian|Polish|Portuguese|Portuguese(Brazil)|Romanian|Russian|Serbian|Sinhalese|Slovak|Slovenian|Spanish|Swahili|Swedish|Syriac|Tagalog|Tamil|Telugu|Thai|Turkish|Ukrainian|Urdu" enable="!eq(-5,false)" default="English" />
+		<setting type="lsep" label="[CR]" />
+		<setting type="lsep" label="30941" />
+		<setting type="lsep" label="30942" />
+	</category>
+	<category label="30860">
+		<setting id="providers:::preferred_provider_1" type="select" label="30011" values="-|cineblog01|filmsenzalimiti" default="-" />
+		<setting id="providers:::preferred_provider_2" type="select" label="30012" values="-|cineblog01|filmsenzalimiti" default="-" />
+		<setting id="providers:::preferred_provider_3" type="select" label="30013" values="-|cineblog01|filmsenzalimiti" default="-" />
+		<setting id="providers:::preferred_provider_4" type="select" label="30014" values="-|cineblog01|filmsenzalimiti" default="-" />
+		<setting type="lsep" label="[CR]" />
+		<setting id="providers:isod-sources_by_j0rdyz65_at_github::enabled" type="bool" label="Isod-Sources By J0Rdyz65 At Github" default="true" />
+		<setting id="providers:isod-sources_by_j0rdyz65_at_github::priority" type="number" label="Priority" default="10" enable="eq(-1,true)" subsetting="true" />
+		<setting id="providers:isod-sources_by_j0rdyz65_at_github:isod-sources:enabled" type="enum" label="Isod-Sources" lvalues="30001|30100" default="true" enable="eq(-2,true)" visible="true" subsetting="true" />
+		<setting type="lsep" label="[CR]" />
+		<setting id="providers:italian-sources_by_j0rdyz65_at_github::enabled" type="bool" label="Italian-Sources By J0Rdyz65 At Github" default="true" />
+		<setting id="providers:italian-sources_by_j0rdyz65_at_github::priority" type="number" label="Priority" default="10" enable="eq(-1,true)" subsetting="true" />
+		<setting id="providers:italian-sources_by_j0rdyz65_at_github:cineblog01:enabled" type="enum" label="Cineblog01" lvalues="30001|30100" default="true" enable="eq(-2,true)" visible="true" subsetting="true" />
+		<setting id="providers:italian-sources_by_j0rdyz65_at_github:filmsenzalimiti:enabled" type="enum" label="Filmsenzalimiti" lvalues="30001|30100" default="true" enable="eq(-3,true)" visible="true" subsetting="true" />
+	</category>
+	<category label="30870">
+		<setting id="resolvers:::preferred_host_1" type="select" label="30016" values="-|abysstream|adnstream|akstream|allmyvideos|backin|bitshare|bliptv|cloudifer|cloudzer|cloudzilla|cramit|cumlouder|dailymotion|depositfiles|directo|divxstage|documentary|exashare|extabit|facebook|fakingstv|fastvideo|fiberupload|filebox|filefactory|fileflyer|filejungle|filereactor|fileserve|filesmonster|filesonic|firedrive|flashx|fooget|fourshared|freakshare|gamovideo|gigasize|googledrive|googlevideo|hdload|hdplay|hotfile|hugefiles|hulkshare|jumbofiles|junkyvideo|justintv|letitbit|letwatch|lumfile|magnovideo|mailru|mediafire|mega|megadrive|megahd|modovideo|moevideos|movreel|movshare|netload|nosvideo|novamov|nowdownload|nowvideo|nubestream|oboom|okru|one80upload|onefichier|openload|playedto|powvideo|publicvideohost|putlocker|putstream|rapidgator|rapidshare|rapidtube|rapidvideo|realvid|rocvideo|royalvids|rutube|sendvid|shareflare|sharpfile|sockshare|speedvid|speedvideo|stagero|stagevu|streamable|streamcloud|streaminto|tumitv|tunepk|turbobit|tutv|twitvid|ultramegabit|uploadedto|uploading|uploadstation|uploaz|uptobox|userporn|v4y|veehd|veevr|veoh|vidbull|vidbux|video4you|videobam|videopremium|videott|videoweed|videowood|videozed|videozer|vidhog|vidspot|vidtome|vidxden|vidxtreme|vidzi|vimeo|vimpleru|vk|vkpass|vodlocker|vureel|watchfreeinhd|xvideos|youtube|youwatch|zinwa|zippyshare" default="-" />
+		<setting id="resolvers:::preferred_host_2" type="select" label="30017" values="-|abysstream|adnstream|akstream|allmyvideos|backin|bitshare|bliptv|cloudifer|cloudzer|cloudzilla|cramit|cumlouder|dailymotion|depositfiles|directo|divxstage|documentary|exashare|extabit|facebook|fakingstv|fastvideo|fiberupload|filebox|filefactory|fileflyer|filejungle|filereactor|fileserve|filesmonster|filesonic|firedrive|flashx|fooget|fourshared|freakshare|gamovideo|gigasize|googledrive|googlevideo|hdload|hdplay|hotfile|hugefiles|hulkshare|jumbofiles|junkyvideo|justintv|letitbit|letwatch|lumfile|magnovideo|mailru|mediafire|mega|megadrive|megahd|modovideo|moevideos|movreel|movshare|netload|nosvideo|novamov|nowdownload|nowvideo|nubestream|oboom|okru|one80upload|onefichier|openload|playedto|powvideo|publicvideohost|putlocker|putstream|rapidgator|rapidshare|rapidtube|rapidvideo|realvid|rocvideo|royalvids|rutube|sendvid|shareflare|sharpfile|sockshare|speedvid|speedvideo|stagero|stagevu|streamable|streamcloud|streaminto|tumitv|tunepk|turbobit|tutv|twitvid|ultramegabit|uploadedto|uploading|uploadstation|uploaz|uptobox|userporn|v4y|veehd|veevr|veoh|vidbull|vidbux|video4you|videobam|videopremium|videott|videoweed|videowood|videozed|videozer|vidhog|vidspot|vidtome|vidxden|vidxtreme|vidzi|vimeo|vimpleru|vk|vkpass|vodlocker|vureel|watchfreeinhd|xvideos|youtube|youwatch|zinwa|zippyshare" default="-" />
+		<setting id="resolvers:::preferred_host_3" type="select" label="30018" values="-|abysstream|adnstream|akstream|allmyvideos|backin|bitshare|bliptv|cloudifer|cloudzer|cloudzilla|cramit|cumlouder|dailymotion|depositfiles|directo|divxstage|documentary|exashare|extabit|facebook|fakingstv|fastvideo|fiberupload|filebox|filefactory|fileflyer|filejungle|filereactor|fileserve|filesmonster|filesonic|firedrive|flashx|fooget|fourshared|freakshare|gamovideo|gigasize|googledrive|googlevideo|hdload|hdplay|hotfile|hugefiles|hulkshare|jumbofiles|junkyvideo|justintv|letitbit|letwatch|lumfile|magnovideo|mailru|mediafire|mega|megadrive|megahd|modovideo|moevideos|movreel|movshare|netload|nosvideo|novamov|nowdownload|nowvideo|nubestream|oboom|okru|one80upload|onefichier|openload|playedto|powvideo|publicvideohost|putlocker|putstream|rapidgator|rapidshare|rapidtube|rapidvideo|realvid|rocvideo|royalvids|rutube|sendvid|shareflare|sharpfile|sockshare|speedvid|speedvideo|stagero|stagevu|streamable|streamcloud|streaminto|tumitv|tunepk|turbobit|tutv|twitvid|ultramegabit|uploadedto|uploading|uploadstation|uploaz|uptobox|userporn|v4y|veehd|veevr|veoh|vidbull|vidbux|video4you|videobam|videopremium|videott|videoweed|videowood|videozed|videozer|vidhog|vidspot|vidtome|vidxden|vidxtreme|vidzi|vimeo|vimpleru|vk|vkpass|vodlocker|vureel|watchfreeinhd|xvideos|youtube|youwatch|zinwa|zippyshare" default="-" />
+		<setting id="resolvers:::preferred_host_4" type="select" label="30019" values="-|abysstream|adnstream|akstream|allmyvideos|backin|bitshare|bliptv|cloudifer|cloudzer|cloudzilla|cramit|cumlouder|dailymotion|depositfiles|directo|divxstage|documentary|exashare|extabit|facebook|fakingstv|fastvideo|fiberupload|filebox|filefactory|fileflyer|filejungle|filereactor|fileserve|filesmonster|filesonic|firedrive|flashx|fooget|fourshared|freakshare|gamovideo|gigasize|googledrive|googlevideo|hdload|hdplay|hotfile|hugefiles|hulkshare|jumbofiles|junkyvideo|justintv|letitbit|letwatch|lumfile|magnovideo|mailru|mediafire|mega|megadrive|megahd|modovideo|moevideos|movreel|movshare|netload|nosvideo|novamov|nowdownload|nowvideo|nubestream|oboom|okru|one80upload|onefichier|openload|playedto|powvideo|publicvideohost|putlocker|putstream|rapidgator|rapidshare|rapidtube|rapidvideo|realvid|rocvideo|royalvids|rutube|sendvid|shareflare|sharpfile|sockshare|speedvid|speedvideo|stagero|stagevu|streamable|streamcloud|streaminto|tumitv|tunepk|turbobit|tutv|twitvid|ultramegabit|uploadedto|uploading|uploadstation|uploaz|uptobox|userporn|v4y|veehd|veevr|veoh|vidbull|vidbux|video4you|videobam|videopremium|videott|videoweed|videowood|videozed|videozer|vidhog|vidspot|vidtome|vidxden|vidxtreme|vidzi|vimeo|vimpleru|vk|vkpass|vodlocker|vureel|watchfreeinhd|xvideos|youtube|youwatch|zinwa|zippyshare" default="-" />
+		<setting type="lsep" label="[CR]" />
+		<setting id="resolvers:isod-resolvers_by_j0rdyz65_at_github::enabled" type="bool" label="Isod-Resolvers By J0Rdyz65 At Github" default="true" />
+		<setting id="resolvers:isod-resolvers_by_j0rdyz65_at_github::priority" type="number" label="Priority" default="10" enable="eq(-1,true)" subsetting="true" />
+		<setting id="resolvers:isod-resolvers_by_j0rdyz65_at_github:isod-resolvers:enabled" type="bool" label="Isod-Resolvers" default="true" enable="eq(-2,true)" visible="false" subsetting="true" />
+		<setting type="lsep" label="[CR]" />
+		<setting id="resolvers:smu-resolvers_by_j0rdyz65_at_github::enabled" type="bool" label="Smu-Resolvers By J0Rdyz65 At Github" default="true" />
+		<setting id="resolvers:smu-resolvers_by_j0rdyz65_at_github::priority" type="number" label="Priority" default="10" enable="eq(-1,true)" subsetting="true" />
+		<setting id="resolvers:smu-resolvers_by_j0rdyz65_at_github:smu-resolvers:enabled" type="bool" label="Smu-Resolvers" default="true" enable="eq(-2,true)" visible="false" subsetting="true" />
+	</category>
+</settings>

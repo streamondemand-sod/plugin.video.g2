@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window>
+	<defaultcontrol always="true">33</defaultcontrol>
+	<animation type="WindowOpen">
+		<effect type="zoom" start="70" end="100" center="auto" tween="back" easing="inout" time="300" />
+		<effect type="fade" start="0" end="100" time="300" />
+	</animation>
+	<animation type="WindowClose">
+		<effect type="zoom" start="100" end="70" center="auto" time="100" />
+		<effect type="fade" start="100" end="0" time="100" />
+	</animation>
+	<zorder>0</zorder>
+	<coordinates>
+		<posx>0</posx>
+	    <posy>0</posy>
+	</coordinates>
+
+	<controls>
+
+		<!-- Background -->
+		<control type="image" id="101">
+			<left>0</left>
+			<top>0</top>
+			<width>1280</width>
+			<height>720</height>
+			<texture border="40">listpanel_back.png</texture>
+		</control>
+
+		<!-- Heading -->
+		<control type="label" id="1">
+			<left>50</left>
+			<top>45</top>
+			<align>center</align>
+			<aligny>center</aligny>
+			<!-- TODO: localize!!! -->
+			<label>SELECT SOURCE</label>
+			<width>430</width>
+			<height>40</height>
+			<font>font30</font>
+		</control>
+
+		<!-- Progress bar -->
+		<control type="progress" id="2">
+			<left>490</left>
+			<top>50</top>
+			<width>740</width>
+			<height>30</height>
+			<texturebg border="2">progressback.png</texturebg>
+			<lefttexture>-</lefttexture>
+			<midtexture border="2">progressbar.png</midtexture>
+			<righttexture>-</righttexture>
+			<overlaytexture>-</overlaytexture>
+		</control>
+
+		<!-- Elapsed time -->
+		<control type="label" id="3">
+			<left>490</left>
+			<top>45</top>
+			<align>left</align>
+			<aligny>center</aligny>
+			<width>110</width>
+			<height>40</height>
+			<font>font30</font>
+			<textcolor>black</textcolor>
+			<zorder>1</zorder>
+		</control>
+
+		<!-- #completed / #total -->
+		<control type="label" id="4">
+			<left>600</left>
+			<top>45</top>
+			<align>right</align>
+			<aligny>center</aligny>
+			<width>630</width>
+			<height>40</height>
+			<font>font30</font>
+			<textcolor>black</textcolor>
+			<zorder>1</zorder>
+		</control>
+
+		<!-- Left side poster -->
+		<control type="image" id="11">
+			<left>50</left>
+			<top>90</top>
+			<width>430</width>
+			<height>580</height>
+			<aspectratio aligny="center">keep</aspectratio>
+		</control>
+
+		<!-- Left side label (in case the poster is missing) -->
+		<control type="label" id="12">
+			<left>60</left>
+			<top>90</top>
+			<width>410</width>
+			<height>580</height>
+			<font>font48</font>
+			<align>center</align>
+			<aligny>center</aligny>
+			<wrapmultiline>true</wrapmultiline>
+		</control>
+
+		<!-- Right side list -->
+		<control type="list" id="21">
+			<left>490</left>
+			<top>90</top>
+			<width>740</width>
+			<height>460</height>
+			<onup>noop</onup>
+			<ondown>31</ondown>
+			<onleft>31</onleft>
+			<onright>31</onright>
+			<orientation>vertical</orientation>
+			<pagecontrol>201</pagecontrol>
+			<scrolltime tween="sine" easing="out">240</scrolltime>
+
+			<itemlayout width="1230" height="46">
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>90</width>
+					<height>46</height>
+					<texture>$INFO[ListItem.Icon]</texture>
+					<aspectratio aligny="center">keep</aspectratio>
+				</control>
+				<control type="label">
+					<left>110</left>
+					<top>8</top>
+					<aligny>center</aligny>
+					<width>630</width>
+					<height>30</height>
+					<font>font30</font>
+					<textcolor>grey2</textcolor>
+					<label>$INFO[ListItem.Label]</label>
+				</control>
+			</itemlayout>
+
+			<focusedlayout width="1230" height="46">
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>90</width>
+					<height>46</height>
+					<texture>$INFO[ListItem.Icon]</texture>
+					<aspectratio aligny="center">keep</aspectratio>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>740</width>
+					<height>46</height>
+					<texture>listselect_fo.png</texture>
+				</control>
+				<control type="label">
+					<left>110</left>
+					<top>8</top>
+					<aligny>center</aligny>
+					<width>630</width>
+					<height>30</height>
+					<font>font30</font>
+					<textcolor>grey2</textcolor>
+					<label>$INFO[ListItem.Label]</label>
+				</control>
+			</focusedlayout>
+
+		</control>
+
+		<!-- scrollbar for the item list -->
+		<control type="scrollbar" id="201">
+			<left>1240</left>
+			<top>90</top>
+			<width>10</width>
+			<height>460</height>
+			<texturesliderbackground>-</texturesliderbackground>
+			<texturesliderbar colordiffuse="55ffffff" border="1">texturesliderbar2.png</texturesliderbar>
+			<texturesliderbarfocus border="1">texturesliderbar2.png</texturesliderbarfocus>
+			<showonepage>false</showonepage>
+			<orientation>vertical</orientation>
+		</control>
+
+		<!-- Right bottom label for item counter -->
+		<control type="label" id="22">
+			<left>490</left>
+			<top>560</top>
+			<width>110</width>
+			<height>46</height>
+			<align>center</align>
+			<aligny>center</aligny>
+            <font>font30</font>
+			<textcolor>grey2</textcolor>
+		</control>
+
+		<!-- Right bottom label for item info -->
+		<control type="label" id="23">
+			<left>600</left>
+			<top>560</top>
+			<width>630</width>
+			<height>46</height>
+			<align>left</align>
+			<aligny>center</aligny>
+            <font>font16</font>
+			<textcolor>grey2</textcolor>
+		</control>
+
+		<!-- Right bottom buttons -->
+        <control type="button" id="31">
+                <left>580</left>
+                <top>610</top>
+                <width>210</width>
+                <font>font30</font>
+				<align>center</align>
+				<!-- TODO: localize!!! -->
+			    <label>OK</label>
+			    <enable>false</enable>
+				<onup>21</onup>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright>32</onright>
+        </control>
+        <control type="button" id="32">
+                <left>800</left>
+                <top>610</top>
+                <width>210</width>
+                <font>font30</font>
+				<align>center</align>
+				<!-- TODO: localize!!! -->
+			    <label>Stop</label>
+				<onup>21</onup>
+				<ondown>noop</ondown>
+				<onleft>31</onleft>
+				<onright>33</onright>
+        </control>
+        <control type="button" id="33">
+                <left>1010</left>
+                <top>610</top>
+                <width>210</width>
+                <font>font30</font>
+				<align>center</align>
+				<!-- TODO: localize!!! -->
+			    <label>Cancel</label>
+				<onup>21</onup>
+				<ondown>noop</ondown>
+				<onleft>32</onleft>
+				<onright>noop</onright>
+        </control>
+
+	</controls>
+
+</window>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window>
+	<zorder>0</zorder>
+	<coordinates>
+		<posx>320</posx>
+	    <posy>180</posy>
+	</coordinates>
+	<controls>
+		<!-- Background -->
+		<control type="image" id="1">
+			<left>-20</left>
+			<top>-20</top>
+            <width>680</width>
+            <height>400</height>
+            <texture border="40">bg.png</texture>
+		</control>
+		<!-- Window title -->
+		<control type="label">
+			<left>10</left>
+			<top>0</top>
+			<width>630</width>
+			<height>20</height>
+			<align>center</align>
+			<textcolor>white</textcolor>
+			<!-- TODO: translate -->
+			<label>PACKAGE MANAGER</label>
+		</control>
+		<!-- Sources -->
+		<control type="button" id="101">
+			<left>10</left>
+			<top>20</top>
+			<align>center</align>
+			<aligny>center</aligny>
+			<label>$ADDON[plugin.video.genesi2 30860]</label>
+			<width>300</width>
+			<height>40</height>
+		</control>
+		<!-- Resolvers -->
+		<control type="button" id="102">
+			<left>330</left>
+			<top>20</top>
+			<align>center</align>
+			<aligny>center</aligny>
+			<label>$ADDON[plugin.video.genesi2 30870]</label>
+			<width>300</width>
+			<height>40</height>
+		</control>
+		<control type="group">
+			<left>10</left>
+			<top>70</top>
+	        <control type="image">
+		        <left>-1</left>
+		        <top>-2</top>
+		        <width>622</width>
+		        <height>284</height>
+		        <texture border="5">inner.png</texture>
+		    </control>
+			<!-- Scrollable List of Plugin -->
+			<control type="list" id="201">
+				<left>0</left>
+				<top>0</top>
+				<width>620</width>
+				<height>280</height>
+				<orientation>vertical</orientation>
+				<pagecontrol>1001</pagecontrol>
+				<scrolltime tween="sine" easing="out">240</scrolltime>
+				<itemlayout width="620" height="30">
+					<control type="label">
+						<left>10</left>
+						<top>0</top>
+						<width>570</width>
+						<height>30</height>
+						<textcolor>grey2</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+					<control type="image">
+						<left>580</left>
+						<top>0</top>
+			            <width>30</width>
+			            <height>30</height>
+	                    <texture>$INFO[ListItem.Overlay,overlays/list/]</texture>
+					</control>
+				</itemlayout>
+				<focusedlayout width="620" height="30">
+                    <control type="image">
+                        <left>0</left>
+                        <top>0</top>
+                        <width>620</width>
+                        <height>30</height>
+                        <texture border="4">listselect_fo.png</texture>
+                        <visible>Control.HasFocus(201)</visible>
+					</control>
+					<control type="label">
+						<left>10</left>
+						<top>0</top>
+						<width>570</width>
+						<height>30</height>
+						<textcolor>white</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+					<control type="image">
+						<left>580</left>
+						<top>0</top>
+			            <width>30</width>
+			            <height>30</height>
+	                    <texture>$INFO[ListItem.Overlay,overlays/list/]</texture>
+					</control>
+				</focusedlayout>
+			</control>
+		</control>
+		<control type="scrollbar" id="1001">
+			<left>632</left>
+			<top>70</top>
+			<width>8</width>
+			<height>280</height>
+			<texturesliderbackground>-</texturesliderbackground>
+			<texturesliderbar colordiffuse="55ffffff" border="1">texturesliderbar2.png</texturesliderbar>
+			<texturesliderbarfocus border="1">texturesliderbar2.png</texturesliderbarfocus>
+			<showonepage>false</showonepage>
+			<orientation>vertical</orientation>
+		</control>
+	</controls>
+</window>
