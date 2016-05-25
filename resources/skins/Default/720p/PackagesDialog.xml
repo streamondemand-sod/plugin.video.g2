@@ -31,7 +31,7 @@
 			<top>20</top>
 			<align>center</align>
 			<aligny>center</aligny>
-			<label>$ADDON[plugin.video.genesi2 30860]</label>
+			<label>$ADDON[plugin.video.g2 30860]</label>
 			<width>300</width>
 			<height>40</height>
 		</control>
@@ -41,7 +41,7 @@
 			<top>20</top>
 			<align>center</align>
 			<aligny>center</aligny>
-			<label>$ADDON[plugin.video.genesi2 30870]</label>
+			<label>$ADDON[plugin.video.g2 30870]</label>
 			<width>300</width>
 			<height>40</height>
 		</control>

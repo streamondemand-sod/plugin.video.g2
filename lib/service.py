@@ -52,7 +52,7 @@ def main():
             service_thread_id += 1
             log.notice('service manager: scheduling the service thread with id %d...', service_thread_id)
             platform.property('service', True, name=str(service_thread_id))
-            xbmc.executebuiltin('RunPlugin(plugin://plugin.video.genesi2/?action=service.thread&name=%d)'%service_thread_id)
+            xbmc.executebuiltin('RunPlugin(plugin://plugin.video.g2/?action=service.thread&name=%d)'%service_thread_id)
             next_restart_after = time.time() + 15
             start_service_thread = False
 

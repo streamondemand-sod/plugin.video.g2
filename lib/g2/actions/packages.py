@@ -33,7 +33,7 @@ from g2.libraries.language import _
 from .lib import ui
 
 
-_DEFAULT_PACKAGES_URLS = ['https://github.com/J0rdyZ65/plugin.video.genesi2/wiki']
+_DEFAULT_PACKAGES_URLS = ['https://github.com/J0rdyZ65/plugin.video.g2/wiki']
 
 
 # TODO[logic]: fix according to the new packages api and kind names...
