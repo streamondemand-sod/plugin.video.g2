@@ -26,48 +26,48 @@
 import sys
 import urllib
 
-from g2.libraries import cache
 from g2.libraries import platform
 from g2.libraries.language import _
 
-from lib import ui
-from lib import downloader
+from .lib import ui
+from .lib import downloader
 
 
-_thread = int(sys.argv[1])
+_THREAD = int(sys.argv[1])
 
 
 def menu(action, **kwargs):
-    # TODO[local]
+    # (fixme) [int]
     items = downloader.listDownloads()
 
+    cmd = (_('Refresh'), ':Container.Refresh')
     if not items:
         pass
 
     elif downloader.status():
-        ui.addDirectoryItem('[COLOR red]Stop Downloads[/COLOR]', 'download.stop', 'movies.jpg', None,
-            context=('Refresh', ':Container.Refresh'))
+        ui.addDirectoryItem('[COLOR red]Stop Downloads[/COLOR]', 'download.stop', 'movies.jpg', None, context=cmd)
 
     else:
-        ui.addDirectoryItem('[COLOR FF00b8ff]Start Downloads[/COLOR]', 'download.start', 'movies.jpg', None,
-            context=('Refresh', ':Container.Refresh'))
+        ui.addDirectoryItem('[COLOR FF00b8ff]Start Downloads[/COLOR]', 'download.start', 'movies.jpg', None, context=cmd)
 
     for i in items:
-        (percentage, completition_time) = downloader.statusItem(i)
+        percentage, completition_time = downloader.statusItem(i)
         status = ''
-        if percentage:
+        if percentage is not None:
             status = '%d%%'%percentage
-            if completition_time: status += ' '+completition_time
+            if completition_time:
+                status += ' '+completition_time
             status = '[COLOR FF00b8ff][%s][/COLOR] ' % status
         ui.addDirectoryItem(status+i['name'], i['url'], i['image'], None,
-            context=('Remove from Queue', 'download.remove&url=%s' % urllib.quote_plus(i['url'])))
+            context=(_('Remove from Queue'), 'download.remove&url=%s' % urllib.quote_plus(i['url'])))
 
     ui.endDirectory()
 
 
 def start(action, **kwargs):
     ui.execute('Action(Back,10025)')
-    if _thread > 0: ui.resolvedPlugin(_thread, True, ui.ListItem(path=''))
+    if _THREAD > 0:
+        ui.resolvedPlugin(_THREAD, True, ui.ListItem(path=''))
     platform.property('downloader', True)
     ui.sleep(3000)
     ui.idle()
@@ -76,7 +76,8 @@ def start(action, **kwargs):
 
 def stop(action, **kwargs):
     ui.execute('Action(Back,10025)')
-    if _thread > 0: ui.resolvedPlugin(_thread, True, ui.ListItem(path=''))
+    if _THREAD > 0:
+        ui.resolvedPlugin(_THREAD, True, ui.ListItem(path=''))
     platform.property('downloader', False)
     ui.sleep(3000)
     ui.idle()

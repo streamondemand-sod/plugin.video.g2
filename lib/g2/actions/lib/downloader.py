@@ -124,7 +124,7 @@ def statusItem(item):
         if platform.property('downloader', name='filepath') != _file_path(downloads_path, item['filename']) else \
                         platform.property('downloader', name='completition_time')
 
-    return (percentage, completition_time)
+    return percentage, completition_time
 
 
 def _file_path(directory, filename):
