@@ -175,7 +175,7 @@ def userlists(action, **kwargs):
     if not items:
         ui.infoDialog(_('No results'))
         return
-    # TODO[code]: here content='movies' means show genre and poster,
+    # (fixme)[code]: here content='movies' means show genre and poster,
     # need to change to a much clearer way, eg:
     #   show_genre_as='imdb_list_meta'
     _add_directory(action, items, content='movies')
@@ -241,7 +241,8 @@ def _add_movie_directory(action, items):
                 })
 
             cm = []
-            # TODO[3pp]: define a setting for choosing the Info / Trailer action to use
+            # (fixme)[user]: define a setting for choosing the Info / Trailer action to use
+            # - the string may have a number of placeholders to be used as id
             if platform.condition('System.HasAddon(script.extendedinfo)'):
                 cm.append((_('Movie information'), "RunScript(script.extendedinfo,info=extendedinfo,id=%s)"%tmdb))
                 cm.append((_('Trailer'), 'RunScript(script.extendedinfo,info=playtrailer,id=%s)'%tmdb))

@@ -32,7 +32,7 @@ from g2.libraries import platform
 
 
 def get(function, timeout, *args, **kwargs):
-    # TODO[code]: remove explicit use of traceback, use trace=True on log.*
+    # (fixme)[code]: remove explicit use of traceback, use trace=True on log.*
     import traceback
 
     table = kwargs.get('table', 'rel_list')

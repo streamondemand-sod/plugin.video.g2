@@ -42,21 +42,14 @@ if _platform == 'xbmc':
 
     # Function aliases
 
-    # TODO[code]:
-    # move addon* into resources.lib.addon
-    # rename:
-    #   addonInfo -> info
-    #   addonInfo2 -> addonInfo
-    #   setSetting -> setting(s, v)
-    #   setting -> setting(s)
+    # (fixme)[code]: put all addons related methods in g2.libraries.addon
     addonInfo = _addon.getAddonInfo
     setting = _addon.getSetting
     def freshsetting(setid):
         return xbmcaddon.Addon().getSetting(setid)
     setSetting = _addon.setSetting
 
-    # TODO[code]:
-    # move all file related functions & data to resources.lib.files
+    # (fixme)[code]: put all fs related methods in g2.libraries.fs
     translatePath = xbmc.translatePath
     Stat = xbmcvfs.Stat
     makeDir = xbmcvfs.mkdirs
@@ -103,7 +96,6 @@ if _platform == 'xbmc':
         elif appearance == '':
             return icon_default2
         else:
-            # TODO[func]: check that the icon actually exists, otherwise returns the icon_default
             return os.path.join(addonPath, 'resources', 'media', appearance, icon)
 
     def property(module='', value=None, name='status', addon=addonInfo('id')):

@@ -33,7 +33,7 @@ from g2.libraries import platform
 from g2.libraries.language import _
 
 
-# TODO[code]: rename as <op><object>, e.g. setContent -> setDirContent...
+# (fixem)[code]: pylint-fy, so rename all these methods
 __all__ = [
    'doQuery',
    'addDirectoryItem',

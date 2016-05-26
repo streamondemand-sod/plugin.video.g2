@@ -29,7 +29,7 @@ from g2.libraries import log
 from g2.libraries import workers
 
 
-# TODO[contrib]: cloneit or keep this url?!?
+# (fixme) ask boogiepop the permit to use this
 _host_images = "https://offshoregit.com/boogiepop/dataserver/ump/images/"
 
 

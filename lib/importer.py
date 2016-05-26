@@ -46,7 +46,7 @@ import xbmc
 # On the other hand, creating a package for exactly the same module and let it be
 # loaded through the packages methods, works fine!
 #
-# TODO[code]: found why and fix it!
+# (fixme)[code]: direct import of required addon libraries
 #
 
 
