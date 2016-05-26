@@ -110,6 +110,7 @@ def resolve(url, checkonly=False):
             else:
                 errors.append(err)
 
+        res = None
         with g2.Context('resolvers', resolver['package'], [resolver['module']], resolver['search_paths']) as mod:
             res = None if not mod else mod[0].resolve(resolver['name'].split('.'), url)
 
