@@ -390,8 +390,12 @@ def update_settings_skema():
             continue    # This kind of packages doesn't require any setting
 
         if 'settings' in kindesc:
-            kind_module = __import__(_PACKAGES_RELATIVE_PATH+kind, globals(), locals(), [], -1)
-            modules_names = sorted(set([nfo.split('.')[-1] for nfo in kind_module.info()]))
+            import_path = _PACKAGES_RELATIVE_PATH+kind
+            mod = __import__(import_path, globals(), locals(), [], -1)
+            for module in import_path.split('.')[1:]:
+                mod = getattr(mod, module)
+
+            modules_names = sorted(set([nfo.split('.')[-1] for nfo in mod.info()]))
             for setid, template in kindesc['settings'].iteritems():
                 add_setting(setid, template['default'], kind,
                             template=template['template'].format(
@@ -400,7 +404,8 @@ def update_settings_skema():
 
         for dummy_imp, name, is_pkg in importer.walk_packages([os.path.join(_PACKAGES_ABSOLUTE_PATH, kind)]):
             log.debug('update_settings_skema: name=%s, is_pkg=%s'%(name, is_pkg))
-            if not is_pkg or '.' in name:
+
+            if not is_pkg or '.' in name or name == 'lib':
                 continue
 
             add_setting('enabled', 'true', kind, name)
