@@ -44,7 +44,7 @@ def info():
 def execute(action, args=None):
     """Execute the plugin actions"""
     if '.' not in action:
-        log.error('{m}.{f}(%s, ...): malformed action identifier (it should be module.action)'%action)
+        log.error('{m}.{f}(%s, ...): malformed action identifier (it should be module.action)', action)
         return
 
     if not args:
@@ -53,7 +53,8 @@ def execute(action, args=None):
         args['action'] = action
 
     module, action = action.split('.')
-    action_ext = [a for a in info().itervalues() if 'package' in a and a.get('module') == module and action in a.get('methods', [])]
+    action_ext = [a for a in info().itervalues()
+                  if 'package' in a and a.get('module') == module and action in a.get('methods', [])]
     try:
         if action_ext:
             # if multiple modules redefine the same actions, use the first one without a particular order
@@ -64,4 +65,4 @@ def execute(action, args=None):
             mod = __import__(module, globals(), locals(), [], -1)
             getattr(mod, action)(**args)
     except Exception as ex:
-        log.error('{m}.{f}(%s.%s, ...): %s'%(module, action, ex))
+        log.error('{m}.{f}(%s.%s, ...): %s', module, action, ex)

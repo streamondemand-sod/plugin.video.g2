@@ -38,6 +38,8 @@ from g2 import resolvers
 from .lib.fuzzywuzzy import fuzz
 
 
+_log_debug = True
+
 _SOURCE_CACHE_LIFETIME = 3600 # secs
 _MIN_FUZZINESS_VALUE = 84
 
@@ -75,34 +77,38 @@ def video_sources(ui_update, content, **kwargs):
 
     sources = {}
     all_completed_providers = 0
-    for package, ps in providers.iteritems():
-        if not ps: continue
+    for package, modules in providers.iteritems():
+        if not modules:
+            continue
 
-        modules = sorted(set([p['module'] for p in ps]))
-        with g2.Context(__name__, package, modules, ps[0]['search_paths']) as ms:
-            if not ms: continue
+        # (fixme) use the priority as sorting method
+        modules = sorted(set([p['module'] for p in modules]))
+        with g2.Context(__name__, package, modules, modules[0]['search_paths']) as mods:
+            if not mods:
+                continue
             threads = []
             channel = []
-            for m, module in zip(ms, modules):
-                sub_modules = [p['name'] for p in ps if p['module'] == module]
-                threads.extend([workers.Thread(_sources_worker, channel, m, s, content, **kwargs) for s in sub_modules])
+            for mod, module in zip(mods, modules):
+                sub_modules = [p['name'] for p in modules if p['module'] == module]
+                threads.extend([workers.Thread(_sources_worker, channel, mod, smodule, content, **kwargs)
+                                for smodule in sub_modules])
 
-            # TODO[opt]: start a maximum of # concurrent threads
-            [t.start() for t in threads]
+            # (fixme)[opt]: start a maximum of # concurrent threads
+            dummy = [t.start() for t in threads]
 
             completed_threads = []
             while len(completed_threads) < len(threads):
                 completed_threads = sorted([t for t in threads if not t.is_alive()], key=lambda t: t.elapsed)
                 # completed_threads = [t for t in threads if not t.is_alive()]
                 new_sources = []
-                for t in completed_threads:
-                    if t.result is not None:
-                        for s in t.result:
-                            if s['url'] not in sources:
-                                new_sources.append(s)
-                                sources[s['url']] = s
+                for thd in completed_threads:
+                    if thd.result is not None:
+                        for src in thd.result:
+                            if src['url'] not in sources:
+                                new_sources.append(src)
+                                sources[src['url']] = src
                         all_completed_providers += 1
-                        t.result = None
+                        thd.result = None
                 if not ui_update:
                     time.sleep(1)
                     continue
@@ -111,8 +117,8 @@ def video_sources(ui_update, content, **kwargs):
                         # Inform all threads to abort ASAP
                         channel.append('abort')
                         break
-                except Exception as e:
-                    log.notice('video_sources(%s): %s'%(content, e))
+                except Exception as ex:
+                    log.notice('{m}.{f}(%s): %s', content, ex)
 
     return sources.values()
 
@@ -120,7 +126,8 @@ def video_sources(ui_update, content, **kwargs):
 def _sources_worker(channel, m, provider, content, **kwargs):
     key_video = '/'.join([kwargs.get(k) or '-' for k in ['imdb', 'season', 'episode']])
 
-    log.notice('sources_worker(%s, %s, title=%s, year=%s): key_video=%s'%(provider, content, kwargs.get('title'), kwargs.get('year'), key_video))
+    log.notice('{m}.{f}(%s, %s, title=%s, year=%s): key_video=%s',
+               provider, content, kwargs.get('title'), kwargs.get('year'), key_video)
 
     video_ref = None
     if key_video == '-/-/-':
@@ -133,48 +140,49 @@ def _sources_worker(channel, m, provider, content, **kwargs):
             dbcon.execute("CREATE TABLE IF NOT EXISTS rel_url (provider TEXT, key_video TEXT, video_ref TEXT, UNIQUE(provider, key_video));")
             dbcon.execute("CREATE TABLE IF NOT EXISTS rel_src (provider TEXT, key_video TEXT, sources TEXT, timestamp TEXT, UNIQUE(provider, key_video));")
             dbcon.commit()
-        except:
+        except Exception:
             pass
 
         try:
             # Check if the sources are already cached and still valid
-            dbcur = dbcon.execute("SELECT * FROM rel_src WHERE provider = '%s' AND key_video = '%s'"%(provider, key_video))
+            dbcur = dbcon.execute("SELECT * FROM rel_src WHERE provider = ? AND key_video = ?",
+                                  (provider, key_video))
             sqlrow = dbcur.fetchone()
 
             sql_ts = int(str(sqlrow['timestamp']).translate(None, '- :'))
             now_ts = int(datetime.datetime.now().strftime("%Y%m%d%H%M"))
             if now_ts - sql_ts < _SOURCE_CACHE_LIFETIME:
                 sources = json.loads(sqlrow['sources'])
-                log.notice('sources_worker(%s, ...): %d sources found in the cache'%(provider, len(sources)))
+                log.notice('{m}.{f}(%s, ...): %d sources found in the cache', provider, len(sources))
                 return sources
-        except:
+        except Exception:
             pass
 
         try:
             # Check if the video url is already cached (TOREVIEW: no expiration?)
-            dbcur = dbcon.execute("SELECT * FROM rel_url WHERE provider = '%s' AND key_video = '%s'" % (provider, key_video))
+            dbcur = dbcon.execute("SELECT * FROM rel_url WHERE provider = ? AND key_video = ?",
+                                  (provider, key_video))
             sqlrow = dbcur.fetchone()
             video_ref = json.loads(sqlrow['video_ref'])
-        except:
+        except Exception:
             pass
 
     if not video_ref:
         get_function_name = 'get_movie' if content == 'movie' else 'get_episode'
         if 'abort' in channel:
-            log.notice('sources_worker(%s): aborted at %s'%(provider, get_function_name))
+            log.notice('{m}.{f}(%s): aborted at %s', provider, get_function_name)
             return []
 
         try:
             video_matches = getattr(m, get_function_name)(provider.split('.'), **kwargs)
-        except Exception as e:
+        except Exception as ex:
             # get functions might fail because of no title/episode found
-            log.notice('%s.%s(...): %s'%(provider, get_function_name, e), trace=True)
+            log.notice('{m}.{f}.%s.%s(...): %s', provider, get_function_name, ex, trace=True)
             video_matches = None
 
         if not video_matches:
-            log.notice('sources_worker(%s): no matches found'%provider)
+            log.notice('{m}.{f}(%s): no matches found', provider)
         else:
-            # TODO[episode]: review
             def cleantitle(title):
                 if title:
                     title = re.sub(r'\(.*\)', '', title) # Anything within ()
@@ -185,33 +193,38 @@ def _sources_worker(channel, m, provider, content, **kwargs):
             video_best_match = max(video_matches, key=lambda m: fuzz.token_sort_ratio(cleantitle(m[1]), title))
             confidence = fuzz.token_sort_ratio(cleantitle(video_best_match[1]), title)
             # (fixme) [user]: add setting for fuzziness min value and also allow to change it via context menu
-            if confidence >= _MIN_FUZZINESS_VALUE: video_ref = video_best_match
-            log.notice('sources_worker(%s): %d matches found; best has confidence %d (%s)'%(provider, len(video_matches), confidence, video_best_match[1]))
+            if confidence >= _MIN_FUZZINESS_VALUE:
+                video_ref = video_best_match
+            log.notice('{m}.{f}(%s): %d matches found; best has confidence %d (%s)',
+                       provider, len(video_matches), confidence, video_best_match[1])
 
         if video_ref and dbcon:
             try:
                 with dbcon:
-                    dbcon.execute("DELETE FROM rel_url WHERE provider = '%s' AND key_video = '%s'" % (provider, key_video))
-                    dbcon.execute("INSERT INTO rel_url Values (?, ?, ?)", (provider, key_video, json.dumps(video_ref)))
-            except Exception as e:
-                log.notice('sources_worker(%s): %s'%(provider, e))
+                    dbcon.execute("DELETE FROM rel_url WHERE provider = ? AND key_video = ?",
+                                  (provider, key_video))
+                    dbcon.execute("INSERT INTO rel_url Values (?, ?, ?)",
+                                  (provider, key_video, json.dumps(video_ref)))
+            except Exception as ex:
+                log.notice('{m}.{f}(%s): %s', provider, ex)
 
     if 'abort' in channel:
-        log.notice('sources_worker(%s): aborted at get_sources'%(provider))
+        log.notice('{m}.{f}(%s): aborted at get_sources', provider)
         return []
 
     sources = []
     if video_ref:
-        log.notice('sources_worker(%s).video_ref(%s)'%(provider, video_ref))
+        log.notice('{m}.{f}(%s).video_ref(%s)', provider, video_ref)
         try:
             sources = m.get_sources(provider.split('.'), video_ref)
-        except:
+        except Exception:
             # get functions might fail because of no sources found
             pass
-        if not sources: sources = []
+        if not sources:
+            sources = []
 
-    for s in sources:
-        s.update({
+    for src in sources:
+        src.update({
             'provider': provider,
         })
 
@@ -219,59 +232,63 @@ def _sources_worker(channel, m, provider, content, **kwargs):
         try:
             # Cache the sources (also in the fail scenario)
             with dbcon:
-                dbcon.execute("DELETE FROM rel_src WHERE provider = '%s' AND key_video = '%s'" % (provider, key_video))
-                dbcon.execute("INSERT INTO rel_src Values (?, ?, ?, ?)", (provider, key_video, json.dumps(sources), datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
-        except Exception as e:
-            log.error('sources_worker(%s): %s'%(provider, e))
+                dbcon.execute("DELETE FROM rel_src WHERE provider = ? AND key_video = ?",
+                              (provider, key_video))
+                dbcon.execute("INSERT INTO rel_src Values (?, ?, ?, ?)",
+                              (provider, key_video, json.dumps(sources), datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
+        except Exception as ex:
+            log.error('{m}.{f}(%s): %s', provider, ex)
 
-    log.notice('sources_worker(%s): %d sources found'%(provider, len(sources)))
+    log.notice('{m}.{f}(%s): %d sources found', provider, len(sources))
 
     return sources
 
 
-_log_debug = True
 def clear_sources_cache(**kwargs):
     try:
         key_video = '/'.join([kwargs.get(k) or '-' for k in ['imdb', 'season', 'episode']])
-        log.debug('{m}.{f}(...): key_video=%s'%(key_video))
+        log.debug('{m}.{f}(...): key_video=%s', key_video)
         platform.makeDir(platform.dataPath)
         dbcon = database.connect(platform.sourcescacheFile, timeout=10)
         with dbcon:
-            dbcon.execute("DELETE FROM rel_src WHERE key_video = '%s'" % key_video)
-    except Exception as e:
-        log.error('{m}.{f}(...): %s'%(e))
+            dbcon.execute("DELETE FROM rel_src WHERE key_video = ?", (key_video,))
+    except Exception as ex:
+        log.error('{m}.{f}(...): %s', ex)
 
 
-# TODO[code]: get_movie -> movie
+# (fixme)[code]: get_movie -> movie
 def get_movie(provider, **kwargs):
     try:
         provider = info()[provider]
     except:
         raise Exception('Provider %s not available'%provider)
 
-    with g2.Context(__name__, provider['package'], [provider['module']], provider['search_paths']) as m:
-        return m[0].get_movie(provider['name'].split('.'), **kwargs)
+    with g2.Context(__name__, provider['package'], [provider['module']], provider['search_paths']) as mod:
+        return mod[0].get_movie(provider['name'].split('.'), **kwargs)
 
 
-# TODO[code]: get_sources -> sources
+# (fixme)[code]: get_sources -> sources
 def get_sources(provider, url):
-    if not url: return []
+    if not url:
+        return []
     try:
         provider = info()[provider]
     except:
         raise Exception('Provider %s not available'%provider)
 
-    with g2.Context(__name__, provider['package'], [provider['module']], provider['search_paths']) as m:
-        sources = m[0].get_sources(provider['name'].split('.'), url)
-        for s in sources:
-            s.update({
+    with g2.Context(__name__, provider['package'], [provider['module']], provider['search_paths']) as mod:
+        sources = mod[0].get_sources(provider['name'].split('.'), url)
+        for src in sources:
+            src.update({
                 'provider': provider['name'],
             })
         return sources
 
 
+# (fixme) cache the url resolution for 1day, clear them together with the sources
 def resolve(provider, url):
-    if not url: return None
+    if not url:
+        return None
     try:
         provider = info()[provider]
     except:
@@ -281,16 +298,18 @@ def resolve(provider, url):
     rurl = resolvers.resolve(url)
 
     # If the resolvers have sucessfully resolved the url, then bypass the source resolver
-    if isinstance(rurl, basestring): return rurl
+    if isinstance(rurl, basestring):
+        return rurl
 
     # If the resolvers return any error other than the 'No resolver for', then stop the resolution
-    if 'No resolver for' not in str(rurl): return rurl
+    if 'No resolver for' not in str(rurl):
+        return rurl
 
     # Otherwise, try with the source resolver and then give the url back to the resolvers again
     try:
-        with g2.Context(__name__, provider['package'], [provider['module']], provider['search_paths']) as m:
-            # TODO[debug]: if successfull, enrich the resolvedurl with the source resolver too!
-            url = m[0].resolve(provider['name'].split('.'), url)
+        with g2.Context(__name__, provider['package'], [provider['module']], provider['search_paths']) as mod:
+            # (fixme)[debug]: if successfull, enrich the resolvedurl with the source resolver too!
+            url = mod[0].resolve(provider['name'].split('.'), url)
     except Exception:
         # On any failure of the source resolver, return the error of the first resolvers invocation
         return rurl

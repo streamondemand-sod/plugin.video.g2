@@ -65,12 +65,13 @@ def _log(msg, level, *args, **kwargs):
                 level_info = 'DEBUG: ' if level == xbmc.LOGDEBUG else '[INFO]'
                 level = newlevel
         if '{m}' in msg or '{f}' in msg or '{t}' in msg:
+            # (fixme) should check if there are other {} and in case abort this formatting
             try:
                 msg = msg.format(**_fetch_ids())
             except Exception:
-                xbmc.log('log.format: '+traceback.format_exc(), xbmc.LOGNOTICE)
+                xbmc.log('log("%s"): _fetch_ids=%s: %s'%(msg, _fetch_ids(), traceback.format_exc()), xbmc.LOGNOTICE)
         if len(kwargs):
-            msg = msg.format(kwargs)
+            msg = msg.format(**kwargs)
         if len(args):
             msg = msg % args
         if isinstance(msg, unicode):
