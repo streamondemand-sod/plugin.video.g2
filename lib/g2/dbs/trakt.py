@@ -82,6 +82,7 @@ def url(kind=None, **kwargs):
     return _urls[kind].format(**kwargs)
 
 
+# (fixme) abort the calls if trakt_enabled is false!
 def movies(url):
     try:
         q = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))

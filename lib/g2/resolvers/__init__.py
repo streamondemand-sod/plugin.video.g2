@@ -60,7 +60,7 @@ def info():
         for i in nfo:
             i.update({
                 # User configurable priority at the package level 
-                'priority': g2.setting('resolvers', package, info='priority'),
+                'priority': g2.setting('resolvers', package, name='priority'),
             })
         return nfo
 
@@ -104,7 +104,7 @@ def resolve(url, checkonly=False):
 
     errors = []
     for resolver in sorted(resolvers, key=lambda r: r['priority']):
-        def collect_resolver_error(err):
+        def collect_resolver_error(resolver, err):
             if isinstance(err, basestring) or err is None or not str(err).startswith(resolver['name']):
                 errors.append(ResolverError('%s: %s'%(resolver['name'], str(err))))
             else:
@@ -115,11 +115,11 @@ def resolve(url, checkonly=False):
 
         # On error, go to the next resolver for the same domain
         if not isinstance(res, basestring):
-            collect_resolver_error(res)
+            collect_resolver_error(resolver, res)
             continue
 
         if not res:
-            collect_resolver_error('empty url')
+            collect_resolver_error(resolver, 'empty url')
             continue
 
         # For non http(s) urls, do not check anything more
@@ -140,24 +140,24 @@ def resolve(url, checkonly=False):
         try:
             response = client.request(res.split('|')[0], headers=headers, close=False, error=True, timeout='20')
         except Exception as ex:
-            collect_resolver_error(str(ex))
+            collect_resolver_error(resolver, str(ex))
             continue
 
         if not response or 'HTTP Error' in str(response):
-            collect_resolver_error(str(response))
+            collect_resolver_error(resolver, str(response))
             continue
 
         if int(response.headers['Content-Length']) < _MIN_STREAM_SIZE:
-            collect_resolver_error('Stream too short')
+            collect_resolver_error(resolver, 'Stream too short')
             continue
 
         meta = metastream.video(response)
 
         url = res.split('|')[0]
         return ResolvedURL('%s%s%s' % (url, '&' if '?' in url else '?', urllib.urlencode(headers))).enrich(
-                           resolver=resolver['name'],
-                           meta=meta,
-                           size=int(response.headers['Content-Length']),
-                           acceptbyteranges='bytes' in response.headers.get('Accept-Ranges', '').lower())
+            resolver=resolver['name'],
+            meta=meta,
+            size=int(response.headers['Content-Length']),
+            acceptbyteranges='bytes' in response.headers.get('Accept-Ranges', '').lower())
 
     return errors

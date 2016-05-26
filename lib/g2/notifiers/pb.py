@@ -32,4 +32,6 @@ _PB = PushBullet(platform.setting('pushbullet_apikey'))
 
 def notices(notes, origin=platform.addonInfo('id'), **dummy_kwargs):
     """Push a comulative note to the pushbullet account"""
+    # (fixme) do not call if apikey is none or invalid
+    # (fixme) add pushbullet_email as non configurable setting and clear it if auth fails
     _PB.pushNote(None, origin, '\n'.join(notes))

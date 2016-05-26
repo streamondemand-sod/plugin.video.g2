@@ -37,43 +37,56 @@ from g2.libraries import language
 
 
 _log_debug = True
-# _log_trace_on_error = True
 
-
-def _ordinal(n):
-    return "%d%s" % (n, "tsnrhtdd"[(n/10%10 != 1)*(n%10 < 4)*n%10::4])
 
 _PACKAGES_KINDS = {
     'actions': {
+        # No user settings
         'settings_category': 0,
     },
     'dbs': {
+        # No user settings
         'settings_category': 0,
     },
     'notifiers': {
+        # No user settings
         'settings_category': 0,
     },
     'providers': {
+        # User setting are generated for each package / module to enable/disable it
         'settings_category': language.msgcode('Sources'),
-        'settings': {
-            'preferred_provider_%d'%i: {
-                'template': 'type="select" label="%s" values="-|{modules_names}"'%(
-                    language.msgcode('%s preferred source provider'%_ordinal(i))),
-                'default': '-',
-            } for i in range(1, 5) if language.msgcode('%s preferred source provider'%_ordinal(i))
-        },
+        # User settings are generated at the package kind level (e.g. providers:::id)
+        # See the code below
+        'settings': {},
     },
     'resolvers': {
+        # User setting are generated for each package / module to enable/disable it
+        # For resolvers, if there is a single module in the package,
+        # the module setting is not displated.
         'settings_category': language.msgcode('Resolvers'),
-        'settings': {
-            'preferred_host_%d'%i: {
-                'template': 'type="select" label="%s" values="-|{modules_names}"'%(
-                    language.msgcode('%s preferred source host'%_ordinal(i))),
-                'default': '-',
-            } for i in range(1, 5) if language.msgcode('%s preferred source host'%_ordinal(i))
-        },
+        # User settings are generated at the package kind level (e.g. resolvers:::id)
+        # See the code below
+        'settings': {},
     },
 }
+
+def _fill_packages_kinds():
+    def _ordinal(num):
+        return "%d%s" % (num, "tsnrhtdd"[(num/10%10 != 1)*(num%10 < 4)*num%10::4])
+
+    for kind, name in [('providers', 'provider'), ('resolvers', 'host')]:
+        settings = _PACKAGES_KINDS[kind]['settings']
+        for i in range(1, 5):
+            msgcode = language.msgcode('%s preferred source %s'%(_ordinal(i), name))
+            if not msgcode:
+                break
+            settings['preferred_provider_%d'%i] = {
+                'template': 'type="select" label="%s" values="-|{modules_names}"'%msgcode,
+                'default': '-',
+            }
+
+# python2.6 doesn't support {} comprehensions
+_fill_packages_kinds()
 
 _RESOURCES_PATH = os.path.join(platform.addonInfo('path'), 'resources') 
 
@@ -199,37 +212,38 @@ def install_or_update(kind, name, site, gui_update=None):
             return None
 
     actives = []
-    for i, m in enumerate(repo):
+    for i, mod in enumerate(repo):
         try:
-            if m['type'] == 'dir':
-                install_or_update(kind, '%s/%s'%(name, m['name']), '%s/%s'%(site, m['name']))
+            if mod['type'] == 'dir':
+                install_or_update(kind, '%s/%s'%(name, mod['name']), '%s/%s'%(site, mod['name']))
             else:
-                module_path = os.path.join(package_path, m['name'])
-                if m['sha'] != git_sha(module_path):
-                    module = client.request(m['download_url'])
+                module_path = os.path.join(package_path, mod['name'])
+                if mod['sha'] != git_sha(module_path):
+                    module = client.request(mod['download_url'])
                     module_path_new = module_path + '.new'
-                    with open(module_path_new, 'w') as f:
-                        f.write(module)
-                    if m.get('sha') == git_sha(module_path_new):
+                    with open(module_path_new, 'w') as fil:
+                        fil.write(module)
+                    if mod.get('sha') == git_sha(module_path_new):
                         os.rename(module_path_new, module_path)
-                        log.notice('g2.install %s.%s: %s'%(kind, name, m['name']))
+                        log.notice('g2.install %s.%s: %s'%(kind, name, mod['name']))
 
-            actives.append(m['name'])
-            if gui_update: gui_update(i+1, len(repo))
-        except Exception as e:
-            log.error('g2.install %s.%s.%s: %s'%(kind, name, m.get('name'), e))
+            actives.append(mod['name'])
+            if gui_update:
+                gui_update(i+1, len(repo))
+        except Exception as ex:
+            log.error('g2.install %s.%s.%s: %s'%(kind, name, mod.get('name'), ex))
 
-    for m in os.listdir(package_path):
-        if m not in actives and not re.search(r'\.py[co]$', m):
-            module_path = os.path.join(package_path, m)
+    for mod in os.listdir(package_path):
+        if mod not in actives and not re.search(r'\.py[co]$', mod):
+            module_path = os.path.join(package_path, mod)
             try:
-                log.notice('g2.install %s.%s: %s is obsolete, removing it...'%(kind, name, m))
+                log.notice('g2.install %s.%s: %s is obsolete, removing it...'%(kind, name, mod))
                 _remove(module_path)
-                if re.search(r'\.py$', m):
+                if re.search(r'\.py$', mod):
                     _remove(os.path.join(module_path+'c'))
                     _remove(os.path.join(module_path+'o'))
-            except Exception as e:
-                log.error('g2.install %s.%s.%s: %s'%(kind, name, m, e))
+            except Exception as ex:
+                log.error('g2.install %s.%s.%s: %s'%(kind, name, mod, ex))
 
     return True
 
@@ -237,34 +251,33 @@ def install_or_update(kind, name, site, gui_update=None):
 def uninstall(kind, name):
     try:
         return _remove(_path(kind, name))
-    except Exception as e:
-        log.error('g2.uninstall %s.%s: %s'%(kind, name, e))
+    except Exception as ex:
+        log.error('g2.uninstall %s.%s: %s'%(kind, name, ex))
         return False
 
 
 def info(kind, infofunc):
     kind = kind.split('.')[-1]
     response_infos = {}
-    infos_paths, infos_modules = cache.get(_info_get, 1, kind, infofunc, hash_args=1, response_info=response_infos) 
-    if 'cached' in response_infos:
-        update_needed = False
-        for path in infos_paths:
-            try:
-                if platform.Stat(path).st_mtime() > response_infos['cached']:
-                    raise
-            except Exception:
-                update_needed = True
-        if update_needed:
-            infos_paths, infos_modules = cache.get(_info_get, 0, kind, infofunc, hash_args=1)
+    try:
+        infos_paths, infos_modules = cache.get(_info_get, 1, kind, infofunc, hash_args=1, response_info=response_infos) 
+        if 'cached' in response_infos:
+            update_needed = False
+            for path in infos_paths:
+                try:
+                    if platform.Stat(path).st_mtime() > response_infos['cached']:
+                        raise
+                except Exception:
+                    update_needed = True
+            if update_needed:
+                infos_paths, infos_modules = cache.get(_info_get, 0, kind, infofunc, hash_args=1)
+    except Exception as ex:
+        log.error('packages.info(%s): %s', kind, ex, trace=True)
+        return {}
 
     return infos_modules
 
 
-# (fixme) [code] if infofunc is missing, use a default version that looks for the packages infos:
-# - callable(m.info) returning a dict or [] of dicts
-# - list(m.INFO)
-# - dict(m.INFO)
-# Uniform all the g2.packages and integrated modules developed so far
 def _info_get(kind, infofunc):
     def addonSettingsFile(addon_id=''):
         return os.path.join(platform.addonInfo2(addon_id, 'profile').decode('utf-8'), 'settings.xml')
@@ -280,7 +293,7 @@ def _info_get(kind, infofunc):
     infos_paths.add(addonSettingsFile())
     infos_modules = {}
     for dummy_package, name, is_pkg in importer.walk_packages([os.path.join(_PACKAGES_ABSOLUTE_PATH, kind)], onerror=ignore):
-        log.debug('info_get: name=%s is_pkg=%s enabled=%s'%(name, is_pkg, setting(kind, name, info='enabled')))
+        log.debug('info_get: name=%s is_pkg=%s enabled=%s'%(name, is_pkg, setting(kind, name, name='enabled')))
 
         if '.' in name or (is_pkg and name == 'lib'):
             continue
@@ -289,13 +302,13 @@ def _info_get(kind, infofunc):
             _info_get_module(infofunc, infos_modules, kind, name)
             continue
 
-        if setting(kind, name, info='enabled') == 'false':
-            log.notice('info_get: package %s ignored, user enable setting is %s'%(name, setting(kind, name, info='enabled')))
+        if setting(kind, name, name='enabled') == 'false':
+            log.notice('info_get: package %s ignored, user enable setting is %s'%(name, setting(kind, name, name='enabled')))
             continue
 
         with Context(kind, name) as pac:
             if not hasattr(pac, 'site'):
-                log.debug('info_get: package %s looks static, skip it!'%name)
+                log.debug('info_get: %s package %s does not specify a site origin; skip it!', kind, name)
                 continue
 
             addonpaths = set()
@@ -316,14 +329,14 @@ def _info_get(kind, infofunc):
             addonpaths = list(addonpaths)
 
             for dummy_package, sname, is_pkg in importer.walk_packages(pac.__path__, onerror=ignore):
-                log.debug('info_get: sname=%s is_pkg=%s enabled=%s'%(sname, is_pkg, setting(kind, name, sname, info='enabled')))
+                log.debug('info_get: sname=%s is_pkg=%s enabled=%s'%(sname, is_pkg, setting(kind, name, sname, name='enabled')))
 
-                if is_pkg or '.' in sname or (setting(kind, name, sname, info='enabled') == 'false' and
+                if is_pkg or '.' in sname or (setting(kind, name, sname, name='enabled') == 'false' and
                                               # (fixme) [logic]: align these codes with settings.xml generation
-                                              setting(kind, name, sname, info='enabled') not in ['0', '1', '2']):
+                                              setting(kind, name, sname, name='enabled') not in ['0', '1', '2']):
                     if not is_pkg:
                         log.debug('info_get: module %s.%s ignored, user enable setting is %s',
-                                  name, sname, setting(kind, name, sname, info='enabled'))
+                                  name, sname, setting(kind, name, sname, name='enabled'))
                     continue
 
                 _info_get_module(infofunc, infos_modules, kind, sname, name, addonpaths)
@@ -334,6 +347,11 @@ def _info_get(kind, infofunc):
 def _info_get_module(infofunc, infos, kind, module, package='', paths=[]):
     with Context(kind, package, [module], paths) as mods:
         try:
+            # (fixme) [code] if infofunc is missing, use a default version that looks for the packages infos:
+            # - callable(m.info) returning a dict or [] of dicts
+            # - list(m.INFO)
+            # - dict(m.INFO)
+            # Uniform all the g2.packages and integrated modules developed so far
             nfo = infofunc(package, module, mods[0], paths)
         except Exception as ex:
             log.error('packages: infofunc(%s, %s, ...): %s'%(package, module, ex))
@@ -356,8 +374,8 @@ def update_settings_skema():
     settings = {}
     templates = {}
     defaults = {}
-    def add_setting(info, default, kind, package='', module='', template=None):
-        setid = _setting_id(kind, package, module, info)
+    def add_setting(name, default, kind, package='', module='', template=None):
+        setid = _setting_id(kind, package, module, name)
         settings[setid] = platform.setting(setid)
         if settings[setid] == '':
             settings[setid] = default
@@ -373,33 +391,38 @@ def update_settings_skema():
 
         if 'settings' in kindesc:
             kind_module = __import__(_PACKAGES_RELATIVE_PATH+kind, globals(), locals(), [], -1)
-            modules_names = sorted(set([info.split('.')[-1] for info in kind_module.info()]))
+            modules_names = sorted(set([nfo.split('.')[-1] for nfo in kind_module.info()]))
             for setid, template in kindesc['settings'].iteritems():
                 add_setting(setid, template['default'], kind,
                             template=template['template'].format(
                                 modules_names='|'.join(modules_names),
                             ))
 
-        for imp, name, is_pkg in importer.walk_packages([os.path.join(_PACKAGES_ABSOLUTE_PATH, kind)]):
+        for dummy_imp, name, is_pkg in importer.walk_packages([os.path.join(_PACKAGES_ABSOLUTE_PATH, kind)]):
             log.debug('update_settings_skema: name=%s, is_pkg=%s'%(name, is_pkg))
-            if not is_pkg or '.' in name: continue
+            if not is_pkg or '.' in name:
+                continue
 
             add_setting('enabled', 'true', kind, name)
             add_setting('priority', '10', kind, name)
-            for imp, sname, is_pkg in importer.walk_packages([os.path.join(_PACKAGES_ABSOLUTE_PATH, kind, name)]):
+            for dummy_imp, sname, is_pkg in importer.walk_packages([os.path.join(_PACKAGES_ABSOLUTE_PATH, kind, name)]):
                 log.debug('update_settings_skema: name=%s.%s, is_pkg=%s'%(name, sname, is_pkg))
-                if is_pkg or '.' in sname: continue
+                if is_pkg or '.' in sname:
+                    continue
                 add_setting('enabled', 'true', kind, name, sname)
 
     settings_skema_path = os.path.join(_RESOURCES_PATH, 'settings.xml')
     new_settings_skema = ''
-    with open(settings_skema_path) as f:
+    with open(settings_skema_path) as fil:
         suppress_skema = False
         line = ''
-        for line in f:
-            if any('label="%s"'%d['settings_category'] in line for d in _PACKAGES_KINDS.itervalues()): suppress_skema = True
-            if '</settings>' in line: break
-            if not suppress_skema: new_settings_skema += line
+        for line in fil:
+            if any('label="%s"'%d['settings_category'] in line for d in _PACKAGES_KINDS.itervalues()):
+                suppress_skema = True
+            if '</settings>' in line:
+                break
+            if not suppress_skema:
+                new_settings_skema += line
 
         current_category = None
         settings_ids = sorted(settings.keys())
@@ -407,18 +430,21 @@ def update_settings_skema():
             category = setid.split(':')[0]
             default_value = defaults[setid]
             if category != current_category:
-                if current_category: new_settings_skema += '\t</category>\n'
+                if current_category:
+                    new_settings_skema += '\t</category>\n'
                 new_settings_skema += '\t<category label="%s">\n'%_PACKAGES_KINDS[category]['settings_category']
                 current_category = category
                 current_package = None
 
             if ':::' in setid:
                 new_settings_skema += '\t\t<setting id="%s" %s default="%s" />\n'%(
-                    setid, templates[setid] if setid in templates else 'type="text" label="%s"'%setid.split(':')[-1], default_value)
+                    setid, templates[setid] if setid in templates else
+                    'type="text" label="%s"'%setid.split(':')[-1], default_value)
                 current_package = '-'
 
             elif setid.endswith('::enabled'):
-                if current_package: new_settings_skema += '\t\t<setting type="lsep" label="[CR]" />\n'
+                if current_package:
+                    new_settings_skema += '\t\t<setting type="lsep" label="[CR]" />\n'
                 new_settings_skema += '\t\t<setting id="%s" type="bool" label="%s" default="%s" />\n'%(
                     setid, setid.split(':')[1].title().replace('_', ' '), default_value)
                 current_package = setid.split(':')[0:2]
@@ -426,7 +452,7 @@ def update_settings_skema():
 
             elif setid.endswith('::priority'):
                 current_module += 1
-                # TODO[int]: localize the label
+                # (fixme)[int]: localize the label
                 new_settings_skema += '\t\t<setting id="%s" type="number" label="Priority" default="%s" enable="eq(-%d,true)" subsetting="true" />\n'%(
                     setid, default_value, current_module)
 
@@ -445,44 +471,45 @@ def update_settings_skema():
                 new_settings_skema += '\t\t<setting id="%s" type="%s" label="%s" %sdefault="%s" enable="eq(-%d,true)" visible="%s" subsetting="true" />\n'%(
                                         setid, settype, setid.split(':')[2].title(), setlvalues, default_value, current_module, visible)
 
-        if current_category: new_settings_skema += '\t</category>\n'
+        if current_category:
+            new_settings_skema += '\t</category>\n'
 
         # Collect the rest of the settings file
         new_settings_skema += line
-        for line in f:
+        for line in fil:
             new_settings_skema += line
 
     # log.debug(new_settings_skema)
     if new_settings_skema != '':
-        with open(settings_skema_path, 'w') as f:
-            f.write(new_settings_skema)
+        with open(settings_skema_path, 'w') as fil:
+            fil.write(new_settings_skema)
 
 
 def _remove(path):
     if not os.path.isdir(path):
         try:
             platform.removeFile(path)
-        except OSError as e:
-            if e.errno != errno.ENOENT:
+        except OSError as ex:
+            if ex.errno != errno.ENOENT:
                 raise
         return True
-    dirs, files = platform.listDir(path)
-    for d in dirs:
-        _remove(os.path.join(path, d))
-    for f in files:
-        platform.removeFile(os.path.join(path, f))
+    directories, filenames = platform.listDir(path)
+    for directory in directories:
+        _remove(os.path.join(path, directory))
+    for filename in filenames:
+        platform.removeFile(os.path.join(path, filename))
     return platform.removeDir(path)
 
 
-def setting(kind, name='', module='', info='enabled'):
+def setting(kind, package='', module='', name='enabled'):
     if not _PACKAGES_KINDS[kind]['settings_category']:
-        # TODO[code]: generalize!!!
-        return 'true' if info == 'enabled' else '10' if info == 'priority' else 'false'
-    return platform.setting(_setting_id(kind, name, module, info))
+        # Implicit setting values for kind packages missing user settings
+        return 'true' if name == 'enabled' else '10' if name == 'priority' else 'false'
+    return platform.setting(_setting_id(kind, package, module, name))
 
 
-def _setting_id(kind, name, module='', info='enabled'):
-    return ':'.join([kind, name, module, info])
+def _setting_id(kind, package, module='', name='enabled'):
+    return ':'.join([kind, package, module, name])
 
 
 def _get_addon_paths(addon_id):
@@ -498,14 +525,15 @@ def _get_addon_paths(addon_id):
 def _get_addon_details(addon_id):
     path = platform.addonInfo2(addon_id, 'path')
     try:
-        with open(os.path.join(path, 'addon.xml')) as f:
-            addon_xml = f.read()
-    except:
+        with open(os.path.join(path, 'addon.xml')) as fil:
+            addon_xml = fil.read()
+    except Exception:
         return (None, [])
 
     # <extension point="xbmc.python.module" library="<subdir>" />
     match = re.search(r'<extension\s+point\s*=\s*"xbmc.python.module".*?library\s*=\s*"([^"]+)"', addon_xml, re.DOTALL)
-    if match: path = os.path.join(path, match.group(1))
+    if match:
+        path = os.path.join(path, match.group(1))
 
     # <import addon="script.module.simplejson" version="3.3.0"/>
     imported_addons = re.compile(r'<import\s+addon\s*=\s*"([^"])".*?/>', re.DOTALL).findall(addon_xml)

@@ -63,7 +63,8 @@ def dialog(action, title=None, year=None, imdb=None, tvdb=None, meta=None, **kwa
 
         ui.execute('Action(Back,10025)')
 
-        if imdb == '0': imdb = '0000000'
+        if imdb == '0':
+            imdb = '0000000'
         imdb = 'tt' + imdb.translate(None, 't')
         content = 'movie'
         name = '%s (%s)'%(title, year)
@@ -81,44 +82,48 @@ def dialog(action, title=None, year=None, imdb=None, tvdb=None, meta=None, **kwa
 
         posterdata = name if metadata.get('poster', '0') == '0' else 'poster://'+metadata['poster']
 
-        w = ui.SourcesDialog('SourcesDialog.xml', platform.addonPath, 'Default', '720p',
-                             sourcesGenerator=sources_generator,
-                             sourcePriority=_source_priority,
-                             sourceResolve=source_resolve,
-                             posterData=posterdata)
+        win = ui.SourcesDialog('SourcesDialog.xml', platform.addonPath, 'Default', '720p',
+                               sourcesGenerator=sources_generator,
+                               sourcePriority=_source_priority,
+                               sourceResolve=source_resolve,
+                               posterData=posterdata)
 
-        # TODO[code]: make a ui that is simply called ui.resolvedPlugin()
-        if _thread > 0: ui.resolvedPlugin(_thread, True, ui.ListItem(path=''))
+        # (fixme)[code]: make a ui that is simply called ui.resolvedPlugin()
+        if _thread > 0:
+            ui.resolvedPlugin(_thread, True, ui.ListItem(path=''))
 
         while True:
-            w.doModal()
+            win.doModal()
 
             # User-abort
-            if not w.selected: break
+            if not win.selected:
+                break
+            item = win.selected
 
-            source = w.selected.getLabel()
-            url = w.selected.getProperty('url')
+            source = item.getLabel()
+            url = item.getProperty('url')
 
             if ui.Player().run(title, year, None, None, imdb, tvdb, meta, url,
-                                   credits=_credits_message(w.selected.getProperty('source_provider'),
-                                                            w.selected.getProperty('source_host'),
-                                                            w.selected.getProperty('media'))):
+                               credits=_credits_message(item.getProperty('source_provider'),
+                                                        item.getProperty('source_host'),
+                                                        item.getProperty('media'))):
                 break
 
             # Invalidate the erroneous stream item
-            w.selected.setProperty('source_url', '')
-            w.selected.setProperty('url', '')
+            item.setProperty('source_url', '')
+            item.setProperty('url', '')
 
             ui.infoDialog(_('Not a valid stream'), heading=source)
             ui.sleep(2000)
 
             log.notice('sources.dialog: player.run("%s", %s) FAILED'%(name, url))
 
-            w.show()
+            win.show()
 
-        del w
+        del win
 
-    except:
+    except Exception as ex:
+        log.error('{m}.{f}: %s', ex)
         ui.infoDialog(_('No stream available'))
 
 
@@ -129,9 +134,9 @@ def folder(action, title=None, year=None, imdb=None, tvdb=None, meta=None, **kwa
         metadata = json.loads(meta)
         log.notice('sources.folder(imdb=%s): certification=%s'%(imdb, metadata.get('mpaa')))
 
-        if imdb == '0': imdb = '0000000'
+        if imdb == '0':
+            imdb = '0000000'
         imdb = 'tt' + imdb.translate(None, 't')
-        # TODO[func]: episode/tvshow
         content = 'movie'
         name = '%s (%s)'%(title, year)
 
@@ -141,8 +146,9 @@ def folder(action, title=None, year=None, imdb=None, tvdb=None, meta=None, **kwa
 
         all_sources = []
         time_start = time.time()
-        def dialog_update(progress, total, new_results=[]):
-            all_sources.extend(new_results)
+        def dialog_update(progress, total, new_results=None):
+            if new_results:
+                all_sources.extend(new_results)
             dialog_progress.update(100 * progress / total,
                                    '%s: %s %s' % (_('Time elapsed'), int(time.time() - time_start), _('seconds')),
                                    '%s: %s' % (_('Sources'), len(all_sources)))
@@ -156,7 +162,8 @@ def folder(action, title=None, year=None, imdb=None, tvdb=None, meta=None, **kwa
 
         log.notice('sources.folder(name=%s, ...): found  %d sources'%(name, len(all_sources)))
 
-        if not all_sources: raise Exception()
+        if not all_sources:
+            raise Exception()
 
         all_sources = sorted(all_sources, key=lambda s: _source_priority(s['source'], s['provider'], s['quality']), reverse=True)
         all_sources = _sources_label(all_sources)
@@ -181,41 +188,52 @@ def folder(action, title=None, year=None, imdb=None, tvdb=None, meta=None, **kwa
         for i, source in enumerate(all_sources):
             try:
                 url, label, provider, info = source['url'], source['label'], source['provider'], source.get('info', '')
-                sysname, sysurl, sysimage, sysprovider = urllib.quote_plus(name), urllib.quote_plus(url), urllib.quote_plus(poster), urllib.quote_plus(provider)
+                sysname = urllib.quote_plus(name)
+                sysurl = urllib.quote_plus(url)
+                sysimage = urllib.quote_plus(poster)
+                sysprovider = urllib.quote_plus(provider)
                 syssource = urllib.quote_plus(json.dumps([source]))
 
+                query = 'action=sources.playitem&title=%s&year=%s&imdb=%s&tvdb=%s&source=%s'%(title, year, imdb, tvdb, syssource)
                 if i == 0:
-                    query = 'action=sources.playitem&title=%s&year=%s&imdb=%s&tvdb=%s&source=%s&meta=%s' % (title, year, imdb, tvdb, syssource, urllib.quote_plus(meta))
-                else:
-                    query = 'action=sources.playitem&title=%s&year=%s&imdb=%s&tvdb=%s&source=%s' % (title, year, imdb, tvdb, syssource)
+                    query += '&meta=%s'%urllib.quote_plus(meta)
 
-                cm = []
-                cm.append((_('Download item'), 'RunPlugin(%s?action=sources.download&name=%s&image=%s&url=%s&provider=%s)' % (_addon, sysname, sysimage, sysurl, sysprovider)))
-                cm.append((_('Add-on settings'), 'RunPlugin(%s?action=tools.settings)' % _addon))
+                cmds = []
+                cmds.append((_('Download item'), 'RunPlugin(%s?action=sources.download&name=%s&image=%s&url=%s&provider=%s)'%
+                             (_addon, sysname, sysimage, sysurl, sysprovider)))
+                cmds.append((_('Add-on settings'), 'RunPlugin(%s?action=tools.settings)'%
+                             (_addon)))
 
                 item = ui.ListItem(label=label, iconImage='DefaultVideo.png', thumbnailImage=thumb)
                 try:
-                    item.setArt({'poster': poster, 'tvshow.poster': poster, 'season.poster': poster, 'banner': banner, 'tvshow.banner': banner, 'season.banner': banner})
-                except:
+                    item.setArt({
+                        'poster': poster,
+                        'tvshow.poster': poster,
+                        'season.poster': poster,
+                        'banner': banner,
+                        'tvshow.banner': banner,
+                        'season.banner': banner,
+                    })
+                except Exception:
                     pass
                 item.setInfo(type='Video', infoLabels=metadata)
                 item.setInfo(type='Video', infoLabels={'genre': info})
-                if fanart: item.setProperty('Fanart_Image', fanart)
+                if fanart:
+                    item.setProperty('Fanart_Image', fanart)
                 item.setProperty('Video', 'true')
                 item.setProperty('IsPlayable', 'true')
-                item.addContextMenuItems(cm, replaceItems=True)
+                item.addContextMenuItems(cmds, replaceItems=True)
                 # NOTE: leave isFolder=True always and ensure that the invoked action, if doesn't display a directory,
                 # does an Action(Back,10025) to remove the empty directory (see playitem)
                 ui.addItem(handle=int(_thread), url='%s?%s' % (_addon, query), listitem=item, isFolder=True)
-            except:
-                import traceback
-                log.notice(traceback.format_exc())
-                pass
+            except Exception as ex:
+                log.error('{m}.{f}: %s', ex)
 
         # To display the genre (actually the provider info) below the label
         ui.setContent(int(_thread), 'movies')
         ui.finishDirectory(int(_thread), cacheToDisc=True)
-    except:
+    except Exception as ex:
+        log.error('{m}.{f}: %s', ex)
         ui.infoDialog(_('No stream available'))
 
 
@@ -227,37 +245,39 @@ def playitem(action, title=None, year=None, imdb=None, tvdb=None, source=None, *
 
         ui.idle()
 
-        next = [] ; prev = [] ; total = []
+        nxt = []
+        prv = []
+        total = []
         meta = None
 
-        for i in range(1,10000):
+        for i in range(1, 10000):
             try:
-                u = ui.infoLabel('ListItem(%s).FolderPath' % str(i))
-                if u in total: raise Exception()
-                total.append(u)
-                u = dict(urlparse.parse_qsl(u.replace('?','')))
-                if 'meta' in u: meta = u['meta']
-                u = json.loads(u['source'])[0]
-                next.append(u)
-            except:
+                item = ui.infoLabel('ListItem(%s).FolderPath' % str(i))
+                if item not in total:
+                    total.append(item)
+                    item = dict(urlparse.parse_qsl(item.replace('?', '')))
+                    meta = item.get('meta', meta)
+                    item = json.loads(item.get('source'))[0]
+                    nxt.append(item)
+            except Exception:
                 break
-        for i in range(-10000,0)[::-1]:
+        for i in range(-10000, 0)[::-1]:
             try:
-                u = ui.infoLabel('ListItem(%s).FolderPath' % str(i))
-                if u in total: raise Exception()
-                total.append(u)
-                u = dict(urlparse.parse_qsl(u.replace('?','')))
-                if 'meta' in u: meta = u['meta']
-                u = json.loads(u['source'])[0]
-                prev.append(u)
-            except:
+                item = ui.infoLabel('ListItem(%s).FolderPath' % str(i))
+                if item not in total:
+                    total.append(item)
+                    item = dict(urlparse.parse_qsl(item.replace('?', '')))
+                    meta = item.get('meta', meta)
+                    item = json.loads(item['source'])[0]
+                    prv.append(item)
+            except Exception:
                 break
 
         items = json.loads(source)
 
         source, quality = items[0]['source'], items[0]['quality']
-        items = [i for i in items+next+prev if i['quality'] == quality and i['source'] == source][:10]
-        items += [i for i in next+prev if i['quality'] == quality and not i['source'] == source][:10]
+        items = [i for i in items+nxt+prv if i['quality'] == quality and i['source'] == source][:10]
+        items += [i for i in nxt+prv if i['quality'] == quality and not i['source'] == source][:10]
 
         dialog_progress = ui.DialogProgress()
         dialog_progress.create(platform.addonInfo('name'))
@@ -269,42 +289,45 @@ def playitem(action, title=None, year=None, imdb=None, tvdb=None, source=None, *
         for i, source in enumerate(items):
             try:
                 dialog_progress.update(100*i/len(items), str(source['label']))
-                if source['source'] == block: break
+                if source['source'] == block:
+                    break
 
                 def dialog_progress_update():
                     return not dialog_progress.iscanceled() and not ui.abortRequested()
 
-                w = source_resolve(source['provider'], source['url'], ui_update=dialog_progress_update)
-                if not w: break
+                thd = source_resolve(source['provider'], source['url'], ui_update=dialog_progress_update)
+                if not thd:
+                    break
 
-                if w.is_alive(): block = source['source']
-                url = w.result
-                if not url: continue
+                if thd.is_alive():
+                    block = source['source']
+                url = thd.result
+                if not url:
+                    continue
 
-                try:
-                    dialog_progress.close()
-                except:
-                    pass
+                dialog_progress.close()
 
                 ui.sleep(200)
 
                 media_label = '?'
                 if hasattr(url, 'meta') and url.meta:
-                    if url.meta['type']: media_label = url.meta['type']
+                    if url.meta['type']:
+                        media_label = url.meta['type']
                     if url.meta['width'] and url.meta['height']:
                         media_label += ' %sx%s'%(url.meta['width'], url.meta['height'])
 
                 ui.Player().run(title, year, None, None, imdb, tvdb, meta, url,
-                                    credits=_credits_message(source['provider'], source['source'], media_label))
+                                credits=_credits_message(source['provider'], source['source'], media_label))
 
                 return
-            except:
-                pass
+            except Exception as ex:
+                log.error('{m}{f}: %s', ex)
 
         dialog_progress.close()
 
-        raise Exception()
-    except:
+        raise Exception('No valid streams')
+    except Exception as ex:
+        log.error('{m}{f}: %s', ex)
         ui.infoDialog(_('No stream available'))
 
 
@@ -313,17 +336,17 @@ def download(action, name=None, provider=None, url=None, image=None, **kwargs):
     def ui_cancel():
         ui.sleep(1000)
         return not ui.abortRequested()
-    w = source_resolve(provider, url, ui_update=ui_cancel)
+    thd = source_resolve(provider, url, ui_update=ui_cancel)
     ui.busydialog(stop=True)
 
-    if not w or w.is_alive():
+    if not thd or thd.is_alive():
         return
 
-    if not isinstance(w.result, basestring):
+    if not isinstance(thd.result, basestring):
         ui.infoDialog(_('Not a valid stream'))
         return
 
-    url = w.result
+    url = thd.result
     if not hasattr(url, 'size'):
         media_size = ''
     else:
@@ -337,7 +360,7 @@ def download(action, name=None, provider=None, url=None, image=None, **kwargs):
         if url.meta['width'] and url.meta['height']:
             media_format += ', ' + _('Resolution %dx%d')%(url.meta['width'], url.meta['height'])
 
-    if ui.yesnoDialog(media_size , media_format, _('Continue with download?')):
+    if ui.yesnoDialog(media_size, media_format, _('Continue with download?')):
         if downloader.addDownload(name, url, image):
             ui.infoDialog(_('Item Added to Queue'), name)
         else:
@@ -354,7 +377,8 @@ def _credits_message(provider, host, media_format):
         '[B]~*~ Credits ~*~[/B]',
         'Source provided by [B]%s[/B]'%provider.split('.')[-1].upper(),
         'Content hosted by [COLOR orange]%s[/COLOR]'%host.upper(),
-        '%sLoaded in {elapsed_time} seconds'%('' if not media_format else 'Format is [COLOR FF009933]%s[/COLOR]; '%media_format.upper()),
+        '%sLoaded in {elapsed_time} seconds'%('' if not media_format else
+                                              'Format is [COLOR FF009933]%s[/COLOR]; '%media_format.upper()),
     ]
 
 
@@ -362,18 +386,18 @@ def _sources_label(sources, index=0):
     for source in sources:
         index += 1
 
-        s = source['source'].lower()
-        p = source['provider'].split('.')[-1]
-        q = source['quality']
+        host = source['source'].lower()
+        provider = source['provider'].split('.')[-1]
+        quality = source['quality']
 
         label = '%02d' % index
 
-        # Second the quality
-        if q in ['1080p', 'HD']: label += ' | [B][I]%s [/I][/B]' % (q)
-        else: label += ' | [I]%s [/I]' % (q)
+        if quality in ['1080p', 'HD']:
+            label += ' | [B][I]%s [/I][/B]' % (quality)
+        else:
+            label += ' | [I]%s [/I]' % (quality)
 
-        # Third the provider and source
-        label += ' | [B]%s[/B] | %s' % (p, s)
+        label += ' | [B]%s[/B] | %s' % (provider, host)
 
         source['label'] = label.upper()
     return sources
@@ -410,7 +434,7 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
     if provider:
         provider = provider.split('.')[-1].lower()
         for top in range(1, 10):
-            pref = g2.setting('providers', info='preferred_provider_%d'%top)
+            pref = g2.setting('providers', name='preferred_provider_%d'%top)
             if not pref:
                 break
             if pref.lower() == provider:
@@ -420,7 +444,7 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
     if host:
         host = host.split('.')[-1].lower()
         for top in range(1, 10):
-            pref = g2.setting('resolvers', info='preferred_host_%d'%top)
+            pref = g2.setting('resolvers', name='preferred_host_%d'%top)
             if not pref:
                 break
             if  pref.lower() == host:
@@ -430,24 +454,25 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
 
 
 def source_resolve(provider, url, ui_update=None):
-    thread = workers.Thread(providers.resolve, provider, url)
-    thread.start()
+    thd = workers.Thread(providers.resolve, provider, url)
+    thd.start()
 
     keyboard_opened = False
     ui_cancelled = False
-    for x in range(3600):
+    for i in range(3600):
         key_open = ui.condition('Window.IsActive(virtualkeyboard)')
-        if key_open: keyboard_opened = True
-        if x > _resolver_timeout and not key_open: break
-        if not thread.is_alive(): break
+        if key_open:
+            keyboard_opened = True
+        if (i > _resolver_timeout and not key_open) or not thd.is_alive():
+            break
         if ui_update and not ui_update():
             ui_cancelled = True
             break
         ui.sleep(500)
 
-    for x in range(_resolver_timeout):
-        if keyboard_opened or ui_cancelled: break
-        if not thread.is_alive(): break
+    for i in range(_resolver_timeout):
+        if keyboard_opened or ui_cancelled or not thd.is_alive():
+            break
         if ui_update and not ui_update():
             ui_cancelled = True
             break
@@ -456,28 +481,28 @@ def source_resolve(provider, url, ui_update=None):
     extrainfo = ''
     if ui_cancelled:
         what = 'cancelled by the user after'
-    elif thread.is_alive():
+    elif thd.is_alive():
         what = 'timeout after'
-    elif thread.exc:
+    elif thd.exc:
         what = 'raised an exception after'
-        extrainfo = ' ['+str(thread.exc)+']'
-    elif not isinstance(thread.result, basestring):
+        extrainfo = ' ['+str(thd.exc)+']'
+    elif not isinstance(thd.result, basestring):
         what = 'unsuccessfully completed in'
-        extrainfo = ' []' if not thread.result else ' '+str(thread.result)
-        thread.result = None
+        extrainfo = ' []' if not thd.result else ' '+str(thd.result)
+        thd.result = None
     else:
         what = 'successfully completed in'
         try:
-            urlparsed = urlparse.urlparse(thread.result)
+            urlparsed = urlparse.urlparse(thd.result)
             host = '%s://%s/.../%s'%(urlparsed.scheme, urlparsed.netloc, urlparsed.path.split('/')[-1])
-        except:
-            host = thread.result
+        except Exception:
+            host = thd.result
         extrainfo = ' "'+host+'"'
 
-    log.notice('providers.resolve(%s, %s): %s %.3f secs%s'%(provider, url, what, thread.elapsed(), extrainfo))
+    log.notice('providers.resolve(%s, %s): %s %.3f secs%s'%(provider, url, what, thd.elapsed(), extrainfo))
 
     # (fixme): [obs] caching and stats
     # - cache successes and failures for 10mins
     # - keep a statistics of the failed host/domains: total call/success
 
-    return None if ui_cancelled else thread
+    return None if ui_cancelled else thd

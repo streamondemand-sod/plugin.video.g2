@@ -66,6 +66,7 @@ def movies(url):
 
 
 def metas(metas):
+    # (fixme) cache the results using cachemeta, move cachemeta here!
     work_items = []
     for m in metas:
         if m['item']:
@@ -82,6 +83,7 @@ def metas(metas):
         if package_work_items:
             _db_method(db, 'metas', package_work_items)
 
+    # (fixme) add time taken
     log.notice('dbs.metas: %d submitted, %d processed, %d completed'%(len(metas), len(work_items), len([w for w in work_items if w['item']])))
 
 

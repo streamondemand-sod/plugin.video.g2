@@ -77,8 +77,9 @@ def _get_objectvalue(monitorid, kind):
 
 
 def _check_changes(kind):
-    for moid, mobj in {mi: mo for mi, mo in _MONITOR_OBJECTS.iteritems()
-                        if mo['kind'] == kind and mo['value'] != _get_objectvalue(mi, kind)}.iteritems():
+    for moid in [mi for mi, mo in _MONITOR_OBJECTS.iteritems()
+                 if mo['kind'] == kind and mo['value'] != _get_objectvalue(mi, kind)]:
+        mobj = _MONITOR_OBJECTS[moid]
         new_value = _get_objectvalue(moid, kind)
         log.debug('service[{t}]: monitored object %s %s changed: %s -> %s',
                   moid, mobj['kind'], mobj['value'], new_value)
