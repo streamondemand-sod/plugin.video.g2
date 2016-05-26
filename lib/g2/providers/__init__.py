@@ -70,26 +70,26 @@ def info():
 def video_sources(ui_update, content, **kwargs):
     providers = {}
     for dummy_kind, package in g2.packages([__name__]):
-        providers[package] = [p for p in info().itervalues() if p['package'] == package and content in p['content']]
-    all_providers = sum([len(providers[p]) for p in providers])
+        providers[package] = [mi for mi in info().itervalues() if mi['package'] == package and content in mi['content']]
+    all_providers = sum([len(providers[mi]) for mi in providers])
     if not all_providers:
         return []
 
     sources = {}
     all_completed_providers = 0
-    for package, modules in providers.iteritems():
-        if not modules:
+    for package, modulesinfo in providers.iteritems():
+        if not modulesinfo:
             continue
 
         # (fixme) use the priority as sorting method
-        modules = sorted(set([p['module'] for p in modules]))
-        with g2.Context(__name__, package, modules, modules[0]['search_paths']) as mods:
+        modules = sorted(set([mi['module'] for mi in modulesinfo]))
+        with g2.Context(__name__, package, modules, modulesinfo[0]['search_paths']) as mods:
             if not mods:
                 continue
             threads = []
             channel = []
             for mod, module in zip(mods, modules):
-                sub_modules = [p['name'] for p in modules if p['module'] == module]
+                sub_modules = [mi['name'] for mi in modulesinfo if mi['module'] == module]
                 threads.extend([workers.Thread(_sources_worker, channel, mod, smodule, content, **kwargs)
                                 for smodule in sub_modules])
 
@@ -250,10 +250,13 @@ def clear_sources_cache(**kwargs):
         log.debug('{m}.{f}(...): key_video=%s', key_video)
         platform.makeDir(platform.dataPath)
         dbcon = database.connect(platform.sourcescacheFile, timeout=10)
+        # (fixme) store the title/year in the rel_src so that it can be returned on success!
         with dbcon:
             dbcon.execute("DELETE FROM rel_src WHERE key_video = ?", (key_video,))
+        return key_video
     except Exception as ex:
         log.error('{m}.{f}(...): %s', ex)
+        return None
 
 
 # (fixme)[code]: get_movie -> movie

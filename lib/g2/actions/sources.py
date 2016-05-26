@@ -367,9 +367,11 @@ def download(action, name=None, provider=None, url=None, image=None, **kwargs):
             ui.infoDialog(_('Item Already In Your Queue'), name)
 
 
-def clearsourcescache(action, **kwargs):
-    providers.clear_sources_cache(**kwargs)
+def clearsourcescache(**kwargs):
     ui.idle()
+    key = providers.clear_sources_cache(**kwargs)
+    if key:
+        ui.infoDialog(_('Cache cleared for')+' '+key)
 
 
 def _credits_message(provider, host, media_format):
