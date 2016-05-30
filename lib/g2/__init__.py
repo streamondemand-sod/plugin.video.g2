@@ -152,7 +152,7 @@ class Context:
         for dummy_path in self.search_paths:
             sys.path.pop(0)
         if not self.ignore_exc and exc_value:
-            log.notice('%s: %s'%(self.fullname, exc_value))
+            log.notice('%s: %s', self.fullname, exc_value, trace=True)
         return True
 
 
