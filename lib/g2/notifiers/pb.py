@@ -19,8 +19,12 @@
 """
 
 
+from g2.libraries import log
 from g2.libraries import platform
 from g2.notifiers.lib.pushbullet import PushBullet
+
+
+_log_debug = True
 
 
 INFO = {
@@ -30,9 +34,50 @@ INFO = {
 _PB = PushBullet(platform.setting('pushbullet_apikey'))
 
 
-def notices(notes, origin=platform.addonInfo('id'), **dummy_kwargs):
+def notices(notes, origin=platform.addonInfo('id'), identifier=None, **kwargs):
     """Push a comulative note to the pushbullet account"""
     # (fixme) do not call if apikey is none or invalid
     # (fixme) add pushbullet_email as non configurable setting and clear it if auth fails
     # (fixme) add a 'device' identifier to the origin, such as Kodi@Home, to be configured in settings
-    _PB.pushNote(None, origin, '\n'.join(notes))
+    body = '\n'.join(notes)
+    if body:
+        _PB.pushNote(origin, body, iden=identifier, **kwargs)
+    elif identifier:
+        _PB.deletePush(identifier[0])
+
+
+class PushBulletEvents(object):
+    def __init__(self, on_push, on_push_dismissed, on_push_delete):
+        self.on_push = on_push
+        self.on_push_dismissed = on_push_dismissed
+        self.on_push_delete = on_push_delete
+
+    def handler(self, event_value, event_type):
+        if event_type == 'opened':
+            log.notice('{m}.{f}: connected to the pushbullet websocket for real time events (%s)', repr(event_value))
+
+        elif event_type == 'closed':
+            code, reason = event_value
+            log.notice('{m}.{f}: pushbullet websocket closed [code:%s, reason:%s]', code, reason)
+
+        elif event_type == 'pushes':
+            for push in event_value:
+                log.debug('{m}.{f}: new/upd push: %s', push)
+                if not push['active']:
+                    self.on_push_delete(push)
+                elif push['dismissed']:
+                    self.on_push_dismissed(push)
+                else:
+                    self.on_push(push)
+
+        else:
+            log.notice('{m}.{f}: event %s not filtered: %s', event_type, event_value)
+
+
+def events(start=False, on_push=lambda p: True, on_push_dismissed=lambda p: True, on_push_delete=lambda p: True):
+    """Start or stop the reading of the real time events stream"""
+    if not start:
+        _PB.events(None)
+    else:
+        return _PB.events(PushBulletEvents(on_push, on_push_dismissed, on_push_delete).handler,
+                          ['opened', 'pushes', 'closed'])

@@ -19,32 +19,67 @@
 
 
 import json
+import urllib
+import urlparse
 
 from g2.libraries import log
 from g2.libraries import client
+from .ws4py.client.threadedclient import WebSocketClient
 
 
-_HOST = "https://api.pushbullet.com/v2"
+_log_debug = True
 
 
-class PushBullet():
-    def __init__(self, apiKey):
-        self.apiKey = apiKey
+_HOST = "https://api.pushbullet.com/v2/"
+_WSS_REALTIME_EVENTS_STREAM = "wss://stream.pushbullet.com/websocket/"
 
-    def _request(self, method, url, postdata=None, params=None, files=None):
+
+class PushBulletEvents(WebSocketClient):
+    def __init__(self, callback, *args, **kwargs):
+        WebSocketClient.__init__(self, *args, **kwargs)
+        self.callback = callback
+
+    def opened(self):
+        self.callback(self.bind_addr, 'opened')
+
+    def closed(self, code, reason=None):
+        self.callback((code, reason), 'closed')
+
+    def received_message(self, message):
+        try:
+            self.callback(json.loads(str(message)), 'message')
+        except Exception:
+            self.callback(message, 'error')
+
+
+class PushBullet:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.wss = None
+        # (fixme) this should be saved/restored to/from a stable storage indexed by api_key
+        self.modified = 0
+        self.evfilter = []
+        self.callback = None
+
+    def _request(self, method, path, postdata=None):
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
             "User-Agent": "pyPushBullet",
-            "Access-Token": self.apiKey,
+            "Access-Token": self.api_key,
         }
 
         if postdata:
-            postdata = json.dumps(postdata)
+            if method == 'GET':
+                path += '?' + urllib.urlencode(postdata)
+                postdata = None
+            else:
+                postdata = json.dumps(postdata)
 
-        log.debug('PushBullet: %s, %s, %s, %s, %s', method, url, postdata, params, files)
+        url = urlparse.urljoin(_HOST, path)
+        log.debug('{m}.{f}: %s %s POST=%s', method, url, postdata)
 
-        result = client.request(url, post=postdata, headers=headers, debug=True)
+        result = client.request(url, method=method, post=postdata, headers=headers, debug=False)
 
         return None if not result else json.loads(result)
 
@@ -57,11 +92,11 @@ class PushBullet():
             type -- stream, thats all there is currently
 
         """
-
-        data = {"nickname": device_name,
-                "type": "stream"
-                }
-        return self._request("POST", _HOST + "/devices", data)
+        data = {
+            "nickname": device_name,
+            "type": "stream",
+        }
+        return self._request("POST", "devices", data)
 
     def getDevices(self):
         """ Get devices
@@ -69,8 +104,7 @@ class PushBullet():
 
             Get a list of devices, and data about them.
         """
-
-        return self._request("GET", _HOST + "/devices")["devices"]
+        return self._request("GET", "devices")["devices"]
 
     def deleteDevice(self, device_iden):
         """ Delete a device
@@ -79,10 +113,9 @@ class PushBullet():
             Arguments:
             device_iden -- iden of device to push to
         """
+        return self._request("DELETE", "devices/"+device_iden)
 
-        return self._request("DELETE", _HOST + "/devices/" + device_iden)
-
-    def pushNote(self, recipient, title, body, recipient_type="device_iden"):
+    def pushNote(self, title, body, **kwargs):
         """ Push a note
             https://docs.pushbullet.com/v2/pushes
 
@@ -92,17 +125,14 @@ class PushBullet():
             body -- the body of the note
             recipient_type -- a type of recipient (device, email, channel or client)
         """
+        data = {
+            "type": "note",
+            "title": title,
+            "body": body,
+        }
+        return self._push(data, **kwargs)
 
-        data = {"type": "note",
-                "title": title,
-                "body": body}
-
-        if recipient:
-            data[recipient_type] = recipient
-
-        return self._request("POST", _HOST + "/pushes", data)
-
-    def pushAddress(self, recipient, name, address, recipient_type="device_iden"):
+    def pushAddress(self, name, address, **kwargs):
         """ Push an address
             https://docs.pushbullet.com/v2/pushes
 
@@ -112,16 +142,14 @@ class PushBullet():
             address -- address of the address
             recipient_type -- a type of recipient (device, email, channel or client)
         """
+        data = {
+            "type": "address",
+            "name": name,
+            "address": address,
+        }
+        return self._push(data, **kwargs)
 
-        data = {"type": "address",
-                "name": name,
-                "address": address}
-				
-        data[recipient_type] = recipient
-				
-        return self._request("POST", _HOST + "/pushes", data)
-
-    def pushList(self, recipient, title, items, recipient_type="device_iden"):
+    def pushList(self, title, items, **kwargs):
         """ Push a list
             https://docs.pushbullet.com/v2/pushes
 
@@ -131,16 +159,14 @@ class PushBullet():
             items -- a list of items
             recipient_type -- a type of recipient (device, email, channel or client)
         """
+        data = {
+            "type": "list",
+            "title": title,
+            "items": items,
+        }
+        return self._push(data, **kwargs)
 
-        data = {"type": "list",
-                "title": title,
-                "items": items}
-				
-        data[recipient_type] = recipient
-
-        return self._request("POST", _HOST + "/pushes", data)
-
-    def pushLink(self, recipient, title, url, recipient_type="device_iden"):
+    def pushLink(self, title, url, **kwargs):
         """ Push a link
             https://docs.pushbullet.com/v2/pushes
 
@@ -150,14 +176,29 @@ class PushBullet():
             url -- link url
             recipient_type -- a type of recipient (device, email, channel or client)
         """
+        data = {
+            "type": "link",
+            "title": title,
+            "url": url,
+        }
+        return self._push(data, **kwargs)
 
-        data = {"type": "link",
-                "title": title,
-                "url": url}
-				
-        data[recipient_type] = recipient
-				
-        return self._request("POST", _HOST + "/pushes", data)
+    def _push(self, data, iden=None, guid=None, recipient=None, recipient_type='device_iden'):
+        log.debug('{m}.{f}: %s iden=%s, guid=%s', data, iden, guid)
+        if guid:
+            data.update({
+                'guid': guid,
+            })
+        if recipient:
+            data.update({
+                recipient_type: recipient,
+            })
+        push = self._request("POST", "pushes", data)
+        if push:
+            self._update_modified([push])
+            if type(iden) == list:
+                iden[0:] = [push['iden']]
+        return push
 
     # def pushFile(self, recipient, file_name, body, file, file_type=None, recipient_type="device_iden"):
     #     """ Push a file
@@ -196,7 +237,7 @@ class PushBullet():
     #             "file_type": file_type}
 
     #     upload_request = self._request("GET",
-    #                                    _HOST + "/upload-request",
+    #                                    "upload-request",
     #                                    None,
     #                                    data)
 
@@ -215,9 +256,9 @@ class PushBullet():
 				
     #     data[recipient_type] = recipient
 
-    #     return self._request("POST", _HOST + "/pushes", data)
+    #     return self._request("POST", "pushes", data)
 
-    def getPushHistory(self, modified_after=0, cursor=None):
+    def getPushHistory(self, modified_after=0, cursor=None, active=True):
         """ Get Push History
             https://docs.pushbullet.com/v2/pushes
 
@@ -227,10 +268,24 @@ class PushBullet():
             modified_after -- Request pushes modified after this timestamp
             cursor -- Request another page of pushes (if necessary)
         """
-        data = {"modified_after": modified_after}
+        data = {
+            # NOTE: used repr as otherwise the float str() method limits
+            # the precision to 12 decimal digits only (vs. 16)
+            "modified_after": repr(modified_after),
+            'active': repr(active).lower(),
+        }
         if cursor:
-            data["cursor"] = cursor
-        return self._request("GET", _HOST + "/pushes", None, data)["pushes"]
+            data.update({
+                "cursor": cursor,
+            })
+
+        pushes = self._request("GET", "pushes", data)
+        self._update_modified(pushes['pushes'])
+        return pushes
+
+    def _update_modified(self, pushes):
+        self.modified = max([self.modified] + [p['modified'] for p in pushes])
+        log.debug('{m}.{f}: modified time updated to %s', self.modified)
 
     def deletePush(self, push_iden):
         """ Delete push
@@ -239,7 +294,7 @@ class PushBullet():
             Arguments:
             push_iden -- the iden of the push to delete
         """
-        return self._request("DELETE", _HOST + "/pushes/" + push_iden)
+        return self._request("DELETE", "pushes/" + push_iden)
 
     def getContacts(self):
         """ Gets your contacts
@@ -247,7 +302,7 @@ class PushBullet():
 
             returns a list of contacts
         """
-        return self._request("GET", _HOST + "/contacts")["contacts"]
+        return self._request("GET", "contacts")["contacts"]
 
     def deleteContact(self, contact_iden):
         """ Delete a contact
@@ -256,48 +311,72 @@ class PushBullet():
             Arguments:
             contact_iden -- the iden of the contact to delete
         """
-        return self._request("DELETE", _HOST + "/contacts/" + contact_iden)
+        return self._request("DELETE", "contacts/" + contact_iden)
 
     def getUser(self):
         """ Get this users information
             https://docs.pushbullet.com/v2/users
         """
-        return self._request("GET", _HOST + "/users/me")
+        return self._request("GET", "users/me")
 
-    def dismissEphemeral(self, notification_id, notification_tag, package_name, source_user_iden):
-        """ Marks an ephemeral notification as dismissed
-            https://docs.pushbullet.com/v2/pushes
+    def events(self, callback=None, evfilter=None):
+        if callback is None:
+            if self.wss:
+                log.debug('{m}.{f}: closing web socket %s...', self.wss.bind_addr)
+                self.wss.close(immediate=True)
+                self.wss = None
+            return None
+        else:
+            self.callback = callback
+            self.evfilter = set() if not evfilter else set(evfilter)
+            self.wss = PushBulletEvents(self._event_handler, _WSS_REALTIME_EVENTS_STREAM + self.api_key)
+            self.wss.connect()
+            return self.wss._th
 
-            Arguments:
-            notification_id -- the id of the notification to dismiss
-            notification_tag -- the tag of the notification
-            package_name -- the name of the package that made the notification
-            source_user_iden -- the identifier for the user that made the notification
-        """
-        data = {"push": {"notification_id": notification_id,
-                         "notification_tag": notification_tag,
-                         "package_name": package_name,
-                         "source_user_iden": source_user_iden,
-                         "type": "dismissal"},
-                "type": "push"}
+    def __del__(self):
+        self.events(None)
 
-        return self._request("POST", _HOST + "/ephemerals", data)
+    def _event_handler(self, event_value, event_type):
+        log.debug('{m}.{f}: %s: %s', event_value, event_type)
 
-    # def realtime(self, callback):
-    #     """ Opens a Realtime Event Stream
-    #         https://docs.pushbullet.com/stream
+        if event_type != 'message':
+            if self._event_filter([event_type]):
+                self.callback(event_value, event_type)
+            if event_type != 'opened':
+                return
+            event_value = {
+                'type': 'tickle',
+                'subtype': 'push',
+            }
 
-    #         callback will be called with one argument, the JSON response
-    #         from the server, nop messages are filtered.
+        message_type = event_value.get('type')
+        if message_type == 'tickle' and event_value.get('subtype') == 'push':
+            if not self._event_filter(['pushes']):
+                return
 
-    #         Arguments:
-    #         callback -- The function to call on activity
-    #     """
+            cursor = None
+            modified = self.modified
+            while True:
+                log.debug('{m}.{f}: fetching pushes since %s [%s]', modified, cursor)
+                pushes = self.getPushHistory(modified, cursor, active=False)
+                log.debug('{m}.{f}: got %d pushes', len(pushes['pushes']))
+                # NOTE: this is not perfectly compliant to the API since other active pushes
+                # might be returned in the following pages, but it optimize the pull in case
+                # no older push is left around. Need to be double checked with pushbullet!!!
+                # BTW, wondering when they purge the db of deleted/dismissed pushes?!?
+                # if not len(pushes['pushes']):
+                #     break
+                self.callback(pushes['pushes'], 'pushes')
+                if 'cursor' in pushes:
+                    cursor = pushes['cursor']
+                else:
+                    break
+            return
 
-    #     url = "wss://stream.pushbullet.com/websocket/" + self.apiKey
-    #     ws = create_connection(url)
-    #     while 1:
-    #         data = ws.recv()
-    #         data = json.loads(data)
-    #         if data["type"] != "nop":
-    #             callback(data)
+        if message_type == 'nop':
+            if self._event_filter(['nop']):
+                self.callback(event_value, 'nop')
+            return
+
+    def _event_filter(self, events):
+        return '*' in self.evfilter or set(events) & self.evfilter

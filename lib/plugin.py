@@ -66,7 +66,13 @@ elif PARAMS['action'] == 'service.thread':
     from g2.actions.lib import downloader
     service.monitor('downloader', 'property', workers.Thread, downloader.worker)
 
-    service.monitor('playing', 'player', platform.execute, 'RunPlugin(%s?action=notify.playingtitle)'%sys.argv[0])
+    service.monitor('playing', 'player', platform.execute, 'RunPlugin(%s?action=player.notify)'%sys.argv[0])
+
+    from g2.notifiers import pb
+    from g2.actions import player
+    # (fixme) add on_push=search_title_to_play...
+    service.monitor('notifiers.pb.events', 'service', pb.events,
+                    init_arg_name='start', on_push_delete=player.stop)
 
 for arg, defvalue in ARGS_DEFAULT.iteritems():
     if arg not in PARAMS:
@@ -76,6 +82,6 @@ if not PARAMS['action']:
     PARAMS['action'] = 'top.menu'
 
 log.notice('Thread ID:%s, ACTION:%s, QUERY:%s, IMDB:%s, URL:%s',
-    sys.argv[1], PARAMS['action'], PARAMS['query'], PARAMS['imdb'], PARAMS['url'])
+           sys.argv[1], PARAMS['action'], PARAMS['query'], PARAMS['imdb'], PARAMS['url'])
 
 actions.execute(PARAMS['action'], PARAMS)

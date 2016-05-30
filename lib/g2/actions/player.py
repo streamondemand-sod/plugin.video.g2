@@ -26,28 +26,36 @@ import xbmc
 
 from g2.libraries import log
 from g2.libraries import platform
+from g2.libraries.language import _
 from g2.dbs import tmdb
 from g2 import notifiers
 
 
 _log_debug = True
+
+
 _PLAYER = xbmc.Player()
 
 
-def playingtitle(action, **kwargs):
-    what = 'Stopped'
-    title = ''
-    url = ''
+def stop(push):
+    log.debug('{m}.{f}: push=%s', push)
+    if platform.property('playingtitle') == push['iden']:
+        _PLAYER.stop()
+        notifiers.notices(_('Forced player stop'))
+
+
+def notify(action, **dummy_kwargs):
     if not _PLAYER.isPlaying():
-        pass
+        notice_id = platform.property('playingtitle')
+        log.debug('{m}.{f}: deleting notice_id=%s...', notice_id)
+        if notice_id:
+            notifiers.notices([], targets='remote', identifier=[notice_id])
+            platform.property('playingtitle', '')
 
-    elif _PLAYER.isPlayingAudio():
-        what = 'Started'
-        title = ' audio'
+    elif not _PLAYER.isPlayingVideo():
+        return
 
-    elif _PLAYER.isPlayingVideo():
-        what = 'Started'
-
+    else:
         title = xbmc.getInfoLabel('VideoPlayer.Title')
         year = xbmc.getInfoLabel('VideoPlayer.Year')
 
@@ -74,16 +82,15 @@ def playingtitle(action, **kwargs):
 
         title = title + ('' if not year else ' (%s)'%year) + ('' if not mpaa or mpaa == '0' else ' [%s]'%mpaa)
         if not title:
-            title = ' ???'
-        else:
-            title = ' ' + title
-        if not imdb:
-            url = ''
-        else:
-            url = ' -- http://www.imdb.com/title/' + imdb
+            title = '???'
+        url = '' if not imdb else 'http://www.imdb.com/title/' + imdb
 
-    # (fixme) [local]
-    notifiers.notices('%s playing%s%s'%(what, title, url), targets='remote')
+        notice_id = []
+        notifiers.notices(' '.join([_('Playing'), title, url]), targets='remote', identifier=notice_id)
+
+        log.debug('{m}.{f}: created notice_id=%s', notice_id)
+        if len(notice_id):
+            platform.property('playingtitle', notice_id[0])
 
 
 def _fetch_db_meta(imdb, title, year):
