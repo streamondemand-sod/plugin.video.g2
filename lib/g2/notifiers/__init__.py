@@ -32,13 +32,13 @@ from g2.libraries import platform
 
 
 def info():
-    def notifiers_info(package, module, m, paths):
-        if not hasattr(m, 'INFO'):
+    def notifiers_info(dummy_package, dummy_module, mod, paths):
+        if not hasattr(mod, 'INFO'):
             return []
-        if callable(m.INFO):
-            nfo = m.INFO(paths)
+        if callable(mod.INFO):
+            nfo = mod.INFO(paths)
         else:
-            nfo = m.INFO
+            nfo = mod.INFO
         return [dict(nfo)]
 
     return g2.info('notifiers', notifiers_info)
@@ -57,4 +57,4 @@ def notices(notes, targets=None, **kwargs):
                 with g2.Context('notifiers', notifier['module'], [], []) as mod:
                     mod.notices(notes, **kwargs)
         except Exception as ex:
-            log.error('notifiers.%s.notices(): %s'%(notifier['name'], ex))
+            log.error('notifiers.%s.notices: %s', notifier['name'], ex)
