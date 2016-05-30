@@ -39,6 +39,13 @@ try:
 except Exception:
     _THREAD_ID = -1
 
+_LEVEL_NAME = {
+    xbmc.LOGDEBUG: 'debug',
+    xbmc.LOGINFO: 'info',
+    xbmc.LOGNOTICE: 'notice',
+    xbmc.LOGERROR: 'error',
+}
+
 
 def debug(msg, *args, **kwargs):
     return _log(msg, xbmc.LOGDEBUG, *args, **kwargs)
@@ -70,8 +77,6 @@ def _log(msg, level, *args, **kwargs):
                 msg = msg.format(**_fetch_ids())
             except Exception:
                 xbmc.log('log("%s"): _fetch_ids=%s: %s'%(msg, _fetch_ids(), traceback.format_exc()), xbmc.LOGNOTICE)
-        if len(kwargs):
-            msg = msg.format(**kwargs)
         if len(args):
             msg = msg % args
         if isinstance(msg, unicode):
@@ -79,8 +84,8 @@ def _log(msg, level, *args, **kwargs):
         xbmc.log('%s[%s%s] %s'%(level_info, _ADDON_ID, ('' if _THREAD_ID < 0 else ':%d'%_THREAD_ID), msg), level)
     except Exception:
         try:
-            msg = 'Logging Failure'
-            xbmc.log('%s: %s'%(msg, traceback.format_exc()), xbmc.LOGNOTICE)
+            xbmc.log('log.%s("%s", %s, %s): %s'%(_LEVEL_NAME.get(level), msg, args, kwargs, traceback.format_exc()),
+                     xbmc.LOGNOTICE)
         except Exception:
             pass
     try:
@@ -100,14 +105,15 @@ def _check_for_debug(level, attribute=_debug_attribute):
 
 def _fetch_ids():
     ids = {}
+    stack = None
     try:
         stack = inspect.stack()
         if len(stack) <= 3:
             raise Exception()
         module = stack[3][1]
         ids.update({
-            'm': os.path.basename(os.path.dirname(module)) if module.endswith('__init__.py')
-                    else os.path.splitext(os.path.basename(module))[0],
+            'm': os.path.basename(os.path.dirname(module)) if module.endswith('__init__.py') else
+                 os.path.splitext(os.path.basename(module))[0],
             'f': stack[3][3],
         })
     except Exception:
