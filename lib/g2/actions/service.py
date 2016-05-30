@@ -19,9 +19,12 @@
 """
 
 
+import threading
+
 import xbmc
 
 from g2.libraries import log
+from g2.libraries import workers
 from g2.libraries import platform
 from g2 import notifiers
 
@@ -45,7 +48,7 @@ _MONITOR = Monitor()
 
 
 def monitor(monitorid, kind, callback, *args, **kwargs):
-    if kind not in ['setting', 'property', 'player']:
+    if kind not in ['setting', 'property', 'player', 'service']:
         log.error('{m}.{f}(%s): monitor object %s not implemented!', monitorid, kind)
         return
 
@@ -64,6 +67,12 @@ def monitor(monitorid, kind, callback, *args, **kwargs):
         'thread_status': None,
     }
 
+    if kind == 'service':
+        _MONITOR_OBJECTS[monitorid].update({
+            'init_arg_name': kwargs.get('init_arg_name')
+        })
+        del _MONITOR_OBJECTS[monitorid]['kwargs']['init_arg_name']
+
     log.debug('{m}.{f}(%s): %s', monitorid, _MONITOR_OBJECTS[monitorid])
 
 
@@ -74,13 +83,31 @@ def _get_objectvalue(monitorid, kind):
         return platform.property(monitorid)
     elif kind == 'player':
         return _player_state(monitorid)
+    elif kind == 'service':
+        try:
+            value = platform.property(monitorid) + 1
+        except Exception:
+            value = 1
+        platform.property(monitorid, value)
+        return value
+
+
+def _player_state(monitorid):
+    if monitorid == 'playing':
+        return None if not _PLAYER.isPlaying() else \
+               'audio' if _PLAYER.isPlayingAudio() else \
+               'video' if _PLAYER.isPlayingVideo() else None
+
+    return None
 
 
 def _check_changes(kind):
-    for moid in [mi for mi, mo in _MONITOR_OBJECTS.iteritems()
-                 if mo['kind'] == kind and mo['value'] != _get_objectvalue(mi, kind)]:
+    for moid in [mi for mi, mo in _MONITOR_OBJECTS.iteritems() if mo['kind'] == kind]:
         mobj = _MONITOR_OBJECTS[moid]
         new_value = _get_objectvalue(moid, kind)
+        if mobj['value'] == new_value:
+            continue
+        
         log.debug('service[{t}]: monitored object %s %s changed: %s -> %s',
                   moid, mobj['kind'], mobj['value'], new_value)
         mobj['value'] = new_value
@@ -91,23 +118,29 @@ def _check_changes(kind):
         else:
             if moid in mobj['kwargs']:
                 mobj['kwargs'][moid] = new_value
+            if mobj['kind'] == 'service':
+                if mobj['init_arg_name']:
+                    mobj['kwargs'][mobj['init_arg_name']] = True
+                else:
+                    mobj['args'] = (True,) + mobj['args'][1:]
             thd = mobj['callback'](*mobj['args'], **mobj['kwargs'])
             # For service threads to be started, the new value should evaluate True
-            if thd and new_value:
+            if isinstance(thd, threading.Thread) and new_value:
+                workers.promote(thd)
                 _service_thread_start(moid, thd)
 
 
 _THREADS = {}
 
 
-def _service_thread_start(monitorid, thread):
-    log.notice('service[{t}]: %s thread starting...', monitorid)
-    _MONITOR_OBJECTS[monitorid]['thread'] = thread
+def _service_thread_start(monitorid, thd):
+    _MONITOR_OBJECTS[monitorid]['thread'] = thd
     _MONITOR_OBJECTS[monitorid]['thread_status'] = None
-    _THREADS[monitorid] = thread
-    thread.name = monitorid
-    log.debug('service[{t}]: %s thread: %s', monitorid, thread)
-    thread.start()
+    _THREADS[monitorid] = thd
+    thd.name = monitorid
+    if type(_MONITOR_OBJECTS[monitorid]['callback']) == type:
+        log.notice('service[{t}]: %s thread starting...', monitorid)
+        thd.start()
 
 
 def _service_thread_status(monitorid):
@@ -123,6 +156,13 @@ def _service_thread_shutdown(monitorid):
     if not _THREADS[monitorid].die:
         log.notice('service[{t}]: %s thread shutting down...', monitorid)
     _THREADS[monitorid].die = True
+    mobj = _MONITOR_OBJECTS[monitorid]
+    if mobj['kind'] == 'service':
+        if mobj['init_arg_name']:
+            mobj['kwargs'][mobj['init_arg_name']] = False
+        else:
+            mobj['args'] = (False,) + mobj['args'][1:]
+        mobj['callback'](*mobj['args'], **mobj['kwargs'])
 
 
 def _service_thread_cleanup(monitorid):
@@ -135,15 +175,6 @@ def _service_thread_cleanup(monitorid):
         platform.property(monitorid, False)
 
 
-def _player_state(monitorid):
-    if monitorid == 'playing':
-        return None if not _PLAYER.isPlaying() else \
-               'audio' if _PLAYER.isPlayingAudio() else \
-               'video' if _PLAYER.isPlayingVideo() else None
-
-    return None
-
-
 def thread(name=None, **dummy_kwargs):
     log.notice('service thread[%s] started ({t})', name)
 
@@ -151,6 +182,7 @@ def thread(name=None, **dummy_kwargs):
         for mobj in _MONITOR_OBJECTS.itervalues():
             log.notice('service[%s]: monitored %s %s', name, mobj['id'], mobj['kind'])
 
+        _check_changes('service')
         while not ui.abortRequested() and platform.property('service', name=name):
             _check_changes('property')
             _check_changes('player')
@@ -170,7 +202,7 @@ def thread(name=None, **dummy_kwargs):
 
             ui.sleep(1000)
 
-        for secs in range(5):
+        for dummy_secs in range(5):
             alive_threads = [t for t in _THREADS.values() if t.is_alive()]
             if not alive_threads:
                 break
@@ -178,7 +210,7 @@ def thread(name=None, **dummy_kwargs):
                 _service_thread_shutdown(thd.name)
             ui.sleep(1000)
     except Exception as ex:
-        log.error('service[%s]: %s', name, ex)
+        log.error('service[%s]: %s', name, ex, trace=True)
 
     log.notice('service thread[%s] stopped ({t})', name)
 
