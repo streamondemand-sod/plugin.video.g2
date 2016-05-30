@@ -26,15 +26,22 @@ import HTMLParser
 
 from g2.libraries import log
 
+
 _log_debug = False
+
 
 class HeadRequest(urllib2.Request):
     def get_method(self):
         return "HEAD"
 
 
+class DeleteRequest(urllib2.Request):
+    def get_method(self):
+        return "DELETE"
+
+
 # TODO[code]: replace with the urlresolver net.py module!!!
-def request(url, head=False, close=True, error=False, proxy=None, post=None, headers=None, mobile=False, safe=False, referer=None, cookie=None, output='', timeout='30', debug=False):
+def request(url, method=None, close=True, error=False, proxy=None, post=None, headers=None, mobile=False, safe=False, referer=None, cookie=None, output='', timeout='30', debug=False):
     global _log_debug
     _log_debug = debug
     try:
@@ -51,18 +58,22 @@ def request(url, head=False, close=True, error=False, proxy=None, post=None, hea
             opener = urllib2.build_opener(*handlers)
             opener = urllib2.install_opener(opener)
         try:
-            if sys.version_info < (2, 7, 9): raise Exception()
-            import ssl; ssl_context = ssl.create_default_context()
+            if sys.version_info < (2, 7, 9):
+                raise Exception()
+            import ssl
+            ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
             handlers += [urllib2.HTTPSHandler(context=ssl_context)]
             opener = urllib2.build_opener(*handlers)
             opener = urllib2.install_opener(opener)
-        except:
+        except Exception:
             pass
 
-        try: headers.update(headers)
-        except: headers = {}
+        try:
+            headers.update(headers)
+        except Exception:
+            headers = {}
         if 'User-Agent' in headers:
             pass
         elif not mobile == True:
@@ -84,11 +95,13 @@ def request(url, head=False, close=True, error=False, proxy=None, post=None, hea
 
         log.debug("client.request:url: %s"%url)
         log.debug("client.request:post: %s"%post)
-        for h in headers:
-            log.debug("client.request:headers: %s=%s"%(h,headers[h]))
-
-        if head:
+        for hdr in headers:
+            log.debug("client.request:headers: %s=%s"%(hdr, headers[hdr]))
+        
+        if method == 'HEAD':
             request = HeadRequest(url, headers=headers)
+        elif method == 'DELETE':
+            request = DeleteRequest(url, headers=headers)
         else:
             request = urllib2.Request(url, data=post, headers=headers)
 
@@ -99,29 +112,30 @@ def request(url, head=False, close=True, error=False, proxy=None, post=None, hea
             response = urllib2.urlopen(request, timeout=int(timeout))
         except urllib2.HTTPError as response:
             requesterr = True
-            if error == 'raise': raise response
+            if error == 'raise':
+                raise response
 
         if response:
             log.debug("client.request:response: %s"%str(response))
-            for h in response.headers:
-                log.debug("client.request:response-headers: %s=%s"%(h, response.headers[h]))
+            for hdr in response.headers:
+                log.debug("client.request:response-headers: %s=%s"%(hdr, response.headers[hdr]))
         if output == 'cookie' or not close == True or type(cookie) == list:
-            for c in cookies:
-                log.debug("client.request:response-cookie: %s=%s"%(c.name, c.value))
+            for cke in cookies:
+                log.debug("client.request:response-cookie: %s=%s"%(cke.name, cke.value))
 
-        if requesterr and error == False: return None
+        if requesterr and error == False:
+            return None
 
         if type(cookie) == list:
-            for c in cookies: 
-                cookie.append('%s=%s' % (c.name, c.value))
+            for cke in cookies: 
+                cookie.append('%s=%s' % (cke.name, cke.value))
 
-        if head:
-            result = response
-        elif not close:
+        if not close:
             result = response
         elif output == 'cookie':
             result = []
-            for c in cookies: result.append('%s=%s' % (c.name, c.value))
+            for cke in cookies:
+                result.append('%s=%s' % (cke.name, cke.value))
             result = "; ".join(result)
         elif output == 'response':
             if safe == True:
@@ -145,13 +159,10 @@ def request(url, head=False, close=True, error=False, proxy=None, post=None, hea
         log.debug('client.request:result(%s):\n%s'%(output, repr(result)))
 
         return result
-    except:
-        if requesterr and error == 'raise': raise response
+    except Exception:
+        if requesterr and error == 'raise':
+            raise response
         return None
-
-
-def source(url, close=True, error=False, proxy=None, post=None, headers=None, mobile=False, safe=False, referer=None, cookie=None, output='', timeout='30'):
-    return request(url, close, error, proxy, post, headers, mobile, safe, referer, cookie, output, timeout)
 
 
 def parseDOM(html, name=u"", attrs={}, ret=False, noattrs=True):
