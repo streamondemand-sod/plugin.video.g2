@@ -31,30 +31,41 @@ Lock = threading.Lock
 current_thread = threading.current_thread
 
 
+class WouldBlockError(Exception):
+    pass
+
+
 class Thread(threading.Thread):
     def __init__(self, target, *args, **kwargs):
-        threading.Thread.__init__(self)
-        self.target = target
-        self.args = args
-        self.kwargs = kwargs
+        if target is not None:
+            threading.Thread.__init__(self, target=target, args=args, kwargs=kwargs)
         self.started = None
         self.stopped = None
         self.exc = None
         self.result = None
         self.die = False
-        self.daemon = True # Let's not block kodi in case a thread runaway
+        if not self.is_alive():
+            self.daemon = True # Let's not block kodi in case a thread runaway
+
+    def init(self):
+        self.__init__(None)
 
     def run(self):
         try:
             self.started = datetime.datetime.now()
             log.debug('Thread.run(%s): started at %s'%(self.name, self.started))
-            self.result = self.target(*self.args, **self.kwargs)
-        except:
-            import traceback
-            log.notice('Thread.run(%s): %s'%(self.name, traceback.format_exc()))
+            if self.__target:
+                self.result = self.__target(*self.__args, **self.__kwargs)
+            # self.result = self.target(*self.args, **self.kwargs)
+        except Exception as ex:
+            log.notice('Thread.run(%s): %s', self.name, ex, trace=True)
         finally:
+            # Avoid a refcycle if the thread is running a function with
+            # an argument that has a member that points to the thread.
+            del self.__target, self.__args, self.__kwargs
             self.stopped = datetime.datetime.now()
-            log.debug('Thread.run(%s): elapsed for %.6fs%s'%(self.name, self.elapsed(), '' if not self.die else ' (asked to die)'))
+            log.debug('Thread.run(%s): elapsed for %.6fs%s',
+                      self.name, self.elapsed(), '' if not self.die else ' (asked to die)')
 
     def elapsed(self):
         if not self.started:
@@ -62,6 +73,15 @@ class Thread(threading.Thread):
         else:
             elapsed = (self.stopped if self.stopped else datetime.datetime.now()) - self.started
             return elapsed.days*86400 + elapsed.seconds + float(elapsed.microseconds)/1000000
+
+
+def promote(thread):
+    if not isinstance(thread, threading.Thread):
+        return False
+    if not isinstance(thread, Thread):
+        thread.__class__ = Thread
+        thread.init()
+    return True
 
 
 @contextmanager
