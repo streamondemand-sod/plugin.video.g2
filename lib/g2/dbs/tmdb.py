@@ -21,7 +21,6 @@
 import re
 import json
 import urllib
-import urlparse
 import datetime
 
 from g2.libraries import log
@@ -46,23 +45,23 @@ _max_concurrent_threads = 10
 _tmdb_key = 'f7f51775877e0bb6703520952b3c7840'
 _tmdb_image = 'http://image.tmdb.org/t/p/original'
 _tmdb_poster = 'http://image.tmdb.org/t/p/w500'
-_tmdb_list_genres = 'http://api.themoviedb.org/3/genre/movie/list?api_key=%s&language='+_info_lang
-_tmdb_list_certifications = 'http://api.themoviedb.org/3/certification/movie/list?api_key=%s'
+_tmdb_list_genres = 'http://api.themoviedb.org/3/genre/movie/list?api_key=@API_KEY@&language='+_info_lang
+_tmdb_list_certifications = 'http://api.themoviedb.org/3/certification/movie/list?api_key=@API_KEY@'
 
 _urls = {
-    'movies{title}': 'http://api.themoviedb.org/3/search/movie?api_key=%s&language={info_lang}&include_adult={include_adult}&query={title}',
-    'movies{year}': 'http://api.themoviedb.org/3/discover/movie?api_key=%s&language={info_lang}&include_adult={include_adult}&year={year}',
-    'movies{person_id}': 'http://api.themoviedb.org/3/discover/movie?api_key=%s&language={info_lang}&include_adult={include_adult}&sort_by=primary_release_date.desc&with_people={person_id}',
-    'movies{genre_id}': 'http://api.themoviedb.org/3/discover/movie?api_key=%s&language={info_lang}&include_adult={include_adult}&with_genres={genre_id}',
-    'movies{certification}': 'http://api.themoviedb.org/3/discover/movie?api_key=%s&language={info_lang}&include_adult={include_adult}&certification={certification}&certification_country=US',
-    'movies{title}{year}': 'http://api.themoviedb.org/3/search/movie?api_key=%s&language={info_lang}&query={title}&year={year}&include_adult={include_adult}',
-    'movie_meta{tmdb_id}': 'http://api.themoviedb.org/3/movie/{tmdb_id}?api_key=%s&language={info_lang}&append_to_response=credits,releases',
-    'movie_meta{imdb_id}': 'http://api.themoviedb.org/3/movie/{imdb_id}?api_key=%s&language={info_lang}&append_to_response=credits,releases',
-    'persons{name}': 'http://api.themoviedb.org/3/search/person?api_key=%s&query={name}',
-    'movies_featured{}': 'http://api.themoviedb.org/3/discover/movie?api_key=%s&language={info_lang}&primary_release_date.gte={one_year_ago}&primary_release_date.lte={two_months_ago}&sort_by=primary_release_date.desc',
-    'movies_popular{}': 'http://api.themoviedb.org/3/movie/popular?api_key=%s&language={info_lang}',
-    'movies_toprated{}': 'http://api.themoviedb.org/3/movie/top_rated?api_key=%s&language={info_lang}',
-    'movies_theaters{}': 'http://api.themoviedb.org/3/movie/now_playing?api_key=%s&language={info_lang}',
+    'movies{title}': 'http://api.themoviedb.org/3/search/movie?api_key=@API_KEY@&language={info_lang}&include_adult={include_adult}&query={title}',
+    'movies{year}': 'http://api.themoviedb.org/3/discover/movie?api_key=@API_KEY@&language={info_lang}&include_adult={include_adult}&year={year}',
+    'movies{person_id}': 'http://api.themoviedb.org/3/discover/movie?api_key=@API_KEY@&language={info_lang}&include_adult={include_adult}&sort_by=primary_release_date.desc&with_people={person_id}',
+    'movies{genre_id}': 'http://api.themoviedb.org/3/discover/movie?api_key=@API_KEY@&language={info_lang}&include_adult={include_adult}&with_genres={genre_id}',
+    'movies{certification}': 'http://api.themoviedb.org/3/discover/movie?api_key=@API_KEY@&language={info_lang}&include_adult={include_adult}&certification={certification}&certification_country=US',
+    'movies{title}{year}': 'http://api.themoviedb.org/3/search/movie?api_key=@API_KEY@&language={info_lang}&query={title}&year={year}&include_adult={include_adult}',
+    'movie_meta{tmdb_id}': 'http://api.themoviedb.org/3/movie/{tmdb_id}?api_key=@API_KEY@&language={info_lang}&append_to_response=credits,releases',
+    'movie_meta{imdb_id}': 'http://api.themoviedb.org/3/movie/{imdb_id}?api_key=@API_KEY@&language={info_lang}&append_to_response=credits,releases',
+    'persons{name}': 'http://api.themoviedb.org/3/search/person?api_key=@API_KEY@&query={name}',
+    'movies_featured{}': 'http://api.themoviedb.org/3/discover/movie?api_key=@API_KEY@&language={info_lang}&primary_release_date.gte={one_year_ago}&primary_release_date.lte={two_months_ago}&sort_by=primary_release_date.desc',
+    'movies_popular{}': 'http://api.themoviedb.org/3/movie/popular?api_key=@API_KEY@&language={info_lang}',
+    'movies_toprated{}': 'http://api.themoviedb.org/3/movie/top_rated?api_key=@API_KEY@&language={info_lang}',
+    'movies_theaters{}': 'http://api.themoviedb.org/3/movie/now_playing?api_key=@API_KEY@&language={info_lang}',
 }
 
 
@@ -86,7 +85,7 @@ def url(kind=None, **kwargs):
 
 def movies(url):
     try:
-        result = client.request(url % _tmdb_key)
+        result = client.request(url.replace('@API_KEY@', _tmdb_key, 1))
         result = json.loads(result)
         results = result['results']
         log.debug('tmdb.movies(%s): %s'%(url, results))
@@ -194,7 +193,7 @@ def metas(metas):
 def _meta_worker(meta):
     try:
         url = meta['url']
-        response = client.request(url % _tmdb_key, error=True, output='response', timeout='10')
+        response = client.request(url.replace('@API_KEY@', _tmdb_key, 1), error=True, output='response', timeout='10')
         if 'HTTP Error' in response[0]: raise Exception(response[0])
         result = json.loads(response[1])
         log.debug('tmdb.metas(%s): %s'%(url, result))
@@ -335,7 +334,7 @@ def _meta_worker(meta):
 
 def persons(url):
     try:
-        result = client.request(url % _tmdb_key)
+        result = client.request(url.replace('@API_KEY@', _tmdb_key, 1))
         result = json.loads(result)
         results = result['results']
         log.debug('tmdb.persons(%s): %s'%(url, results))
@@ -387,7 +386,7 @@ def genres():
     try:
         # For some reason, Finnish, Croatians and Norvegians doesn't like the traslated genre names
         url = re.sub('language=(fi|hr|no)', '', _tmdb_list_genres)
-        result = client.request(url % _tmdb_key)
+        result = client.request(url.replace('@API_KEY@', _tmdb_key, 1))
         result = json.loads(result)
         results = result['genres']
         log.debug('tmdb.genres(): %s'%results)
@@ -418,7 +417,7 @@ def genres():
 
 def certifications(country):
     try:
-        result = client.request(_tmdb_list_certifications % _tmdb_key)
+        result = client.request(_tmdb_list_certifications.replace('@API_KEY@', _tmdb_key, 1))
         result = json.loads(result)
         results = result['certifications'][country]
         log.debug('tmdb.certifications(%s): %s'%(country, results))
