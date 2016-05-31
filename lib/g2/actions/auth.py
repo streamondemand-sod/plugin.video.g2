@@ -81,6 +81,7 @@ def pushbullet(action, **kwargs):
         ui.infoDialog(_('Pushbullet disabled'))
         return
 
+    # (fixme) if auth fail, clear the pushbullet_email, otherwise set it to the email address
     pbo = g2.notifiers.pb.PushBullet(platform.setting('pushbullet_apikey'))
     try:
         user = pbo.getUser()
