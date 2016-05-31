@@ -47,14 +47,26 @@ def info():
 def notices(notes, targets=None, **kwargs):
     if isinstance(notes, basestring):
         notes = [notes]
-    # (fixme) [func] review the targets semantic
-    for notifier in [no for no in info().itervalues() if not targets or no['target'] in targets]:
+    _all_modules_method('notices', targets, notes, **kwargs)
+
+
+def events(start, targets=None, **kwargs):
+    if start is None:
+        start = False
+    return _all_modules_method('events', targets, start, **kwargs)
+
+
+def _all_modules_method(method, targets, *args, **kwargs):
+    res = None
+    for module in [m for m in info().itervalues() if method in m['methods'] and (not targets or m['target'] in targets)]:
         try:
-            if 'package' in notifier:
-                with g2.Context('notifiers', notifier['package'], [notifier['module']], notifier['search_paths']) as mod:
-                    mod[0].notices(notes, **kwargs)
+            if 'package' in module:
+                with g2.Context('notifiers', module['package'], [module['module']], module['search_paths']) as mod:
+                    res = getattr(mod[0], method)(*args, **kwargs)
             else:
-                with g2.Context('notifiers', notifier['module'], [], []) as mod:
-                    mod.notices(notes, **kwargs)
+                with g2.Context('notifiers', module['module'], [], []) as mod:
+                    res = getattr(mod, method)(*args, **kwargs)
         except Exception as ex:
-            log.error('notifiers.%s.notices: %s', notifier['name'], ex)
+            log.error('notifiers.%s.%s: %s', module['name'], method, ex)
+
+    return res

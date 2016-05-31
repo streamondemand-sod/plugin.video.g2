@@ -27,7 +27,7 @@ from g2.libraries import client
 from .ws4py.client.threadedclient import WebSocketClient
 
 
-_log_debug = True
+# _log_debug = True
 
 
 _HOST = "https://api.pushbullet.com/v2/"
@@ -56,7 +56,6 @@ class PushBullet:
     def __init__(self, api_key):
         self.api_key = api_key
         self.wss = None
-        # (fixme) this should be saved/restored to/from a stable storage indexed by api_key
         self.modified = 0
         self.evfilter = []
         self.callback = None
@@ -183,7 +182,7 @@ class PushBullet:
         }
         return self._push(data, **kwargs)
 
-    def _push(self, data, iden=None, guid=None, recipient=None, recipient_type='device_iden'):
+    def _push(self, data, iden=None, guid=None, recipient=None, recipient_type='device_iden', url=None):
         log.debug('{m}.{f}: %s iden=%s, guid=%s', data, iden, guid)
         if guid:
             data.update({
@@ -193,6 +192,11 @@ class PushBullet:
             data.update({
                 recipient_type: recipient,
             })
+        if url:
+            data.update({
+                'url': url,
+            })
+
         push = self._request("POST", "pushes", data)
         if push:
             self._update_modified([push])
@@ -319,16 +323,17 @@ class PushBullet:
         """
         return self._request("GET", "users/me")
 
-    def events(self, callback=None, evfilter=None):
+    def events(self, callback=None, evfilter=None, modified=0):
         if callback is None:
             if self.wss:
                 log.debug('{m}.{f}: closing web socket %s...', self.wss.bind_addr)
                 self.wss.close(immediate=True)
                 self.wss = None
-            return None
+            return self.modified
         else:
             self.callback = callback
             self.evfilter = set() if not evfilter else set(evfilter)
+            self.modified = modified
             self.wss = PushBulletEvents(self._event_handler, _WSS_REALTIME_EVENTS_STREAM + self.api_key)
             self.wss.connect()
             return self.wss._th

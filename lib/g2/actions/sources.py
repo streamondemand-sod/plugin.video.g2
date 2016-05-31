@@ -32,15 +32,46 @@ from g2.libraries import log
 from g2.libraries import workers
 from g2.libraries import platform
 from g2.libraries.language import _
+
 from g2 import providers
+from g2 import resolvers
+
 from .lib import ui
 from .lib import downloader
 
 
-_resolver_timeout = 30 # seconds
-
 _addon = sys.argv[0]
 _thread = int(sys.argv[1])
+
+_RESOLVER_TIMEOUT = 30 # seconds
+
+
+
+def url(action, title=None, url=None, **kwargs):
+    try:
+        if not url:
+            return
+
+        ui.busydialog()
+        def ui_cancel():
+            ui.sleep(1000)
+            return not ui.abortRequested()
+        thd = _resolve(None, url, ui_update=ui_cancel)
+        ui.busydialog(stop=True)
+
+        if not thd or thd.is_alive():
+            return
+
+        if not isinstance(thd.result, basestring):
+            ui.infoDialog(_('Not a valid stream'))
+            return
+
+        url = thd.result
+        ui.Player().run(title, None, None, None, None, None, None, url)
+
+    except Exception as ex:
+        log.error('{m}.{f}: %s', ex)
+        ui.infoDialog(_('Not a valid stream'))
 
 
 def usefolderonce(action, **kwargs):
@@ -85,7 +116,7 @@ def dialog(action, title=None, year=None, imdb=None, tvdb=None, meta=None, **kwa
         win = ui.SourcesDialog('SourcesDialog.xml', platform.addonPath, 'Default', '720p',
                                sourcesGenerator=sources_generator,
                                sourcePriority=_source_priority,
-                               sourceResolve=source_resolve,
+                               sourceResolve=_resolve,
                                posterData=posterdata)
 
         # (fixme)[code]: make a ui that is simply called ui.resolvedPlugin()
@@ -96,9 +127,9 @@ def dialog(action, title=None, year=None, imdb=None, tvdb=None, meta=None, **kwa
             win.doModal()
 
             # User-abort
-            if not win.selected:
-                break
             item = win.selected
+            if not item:
+                break
 
             source = item.getLabel()
             url = item.getProperty('url')
@@ -295,7 +326,7 @@ def playitem(action, title=None, year=None, imdb=None, tvdb=None, source=None, *
                 def dialog_progress_update():
                     return not dialog_progress.iscanceled() and not ui.abortRequested()
 
-                thd = source_resolve(source['provider'], source['url'], ui_update=dialog_progress_update)
+                thd = _resolve(source['provider'], source['url'], ui_update=dialog_progress_update)
                 if not thd:
                     break
 
@@ -336,7 +367,7 @@ def download(action, name=None, provider=None, url=None, image=None, **kwargs):
     def ui_cancel():
         ui.sleep(1000)
         return not ui.abortRequested()
-    thd = source_resolve(provider, url, ui_update=ui_cancel)
+    thd = _resolve(provider, url, ui_update=ui_cancel)
     ui.busydialog(stop=True)
 
     if not thd or thd.is_alive():
@@ -455,8 +486,11 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
     return priority
 
 
-def source_resolve(provider, url, ui_update=None):
-    thd = workers.Thread(providers.resolve, provider, url)
+def _resolve(provider, url, ui_update=None):
+    if provider:
+        thd = workers.Thread(providers.resolve, provider, url)
+    else:
+        thd = workers.Thread(resolvers.resolve, url)
     thd.start()
 
     keyboard_opened = False
@@ -465,14 +499,14 @@ def source_resolve(provider, url, ui_update=None):
         key_open = ui.condition('Window.IsActive(virtualkeyboard)')
         if key_open:
             keyboard_opened = True
-        if (i > _resolver_timeout and not key_open) or not thd.is_alive():
+        if (i > _RESOLVER_TIMEOUT and not key_open) or not thd.is_alive():
             break
         if ui_update and not ui_update():
             ui_cancelled = True
             break
         ui.sleep(500)
 
-    for i in range(_resolver_timeout):
+    for i in range(_RESOLVER_TIMEOUT):
         if keyboard_opened or ui_cancelled or not thd.is_alive():
             break
         if ui_update and not ui_update():
@@ -494,14 +528,15 @@ def source_resolve(provider, url, ui_update=None):
         thd.result = None
     else:
         what = 'successfully completed in'
+        rurl = thd.result
         try:
-            urlparsed = urlparse.urlparse(thd.result)
+            urlparsed = urlparse.urlparse(rurl)
             host = '%s://%s/.../%s'%(urlparsed.scheme, urlparsed.netloc, urlparsed.path.split('/')[-1])
         except Exception:
-            host = thd.result
-        extrainfo = ' "'+host+'"'
+            host = rurl
+        extrainfo = '%s"%s"'%('' if not hasattr(rurl, 'resolver') else 'by %s '%rurl.resolver, host)
 
-    log.notice('providers.resolve(%s, %s): %s %.3f secs%s'%(provider, url, what, thd.elapsed(), extrainfo))
+    log.notice('{m}.{f}(%s, %s): %s %.3f secs%s'%(provider, url, what, thd.elapsed(), extrainfo))
 
     # (fixme): [obs] caching and stats
     # - cache successes and failures for 10mins

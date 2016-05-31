@@ -37,13 +37,6 @@ _log_debug = True
 _PLAYER = xbmc.Player()
 
 
-def stop(push):
-    log.debug('{m}.{f}: push=%s', push)
-    if platform.property('player.notice.id') == push['iden']:
-        _PLAYER.stop()
-        notifiers.notices(_('Forced player stop'))
-
-
 def notify(action, **dummy_kwargs):
     if not _PLAYER.isPlaying():
         notice_id = platform.property('player.notice.id')
@@ -86,7 +79,7 @@ def notify(action, **dummy_kwargs):
         url = '' if not imdb else 'http://www.imdb.com/title/' + imdb
 
         notice_id = []
-        notifiers.notices(' '.join([_('Playing'), title, url]), targets='remote', identifier=notice_id)
+        notifiers.notices(_('Playing {title} -- {url}').format(title=title, url=url), targets='remote', identifier=notice_id)
 
         log.debug('{m}.{f}: created notice_id=%s', notice_id)
         if len(notice_id):

@@ -35,7 +35,6 @@ from g2.libraries import log
 from g2.libraries import platform
 from g2 import actions
 
-
 PARAMS = dict(urlparse.parse_qsl(sys.argv[2].replace('?', '')))
 ARGS_DEFAULT = {
     'action': platform.setting('top_menu'),
@@ -68,11 +67,10 @@ elif PARAMS['action'] == 'service.thread':
 
     service.monitor('playing', 'player', platform.execute, 'RunPlugin(%s?action=player.notify)'%sys.argv[0])
 
-    from g2.notifiers import pb
-    from g2.actions import player
-    # (fixme) add on_push=search_title_to_play...
-    service.monitor('notifiers.pb.events', 'service', pb.events,
-                    init_arg_name='start', on_push_delete=player.stop)
+    from g2 import notifiers
+    from g2.actions import push
+    service.monitor('notifiers.events', 'service', notifiers.events,
+                    init_arg_name='start', on_push=push.new, on_push_delete=push.delete)
 
 for arg, defvalue in ARGS_DEFAULT.iteritems():
     if arg not in PARAMS:

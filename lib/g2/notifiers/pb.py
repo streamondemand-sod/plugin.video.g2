@@ -19,7 +19,10 @@
 """
 
 
+import xbmc
+
 from g2.libraries import log
+from g2.libraries import cache
 from g2.libraries import platform
 from g2.notifiers.lib.pushbullet import PushBullet
 
@@ -28,26 +31,27 @@ _log_debug = True
 
 
 INFO = {
+    'methods': ['notices', 'events'],
     'target': 'remote',
 }
 
 _PB = PushBullet(platform.setting('pushbullet_apikey'))
 
+# (fixme) add an enabled() method that returns True only if the auth key has been validated!
+# The enabled method also determine if the INFO should be defined or not.
 
-def notices(notes, origin=platform.addonInfo('id'), identifier=None, **kwargs):
+def notices(notes, origin=xbmc.getInfoLabel('System.FriendlyName'), identifier=None, url=None, **kwargs):
     """Push a comulative note to the pushbullet account"""
-    # (fixme) do not call if apikey is none or invalid
-    # (fixme) add pushbullet_email as non configurable setting and clear it if auth fails
-    # (fixme) add a 'device' identifier to the origin, such as Kodi@Home, to be configured in settings
     body = '\n'.join(notes)
     if body:
-        _PB.pushNote(origin, body, iden=identifier, **kwargs)
+        _PB.pushNote(origin, body, iden=identifier, url=url, **kwargs)
     elif identifier:
         _PB.deletePush(identifier[0])
 
 
 class PushBulletEvents(object):
-    def __init__(self, on_push, on_push_dismissed, on_push_delete):
+    def __init__(self, recipient, on_push, on_push_dismissed, on_push_delete):
+        self.recipient = recipient
         self.on_push = on_push
         self.on_push_dismissed = on_push_dismissed
         self.on_push_delete = on_push_delete
@@ -62,8 +66,10 @@ class PushBulletEvents(object):
 
         elif event_type == 'pushes':
             for push in event_value:
-                log.debug('{m}.{f}: new/upd push: %s', push)
-                if not push['active']:
+                log.debug('{m}.{f}: %s: %s', self.recipient, push)
+                if self.recipient and 'target_device_iden' in push and self.recipient != push['target_device_iden']:
+                    pass # ignore the addressed pushes not directed to us or to everybody
+                elif not push['active']:
                     self.on_push_delete(push)
                 elif push['dismissed']:
                     self.on_push_dismissed(push)
@@ -74,10 +80,38 @@ class PushBulletEvents(object):
             log.notice('{m}.{f}: event %s not filtered: %s', event_type, event_value)
 
 
-def events(start=False, on_push=lambda p: True, on_push_dismissed=lambda p: True, on_push_delete=lambda p: True):
+def _nop(dummy):
+    pass
+
+
+def events(start=False, on_push=_nop, on_push_dismissed=_nop, on_push_delete=_nop):
     """Start or stop the reading of the real time events stream"""
-    if not start:
-        _PB.events(None)
-    else:
-        return _PB.events(PushBulletEvents(on_push, on_push_dismissed, on_push_delete).handler,
-                          ['opened', 'pushes', 'closed'])
+    if start:
+        def pb_last_modified(dummy_apikey):
+            return 0.0
+        modified = cache.get(pb_last_modified, -1, _PB.api_key)
+        log.debug('{m}.{f}: last modified timestamp: %f (restored from cache)', modified)
+
+        try:
+            my_nickname = xbmc.getInfoLabel('System.FriendlyName')
+            my_iden = [d.get('iden') for d in _PB.getDevices() if d.get('nickname') == my_nickname]
+            if my_iden:
+                my_iden = my_iden[0]
+                log.notice('{m}.{f}: found device %s with iden %s', my_nickname, my_iden)
+            else:
+                my_iden = _PB.addDevice(my_nickname)['iden']
+                log.notice('{m}.{f}: created new device %s with iden %s', my_nickname, my_iden)
+        except Exception as ex:
+            my_iden = None
+            log.error('{m}.{f}: failed to create a new device: %s', ex)
+
+        return _PB.events(PushBulletEvents(my_iden, on_push, on_push_dismissed, on_push_delete).handler,
+                          ['opened', 'pushes', 'closed'], modified=modified)
+
+    try:
+        def pb_last_modified(dummy_apikey):
+            return _PB.events(None)
+        modified = cache.get(pb_last_modified, 0, _PB.api_key)
+        log.debug('{m}.{f}: last modified timestamp: %f (saved to cache)', modified)
+    except Exception as ex:
+        log.notice('{m}.{f}: %s', ex)
