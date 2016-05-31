@@ -50,9 +50,8 @@ def addDownload(name, url, image):
     if name in [i['name'] for i in result]:
         return False
 
-    if hasattr(url, 'meta'):
-        # If the stream type is kwnon, used it as file suffix
-        ext = url.meta.get('type')
+    # If the stream type is kwnon, use it as file suffix
+    ext = None if not hasattr(url, 'meta') else url.meta.get('type')
     if not ext:
         # Otherwise derive the suffix from the path component of the url
         ext = os.path.splitext(urlparse.urlparse(url).path)[1][1:].lower()
