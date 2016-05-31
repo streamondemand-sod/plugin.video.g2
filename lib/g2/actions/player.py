@@ -39,18 +39,18 @@ _PLAYER = xbmc.Player()
 
 def stop(push):
     log.debug('{m}.{f}: push=%s', push)
-    if platform.property('playingtitle') == push['iden']:
+    if platform.property('player.notice.id') == push['iden']:
         _PLAYER.stop()
         notifiers.notices(_('Forced player stop'))
 
 
 def notify(action, **dummy_kwargs):
     if not _PLAYER.isPlaying():
-        notice_id = platform.property('playingtitle')
+        notice_id = platform.property('player.notice.id')
         log.debug('{m}.{f}: deleting notice_id=%s...', notice_id)
         if notice_id:
             notifiers.notices([], targets='remote', identifier=[notice_id])
-            platform.property('playingtitle', '')
+            platform.property('player.notice.id', '')
 
     elif not _PLAYER.isPlayingVideo():
         return
@@ -90,7 +90,7 @@ def notify(action, **dummy_kwargs):
 
         log.debug('{m}.{f}: created notice_id=%s', notice_id)
         if len(notice_id):
-            platform.property('playingtitle', notice_id[0])
+            platform.property('player.notice.id', notice_id[0])
 
 
 def _fetch_db_meta(imdb, title, year):
