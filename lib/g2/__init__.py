@@ -130,9 +130,9 @@ class Context:
         except Exception as ex:
             self.__exit__(None, None, None)
             if self.modules == []:
-                log.error('%s: import %s: %s'%(self.kind, self.fullname, ex))
+                log.error('%s: import %s: %s', self.kind, self.fullname, ex, trace=True)
             else:
-                log.error('%s: from %s import %s: %s'%(self.kind, self.fullname, ', '.join(self.modules), ex))
+                log.error('%s: from %s import %s: %s', self.kind, self.fullname, ', '.join(self.modules), ex, trace=True)
             return None
 
         if not self.modules:
@@ -307,6 +307,9 @@ def _info_get(kind, infofunc):
             continue
 
         with Context(kind, name) as pac:
+            if not pac:
+                continue
+
             if not hasattr(pac, 'site'):
                 log.debug('info_get: %s package %s does not specify a site origin; skip it!', kind, name)
                 continue
@@ -346,6 +349,8 @@ def _info_get(kind, infofunc):
 
 def _info_get_module(infofunc, infos, kind, module, package='', paths=[]):
     with Context(kind, package, [module], paths) as mods:
+        if not mods:
+            return
         try:
             # (fixme) [code] if infofunc is missing, use a default version that looks for the packages infos:
             # - callable(m.info) returning a dict or [] of dicts
@@ -354,7 +359,7 @@ def _info_get_module(infofunc, infos, kind, module, package='', paths=[]):
             # Uniform all the g2.packages and integrated modules developed so far
             nfo = infofunc(package, module, mods[0], paths)
         except Exception as ex:
-            log.error('packages: infofunc(%s, %s, ...): %s'%(package, module, ex))
+            log.error('packages: infofunc(%s, %s, ...): %s', package, module, ex, trace=True)
             nfo = []
 
         for i in nfo:
