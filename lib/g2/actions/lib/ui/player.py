@@ -54,7 +54,8 @@ class Player(xbmc.Player):
         self.content = 'movie' if season == None or episode == None else 'episode'
 
         self.title = title ; self.year = year
-        self.name = '%s (%s)' % (title, year) if self.content == 'movie' else '%s S%02dE%02d' % (title, int(season), int(episode))
+        self.name = '%s%s'%(title, '' if not year else ' (%s)'%year) if self.content == 'movie' else\
+                    '%s S%02dE%02d'%(title, int(season), int(episode))
         self.season = '%01d' % int(season) if self.content == 'episode' else None
         self.episode = '%01d' % int(episode) if self.content == 'episode' else None
 
