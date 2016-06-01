@@ -165,13 +165,15 @@ def request(url, method=None, close=True, error=False, proxy=None, post=None, he
         return None
 
 
-def parseDOM(html, name=u"", attrs={}, ret=False, noattrs=True):
+def parseDOM(html, name=u"", attrs={}, ret=False, noattrs=True, debug=True):
     # Copyright (C) 2010-2011 Tobias Ussing And Henrik Mosgaard Jensen
+    global _log_debug
+    _log_debug = debug
 
     if isinstance(html, str):
         try:
             html = [html.decode("utf-8")] # Replace with chardet thingy
-        except:
+        except Exception:
             html = [html]
     elif isinstance(html, unicode):
         html = [html]
@@ -195,14 +197,13 @@ def parseDOM(html, name=u"", attrs={}, ret=False, noattrs=True):
         lst = []
         for key in attrs:
             try:
-                # log.notice('parseDOM(..., %s, %s, ...): compile(%s)'%(name, attrs, '(<' + name + '[^>]*?(?:' + key + '=[\'"]' + attrs[key] + '[\'"].*?>))'))
                 lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=[\'"]' + attrs[key] + '[\'"].*?>))', re.M | re.S).findall(item)
-            except:
+            except Exception:
                 pass
             if len(lst2) == 0 and attrs[key].find(" ") == -1:  # Try matching without quotation marks
                 try:
                     lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=' + attrs[key] + '.*?>))', re.M | re.S).findall(item)
-                except:
+                except Exception:
                     pass
 
             if len(lst) == 0:
@@ -213,7 +214,7 @@ def parseDOM(html, name=u"", attrs={}, ret=False, noattrs=True):
                 test.reverse()
                 for i in test:  # Delete anything missing from the next list.
                     if not lst[i] in lst2:
-                        del(lst[i])
+                        del lst[i]
 
         if len(lst) == 0 and attrs == {}:
             if noattrs:
@@ -254,7 +255,7 @@ def parseDOM(html, name=u"", attrs={}, ret=False, noattrs=True):
 
                 start = item.find(match)
                 end = item.find(endstr, start)
-                pos = item.find("<" + name, start + 1 )
+                pos = item.find("<" + name, start + 1)
 
                 while pos < end and pos != -1:
                     tend = item.find(endstr, end + len(endstr))
