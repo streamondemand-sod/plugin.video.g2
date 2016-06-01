@@ -19,19 +19,23 @@
 
 
 import json
-import urllib
 import urlparse
 
+import requests
+from requests.packages import urllib3
+
 from g2.libraries import log
-from g2.libraries import client
 from .ws4py.client.threadedclient import WebSocketClient
 
 
-# _log_debug = True
+_log_debug = True
 
 
 _HOST = "https://api.pushbullet.com/v2/"
 _WSS_REALTIME_EVENTS_STREAM = "wss://stream.pushbullet.com/websocket/"
+
+
+urllib3.disable_warnings()
 
 
 class PushBulletEvents(WebSocketClient):
@@ -53,34 +57,43 @@ class PushBulletEvents(WebSocketClient):
 
 
 class PushBullet:
-    def __init__(self, api_key):
+    def __init__(self, api_key, user_agent=None):
         self.api_key = api_key
+        self.user_agent = user_agent
         self.wss = None
         self.modified = 0
         self.evfilter = []
         self.callback = None
 
-    def _request(self, method, path, postdata=None):
+    def _request(self, method, path, post=None):
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "User-Agent": "pyPushBullet",
             "Access-Token": self.api_key,
         }
+        if self.user_agent:
+            headers.update({
+                "User-Agent": self.user_agent,
+            })
 
-        if postdata:
-            if method == 'GET':
-                path += '?' + urllib.urlencode(postdata)
-                postdata = None
-            else:
-                postdata = json.dumps(postdata)
+        if method != 'GET':
+            params = None
+        else:
+            params = post
+            post = None
 
         url = urlparse.urljoin(_HOST, path)
-        log.debug('{m}.{f}: %s %s POST=%s', method, url, postdata)
 
-        result = client.request(url, method=method, post=postdata, headers=headers, debug=False)
+        log.debug('{m}.{f}: %s %s post=%s, params=%s', method, url, post, params)
+        res = requests.request(method, url, json=post, params=params, headers=headers)
 
-        return None if not result else json.loads(result)
+        try:
+            res.raise_for_status()
+            return res.json()
+        except Exception as ex:
+            log.error('{m}.{f}: %s', ex)
+            return None
+
 
     def addDevice(self, device_name):
         """ Push a note
@@ -347,6 +360,9 @@ class PushBullet:
         if event_type != 'message':
             if self._event_filter([event_type]):
                 self.callback(event_value, event_type)
+            if event_type == 'closed':
+                self.wss = None
+                return
             if event_type != 'opened':
                 return
             event_value = {
@@ -364,6 +380,8 @@ class PushBullet:
             while True:
                 log.debug('{m}.{f}: fetching pushes since %s [%s]', modified, cursor)
                 pushes = self.getPushHistory(modified, cursor, active=False)
+                if pushes is None:
+                    break
                 log.debug('{m}.{f}: got %d pushes', len(pushes['pushes']))
                 # NOTE: this is not perfectly compliant to the API since other active pushes
                 # might be returned in the following pages, but it optimize the pull in case
