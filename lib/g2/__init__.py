@@ -541,12 +541,16 @@ def _get_addon_details(addon_id):
         return (None, [])
 
     # <extension point="xbmc.python.module" library="<subdir>" />
-    match = re.search(r'<extension\s+point\s*=\s*"xbmc.python.module".*?library\s*=\s*"([^"]+)"', addon_xml, re.DOTALL)
-    if match:
-        path = os.path.join(path, match.group(1))
+    # <extension library="<subdir>" point="xbmc.python.module" />
+    for pat in [r'<extension.*?point\s*=\s*"xbmc.python.module".*?library\s*=\s*"([^"]+)"',
+                r'<extension.*?library\s*=\s*"([^"]+)".*?point\s*=\s*"xbmc.python.module"']:
+        match = re.search(pat, addon_xml, re.DOTALL)
+        if match:
+            path = os.path.join(path, match.group(1))
+            break
 
     # <import addon="script.module.simplejson" version="3.3.0"/>
-    imported_addons = re.compile(r'<import\s+addon\s*=\s*"([^"])".*?/>', re.DOTALL).findall(addon_xml)
+    imported_addons = re.compile(r'<import.*?addon\s*=\s*"([^"]+)"', re.DOTALL).findall(addon_xml)
 
     log.debug('_get_addon_details(%s): path=%s, imported_addons=%s'%(addon_id, path, imported_addons))
 
