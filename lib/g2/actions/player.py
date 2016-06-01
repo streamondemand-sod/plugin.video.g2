@@ -40,8 +40,8 @@ _PLAYER = xbmc.Player()
 def notify(action, **dummy_kwargs):
     if not _PLAYER.isPlaying():
         notice_id = platform.property('player.notice.id')
-        log.debug('{m}.{f}: deleting notice_id=%s...', notice_id)
         if notice_id:
+            log.debug('{m}.{f}: deleting notice_id=%s...', notice_id)
             notifiers.notices([], targets='remote', identifier=[notice_id])
             platform.property('player.notice.id', '')
 
@@ -81,8 +81,8 @@ def notify(action, **dummy_kwargs):
         notice_id = []
         notifiers.notices(_('Playing {title} -- {url}').format(title=title, url=url), targets='remote', identifier=notice_id)
 
-        log.debug('{m}.{f}: created notice_id=%s', notice_id)
         if len(notice_id):
+            log.debug('{m}.{f}: created notice_id=%s', notice_id[0])
             platform.property('player.notice.id', notice_id[0])
 
 
