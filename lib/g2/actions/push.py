@@ -49,27 +49,47 @@ def new(push):
         if not url:
             return
 
-        dbsites = {
+        sites = {
             'imdb.com': {
+                'type': 'db',
                 'id_name': 'imdb_id',
                 'id_value': r'/title/(tt[\d]+)',
                 'db_query': 'movie_meta{imdb_id}',
             },
             'themoviedb.org': {
+                'type': 'db',
                 'id_name': 'tmdb_id',
                 'id_value': r'/movie/([\d]+)',
                 'db_query': 'movie_meta{tmdb_id}',
             },
+            # This is a folder plugin, so it cannot be hooked in this way.
+            # A specific resolver has to be created.
+            # 'ilfattoquotidiano.it': {
+            #     'type': 'addon',
+            #     'addon': 'plugin.video.fattoquotidianotv',
+            #     'query': 'page={url}&id=v',
+            # },
         }
         netloc, path = urlparse.urlparse(url)[1:3]
         netloc = '.'.join(netloc.split('.')[-2:])
-        if netloc not in dbsites:
+        if netloc not in sites:
             title = push.get('body', '').encode('utf-8').split('\n')[0]
             platform.execute('RunPlugin(%s?action=sources.url&title=%s&url=%s)'%
                              (sys.argv[0], urllib.quote_plus(title), urllib.quote_plus(url)))
 
-        else:
-            dbs = dbsites[netloc]
+        elif sites[netloc]['type'] == 'addon':
+            adn = sites[netloc]
+            if not platform.condition('System.HasAddon(%s)'%adn['addon']):
+                raise Exception(_('Addon {addon} is missing').format(addon=adn['addon']))
+            query = adn['query'].format(
+                url=urllib.quote_plus(url.encode('utf-8')),
+            )
+            plugin = 'RunScript(plugin://%s/?%s)'%(adn['addon'], query)
+            log.debug('{m}.{f}: executing %s...', plugin)
+            platform.execute(plugin)
+
+        elif sites[netloc]['type'] == 'db':
+            dbs = sites[netloc]
             from g2.dbs import tmdb
             kwargs = {
                 dbs['id_name']: re.search(dbs['id_value'], path).group(1),
@@ -83,9 +103,13 @@ def new(push):
             platform.execute('RunPlugin(%s?action=sources.dialog&title=%s&year=%s&imdb=%s&tmdb=%s&meta=%s)'%
                              (sys.argv[0], urllib.quote_plus(item['title']), urllib.quote_plus(item['year']),
                               urllib.quote_plus(item['imdb']), '', urllib.quote_plus(json.dumps(item))))
+
+        else:
+            raise Exception('unknown site type: %s'%sites[netloc])
+
     except Exception as ex:
         log.error('{m}.{f}: %s', ex)
-        ui.infoDialog(_('No movie identified in the push'))
+        ui.infoDialog(_('URL not supported'))
 
 
 def delete(push):
