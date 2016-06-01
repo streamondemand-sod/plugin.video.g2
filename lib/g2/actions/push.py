@@ -41,8 +41,16 @@ _log_debug = True
 _PLAYER = xbmc.Player()
 
 
+# (fixme) need to abstract from the actual pushbullet dict.
+# - new(iden, target_all=bool, body, url)
+# - delete(iden, target_all=bool)
 def new(push):
     """Find a movie in the push and schedule the sources dialog"""
+
+    if 'target_device_iden' in push:
+        # Remove the push if addressed to kodi
+        notifiers.notices([], identifier=[push['iden']])
+
     try:
         log.debug('{m}.{f}: %s', push)
         url = push.get('url')

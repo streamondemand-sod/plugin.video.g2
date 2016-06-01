@@ -76,7 +76,6 @@ class PushBulletEvents(object):
                     self.on_push_dismissed(push)
                 else:
                     self.on_push(push)
-
         else:
             log.notice('{m}.{f}: event %s not filtered: %s', event_type, event_value)
 
