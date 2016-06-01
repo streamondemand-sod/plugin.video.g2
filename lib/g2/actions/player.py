@@ -79,7 +79,12 @@ def notify(action, **dummy_kwargs):
         url = '' if not imdb else 'http://www.imdb.com/title/' + imdb
 
         notice_id = []
-        notifiers.notices(_('Playing {title} -- {url}').format(title=title, url=url), targets='remote', identifier=notice_id)
+        notifiers.notices(_('Playing {title}{dashes_if_url}{url}').
+                          format(
+                              title=title,
+                              dashes_if_url='--' if url else '',
+                              url=url,
+                          ), targets='remote', identifier=notice_id)
 
         if len(notice_id):
             log.debug('{m}.{f}: created notice_id=%s', notice_id[0])
