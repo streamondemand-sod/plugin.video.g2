@@ -81,9 +81,13 @@ def new(push):
         netloc, path = urlparse.urlparse(url)[1:3]
         netloc = '.'.join(netloc.split('.')[-2:])
         if netloc not in sites:
-            title = push.get('body', '').encode('utf-8').split('\n')[0]
+            title = push.get('title', '')
+            if not title:
+                title = push.get('body', '')
+            if not title:
+                title = ''
             platform.execute('RunPlugin(%s?action=sources.url&title=%s&url=%s)'%
-                             (sys.argv[0], urllib.quote_plus(title), urllib.quote_plus(url)))
+                             (sys.argv[0], urllib.quote_plus(title.encode('utf-8')), urllib.quote_plus(url)))
 
         elif sites[netloc]['type'] == 'addon':
             adn = sites[netloc]
