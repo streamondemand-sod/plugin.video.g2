@@ -25,10 +25,12 @@ import urllib
 import pkgutil
 import urlparse
 
+from contextlib import closing
+
 import g2
 
 from g2.libraries import log
-from g2.libraries import client
+from g2.libraries import client2
 from .lib import metastream
 
 
@@ -134,31 +136,30 @@ def resolve(url, checkonly=False):
             headers = dict('')
 
         if not 'User-Agent' in headers:
-            headers['User-Agent'] = client.agent()
+            headers['User-Agent'] = client2.agent()
         if not 'Referer' in headers:
             headers['Referer'] = url
 
-        try:
-            response = client.request(res.split('|')[0], headers=headers, close=False, error=True, timeout='20')
-        except Exception as ex:
-            collect_resolver_error(resolver, str(ex))
-            continue
+        with closing(client2.get(res.split('|')[0], headers=headers, stream=True, timeout=20, raise_error=False)) as resp:
+            try:
+                resp.raise_for_status()
+            except Exception as ex:
+                collect_resolver_error(resolver, str(ex))
+                continue
 
-        if not response or 'HTTP Error' in str(response):
-            collect_resolver_error(resolver, str(response))
-            continue
+            content_lenght = resp.headers.get('Content-Length', 0)
+            if content_lenght < _MIN_STREAM_SIZE:
+                collect_resolver_error(resolver, 'Stream too short')
+                continue
 
-        if int(response.headers['Content-Length']) < _MIN_STREAM_SIZE:
-            collect_resolver_error(resolver, 'Stream too short')
-            continue
+            meta = metastream.video(resp.raw)
 
-        meta = metastream.video(response)
-
-        url = res.split('|')[0]
-        return ResolvedURL('%s%s%s' % (url, '&' if '?' in url else '?', urllib.urlencode(headers))).enrich(
-            resolver=resolver['name'],
-            meta=meta,
-            size=int(response.headers['Content-Length']),
-            acceptbyteranges='bytes' in response.headers.get('Accept-Ranges', '').lower())
+            url = res.split('|')[0]
+            return ResolvedURL('%s%s%s' % (url, '&' if '?' in url else '?', urllib.urlencode(headers))).enrich(
+                resolver=resolver['name'],
+                meta=meta,
+                size=content_lenght,
+                acceptbyteranges='bytes' in resp.headers.get('Accept-Ranges', '').lower()
+            )
 
     return errors
