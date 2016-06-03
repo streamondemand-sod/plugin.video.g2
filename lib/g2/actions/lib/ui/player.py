@@ -53,7 +53,8 @@ class Player(xbmc.Player):
 
         self.content = 'movie' if season == None or episode == None else 'episode'
 
-        self.title = title ; self.year = year
+        self.title = title
+        self.year = year
         self.name = '%s%s'%(title, '' if not year else ' (%s)'%year) if self.content == 'movie' else\
                     '%s S%02dE%02d'%(title, int(season), int(episode))
         self.season = '%01d' % int(season) if self.content == 'episode' else None
@@ -101,7 +102,8 @@ class Player(xbmc.Player):
             poster = meta['poster'] if 'poster' in meta else '0'
             thumb = meta['thumb'] if 'thumb' in meta else poster
 
-            if poster == '0': poster = platform.addonPoster()
+            if poster == '0':
+                poster = platform.addonPoster()
 
             return (poster, thumb, meta)
         except:
@@ -153,7 +155,7 @@ class Player(xbmc.Player):
                 self.currentTime = self.getTime()
                 if not watched and self.currentTime / self.totalTime >= .9:
                     watched = True
-                    db.watched('movie{imdb_id}', watched, imdb_id=self.imdb)
+                    dbs.watched('movie{imdb_id}', watched, imdb_id=self.imdb)
             except:
                 pass
             xbmc.sleep(2000)
