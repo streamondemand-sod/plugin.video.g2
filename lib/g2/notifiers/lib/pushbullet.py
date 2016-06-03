@@ -64,6 +64,7 @@ class PushBullet:
         self.modified = 0
         self.evfilter = []
         self.callback = None
+        self.reqsess = None
 
     def _request(self, method, path, post=None):
         headers = {
@@ -84,8 +85,9 @@ class PushBullet:
 
         url = urlparse.urljoin(_HOST, path)
 
-        log.debug('{m}.{f}: %s %s post=%s, params=%s', method, url, post, params)
-        res = requests.request(method, url, json=post, params=params, headers=headers)
+        log.debug('{m}.{f}: %s%s %s post=%s, params=%s', '(session) ' if self.reqsess else '', method, url, post, params)
+        reqobj = self.reqsess if self.reqsess else requests
+        res = reqobj.request(method, url, json=post, params=params, headers=headers)
 
         try:
             res.raise_for_status()
@@ -336,23 +338,33 @@ class PushBullet:
         """
         return self._request("GET", "users/me")
 
-    def events(self, callback=None, evfilter=None, modified=0):
-        if callback is None:
-            if self.wss:
-                log.debug('{m}.{f}: closing web socket %s...', self.wss.bind_addr)
-                self.wss.close(immediate=True)
-                self.wss = None
-            return self.modified
-        else:
-            self.callback = callback
-            self.evfilter = set() if not evfilter else set(evfilter)
-            self.modified = modified
+    def start_events_handling(self, callback, evfilter=None, modified=0):
+        """Start the thread for handling the pb events
+        - Monitor the websocket real time events
+        - Pull the push history and give the new events to the callback
+        """
+        self.callback = callback
+        self.evfilter = set() if not evfilter else set(evfilter)
+        self.modified = modified
+        if not self.wss:
             self.wss = PushBulletEvents(self._event_handler, _WSS_REALTIME_EVENTS_STREAM + self.api_key)
             self.wss.connect()
-            return self.wss._th
+        if not self.reqsess:
+            self.reqsess = requests.Session()
+        return self.wss._th
+
+    def stop_events_handling(self):
+        if self.wss:
+            log.debug('{m}.{f}: closing web socket %s...', self.wss.bind_addr)
+            self.wss.close(immediate=True)
+            self.wss = None
+        if self.reqsess:
+            self.reqsess.close()
+            self.reqsess = None
+        return self.modified
 
     def __del__(self):
-        self.events(None)
+        self.stop_events_handling()
 
     def _event_handler(self, event_value, event_type):
         log.debug('{m}.{f}: %s: %s', event_value, event_type)

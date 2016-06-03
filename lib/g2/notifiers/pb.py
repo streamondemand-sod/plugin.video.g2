@@ -105,12 +105,12 @@ def events(start=False, on_push=_nop, on_push_dismissed=_nop, on_push_delete=_no
             my_iden = None
             log.error('{m}.{f}: failed to create a new device: %s', ex)
 
-        return _PB.events(PushBulletEvents(my_iden, on_push, on_push_dismissed, on_push_delete).handler,
-                          ['opened', 'pushes', 'closed'], modified=modified)
+        return _PB.start_events_handling(PushBulletEvents(my_iden, on_push, on_push_dismissed, on_push_delete).handler,
+                                         ['opened', 'pushes', 'closed'], modified=modified)
 
     try:
         def pb_last_modified(dummy_apikey):
-            return _PB.events(None)
+            return _PB.stop_events_handling()
         modified = cache.get(pb_last_modified, 0, _PB.api_key)
         log.debug('{m}.{f}: last modified timestamp: %f (saved to cache)', modified)
     except Exception as ex:
