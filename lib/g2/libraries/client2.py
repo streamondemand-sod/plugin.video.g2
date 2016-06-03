@@ -29,13 +29,26 @@ import requests
 from g2.libraries import log
 
 
-_log_debug = True
+# _log_debug = True
 
 
-def get(url, raise_error=True, **kwargs):
+def get(url, raise_error=True, debug=False, **kwargs):
+    # (fixme) if debug print also the request content
     res = requests.get(url, **kwargs)
+
+    if debug:
+        for hdr, val in res.headers.iteritems():
+            log.debug('{m}.{f}: response.headers: %s=%s', hdr, val)
+        for cke, val in res.cookies.iteritems():
+            log.debug('{m}.{f}: response.cookies: %s=%s', cke, val)
+        if res.history:
+            log.debug('{m}.{f}: response.history: %s', res.history)
+        log.debug('{m}.{f}: response.code: %s', res.status_code)
+        log.debug('{m}.{f}: response.content[%s]: %s', res.encoding, res.content)
+
     if raise_error:
         res.raise_for_status()
+
     return res
 
 
