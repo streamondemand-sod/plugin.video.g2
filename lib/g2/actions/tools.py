@@ -34,7 +34,7 @@ def menu(**kwargs):
     ui.addDirectoryItem(_('[B]G2[/B] : Clear sources...'), 'sources.clear', 'cache.jpg', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]G2[/B] : Clear cache...'), 'tools.clearcache', 'cache.jpg', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]G2[/B] : Library'), 'library.menu', 'tools.jpg', 'DefaultAddonProgram.png')
-    ui.addDirectoryItem(_('[B]G2[/B] : Packages'), 'g2.dialog', 'tools.jpg', 'DefaultAddonProgram.png', isFolder=False)
+    ui.addDirectoryItem(_('[B]G2[/B] : Packages'), 'packages.dialog', 'tools.jpg', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]G2[/B] : Restart Service'), 'tools.killservice', 'tools.jpg', 'DefaultAddonProgram.png', isFolder=False)
     ui.endDirectory()
 

@@ -40,19 +40,8 @@ _log_debug = True
 
 
 _PACKAGES_KINDS = {
-    'actions': {
-        # No user settings
-        'settings_category': 0,
-    },
-    'dbs': {
-        # No user settings
-        'settings_category': 0,
-    },
-    'notifiers': {
-        # No user settings
-        'settings_category': 0,
-    },
     'providers': {
+        'order': 1,
         # User setting are generated for each package / module to enable/disable it
         'settings_category': language.msgcode('Sources'),
         # User settings are generated at the package kind level (e.g. providers:::id)
@@ -60,6 +49,7 @@ _PACKAGES_KINDS = {
         'settings': {},
     },
     'resolvers': {
+        'order': 2,
         # User setting are generated for each package / module to enable/disable it
         # For resolvers, if there is a single module in the package,
         # the module setting is not displated.
@@ -67,6 +57,21 @@ _PACKAGES_KINDS = {
         # User settings are generated at the package kind level (e.g. resolvers:::id)
         # See the code below
         'settings': {},
+    },
+    'dbs': {
+        'order': 3,
+        # No user settings
+        'settings_category': 0,
+    },
+    'notifiers': {
+        'order': 4,
+        # No user settings
+        'settings_category': 0,
+    },
+    'actions': {
+        'order': 5,
+        # No user settings
+        'settings_category': 0,
     },
 }
 
@@ -164,11 +169,15 @@ def local_name(site):
         return None
 
 
-def packages(kinds=_PACKAGES_KINDS.keys()):
-    for kind in kinds:
+def kinds():
+    return [k for k, dummy_v in sorted(_PACKAGES_KINDS.items(), key=lambda i: i[1]['order'])]
+
+
+def packages(kinds_=kinds()):
+    for kind in kinds_:
         kind = kind.split('.')[-1]
         for dummy_package, name, is_pkg in importer.walk_packages([os.path.join(_PACKAGES_ABSOLUTE_PATH, kind)]):
-            if is_pkg:
+            if is_pkg and name != 'lib':
                 yield kind, name
 
 
@@ -262,10 +271,11 @@ def info(kind, infofunc):
     try:
         infos_paths, infos_modules = cache.get(_info_get, 1, kind, infofunc, hash_args=1, response_info=response_infos) 
         if 'cached' in response_infos:
+            log.debug('{m}.{f}: info cached %s, paths=%s', response_infos['cached'], infos_paths)
             update_needed = False
             for path in infos_paths:
                 try:
-                    if platform.Stat(path).st_mtime() > response_infos['cached']:
+                    if not os.path.exists(path) or platform.Stat(path).st_mtime() > response_infos['cached']:
                         raise
                 except Exception:
                     update_needed = True
@@ -293,7 +303,7 @@ def _info_get(kind, infofunc):
     infos_paths.add(addonSettingsFile())
     infos_modules = {}
     for dummy_package, name, is_pkg in importer.walk_packages([os.path.join(_PACKAGES_ABSOLUTE_PATH, kind)], onerror=ignore):
-        log.debug('info_get: name=%s is_pkg=%s enabled=%s'%(name, is_pkg, setting(kind, name, name='enabled')))
+        log.debug('{m}.{f}: name=%s.%s, is_pkg=%s, enabled=%s'%(kind, name, is_pkg, setting(kind, name, name='enabled')))
 
         if '.' in name or (is_pkg and name == 'lib'):
             continue
@@ -303,7 +313,7 @@ def _info_get(kind, infofunc):
             continue
 
         if setting(kind, name, name='enabled') == 'false':
-            log.notice('info_get: package %s ignored, user enable setting is %s'%(name, setting(kind, name, name='enabled')))
+            log.notice('{m}: package %s ignored, user enable setting is %s'%(name, setting(kind, name, name='enabled')))
             continue
 
         with Context(kind, name) as pac:
@@ -311,10 +321,10 @@ def _info_get(kind, infofunc):
                 continue
 
             if not hasattr(pac, 'site'):
-                log.debug('info_get: %s package %s does not specify a site origin; skip it!', kind, name)
+                log.debug('{m}.{f}: %s package %s does not specify a site origin; skip it!', kind, name)
                 continue
 
-            addonpaths = set()
+            addonpaths = []
             if hasattr(pac, 'addons') and pac.addons:
                 required_addons_installed = True
                 addon_ids = [pac.addons] if isinstance(pac.addons, basestring) else pac.addons
@@ -322,23 +332,24 @@ def _info_get(kind, infofunc):
                     if not platform.condition('System.HasAddon(%s)'%addon_id):
                         required_addons_installed = False
                     else:
-                        addonpaths |= _get_addon_paths(addon_id)
+                        addonpaths.extend(_get_addon_paths(addon_id))
                         infos_paths.add(addonSettingsFile(addon_id))
-                    log.debug('info_get(%s, %s): %s paths=%s'%(kind, name, addon_id, addonpaths))
+                    log.debug('{m}.{f}: package=%s.%s, addon=%s, paths=%s'%(kind, name, addon_id, addonpaths))
 
                 if not required_addons_installed:
-                    log.notice('packages: %s: required addons (%s) not installed'%(name, ', '.join(pac.addons)))
+                    log.notice('{m}: %s: required addons (%s) not installed'%(name, ', '.join(pac.addons)))
                     continue
-            addonpaths = list(addonpaths)
+            addonpaths = addonpaths[0:1] + list(set(addonpaths[1:]))
+
+            infos_paths.add(os.path.join(_PACKAGES_ABSOLUTE_PATH, kind, name))
 
             for dummy_package, sname, is_pkg in importer.walk_packages(pac.__path__, onerror=ignore):
-                log.debug('info_get: sname=%s is_pkg=%s enabled=%s'%(sname, is_pkg, setting(kind, name, sname, name='enabled')))
+                log.debug('{m}.{f}: sname=%s is_pkg=%s enabled=%s'%(sname, is_pkg, setting(kind, name, sname, name='enabled')))
 
-                if is_pkg or '.' in sname or (setting(kind, name, sname, name='enabled') == 'false' and
-                                              # (fixme) [logic]: align these codes with settings.xml generation
-                                              setting(kind, name, sname, name='enabled') not in ['0', '1', '2']):
-                    if not is_pkg:
-                        log.debug('info_get: module %s.%s ignored, user enable setting is %s',
+                # (fixme) found a way to disable providers configured with content == none
+                if is_pkg or '.' in sname or setting(kind, name, sname, name='enabled') == 'false':
+                    if not is_pkg and '.' not in sname:
+                        log.debug('{m}.{f}: module %s.%s ignored, user enable setting is %s',
                                   name, sname, setting(kind, name, sname, name='enabled'))
                     continue
 
@@ -348,6 +359,7 @@ def _info_get(kind, infofunc):
 
 
 def _info_get_module(infofunc, infos, kind, module, package='', paths=[]):
+    log.debug('{m}.{f}: %s.%s%s', kind, package+'.' if package else '', module)
     with Context(kind, package, [module], paths) as mods:
         if not mods:
             return
@@ -359,9 +371,10 @@ def _info_get_module(infofunc, infos, kind, module, package='', paths=[]):
             # Uniform all the g2.packages and integrated modules developed so far
             nfo = infofunc(package, module, mods[0], paths)
         except Exception as ex:
-            log.error('packages: infofunc(%s, %s, ...): %s', package, module, ex, trace=True)
+            log.error('{m}: infofunc(%s, %s, ...): %s', package, module, ex, trace=True)
             nfo = []
 
+        log.debug('{m}.{f}: nfo=%s', nfo)
         for i in nfo:
             fullname = ('' if not package else package+'.') + module + ('' if 'name' not in i else '.'+i['name'])
             infos[fullname] = dict(i)
@@ -523,12 +536,12 @@ def _setting_id(kind, package, module='', name='enabled'):
 
 
 def _get_addon_paths(addon_id):
-    paths = set()
+    paths = []
     path, imported_addons = _get_addon_details(addon_id)
     if path:
-        paths.add(path)
+        paths.append(path)
         for addon_id in imported_addons:
-            paths |= _get_addon_paths(addon_id)
+            paths.extend(_get_addon_paths(addon_id))
     return paths
 
 

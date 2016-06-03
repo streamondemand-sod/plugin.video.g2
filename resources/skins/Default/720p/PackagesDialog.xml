@@ -2,7 +2,7 @@
 <window>
 	<zorder>0</zorder>
 	<coordinates>
-		<posx>320</posx>
+		<posx>170</posx>
 	    <posy>180</posy>
 	</coordinates>
 	<controls>
@@ -10,7 +10,7 @@
 		<control type="image" id="1">
 			<left>-20</left>
 			<top>-20</top>
-            <width>680</width>
+            <width>980</width>
             <height>400</height>
             <texture border="40">bg.png</texture>
 		</control>
@@ -18,74 +18,96 @@
 		<control type="label">
 			<left>10</left>
 			<top>0</top>
-			<width>630</width>
+			<width>960</width>
 			<height>20</height>
 			<align>center</align>
 			<textcolor>white</textcolor>
 			<!-- TODO: translate -->
 			<label>PACKAGE MANAGER</label>
 		</control>
-		<!-- Sources -->
-		<control type="button" id="101">
+
+		<!-- List of buttons for selecting the packages kind -->
+		<control type="list" id="101">
 			<left>10</left>
-			<top>20</top>
-			<align>center</align>
-			<aligny>center</aligny>
-			<label>$ADDON[plugin.video.g2 30860]</label>
-			<width>300</width>
-			<height>40</height>
+			<top>25</top>
+			<width>200</width>
+			<height>320</height>
+			<orientation>vertical</orientation>
+	        <texture border="5">inner.png</texture>
+			<itemlayout width="200" height="50">
+				<control type="label">
+					<align>left</align>
+					<aligny>center</aligny>
+					<width>200</width>
+					<height>40</height>
+					<font>font30</font>
+					<textcolor>grey2</textcolor>
+					<label>$INFO[ListItem.Label]</label>
+				</control>
+			</itemlayout>
+			<focusedlayout width="200" height="50">
+				<control type="label">
+					<align>left</align>
+					<aligny>center</aligny>
+					<width>200</width>
+					<height>40</height>
+					<font>font30</font>
+					<textcolor>white</textcolor>
+					<label>$INFO[ListItem.Label]</label>
+				</control>
+                <control type="image">
+                    <left>0</left>
+                    <top>0</top>
+                    <width>200</width>
+                    <height>40</height>
+                    <texture border="4">listselect_fo.png</texture>
+                    <visible>Control.HasFocus(101)</visible>
+				</control>
+			</focusedlayout>
 		</control>
-		<!-- Resolvers -->
-		<control type="button" id="102">
-			<left>330</left>
-			<top>20</top>
-			<align>center</align>
-			<aligny>center</aligny>
-			<label>$ADDON[plugin.video.g2 30870]</label>
-			<width>300</width>
-			<height>40</height>
-		</control>
+
+		<!-- List of labels for selecting the package -->
 		<control type="group">
-			<left>10</left>
-			<top>70</top>
+			<left>210</left>
+			<top>25</top>
 	        <control type="image">
 		        <left>-1</left>
 		        <top>-2</top>
-		        <width>622</width>
-		        <height>284</height>
+		        <width>722</width>
+		        <height>334</height>
 		        <texture border="5">inner.png</texture>
 		    </control>
 			<!-- Scrollable List of Plugin -->
 			<control type="list" id="201">
 				<left>0</left>
 				<top>0</top>
-				<width>620</width>
-				<height>280</height>
+				<width>720</width>
+				<height>320</height>
 				<orientation>vertical</orientation>
 				<pagecontrol>1001</pagecontrol>
 				<scrolltime tween="sine" easing="out">240</scrolltime>
-				<itemlayout width="620" height="30">
+				<itemlayout width="720" height="30">
 					<control type="label">
 						<left>10</left>
 						<top>0</top>
-						<width>570</width>
+						<width>670</width>
 						<height>30</height>
 						<textcolor>grey2</textcolor>
 						<label>$INFO[ListItem.Label]</label>
 					</control>
 					<control type="image">
-						<left>580</left>
+						<left>680</left>
 						<top>0</top>
 			            <width>30</width>
 			            <height>30</height>
 	                    <texture>$INFO[ListItem.Overlay,overlays/list/]</texture>
 					</control>
 				</itemlayout>
-				<focusedlayout width="620" height="30">
+				<focusedlayout width="720" height="30">
                     <control type="image">
                         <left>0</left>
                         <top>0</top>
-                        <width>620</width>
+                        <width>720</width>
                         <height>30</height>
                         <texture border="4">listselect_fo.png</texture>
                         <visible>Control.HasFocus(201)</visible>
@@ -93,13 +115,13 @@
 					<control type="label">
 						<left>10</left>
 						<top>0</top>
-						<width>570</width>
+						<width>670</width>
 						<height>30</height>
 						<textcolor>white</textcolor>
 						<label>$INFO[ListItem.Label]</label>
 					</control>
 					<control type="image">
-						<left>580</left>
+						<left>680</left>
 						<top>0</top>
 			            <width>30</width>
 			            <height>30</height>
@@ -109,7 +131,7 @@
 			</control>
 		</control>
 		<control type="scrollbar" id="1001">
-			<left>632</left>
+			<left>732</left>
 			<top>70</top>
 			<width>8</width>
 			<height>280</height>

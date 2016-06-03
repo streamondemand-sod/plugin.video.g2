@@ -27,38 +27,45 @@ import xbmcgui
 import g2
 
 from g2.libraries import log
-from g2.libraries import client
+from g2.libraries import client2
 from g2.libraries import platform
 from g2.libraries.language import _
 from .lib import ui
 
 
-_DEFAULT_PACKAGES_URLS = ['https://github.com/J0rdyZ65/plugin.video.g2/wiki']
+_log_debug = True
+
+_DEFAULT_PACKAGES_URLS = ['http://j0rdyz65.github.io/']
 
 
-# TODO[logic]: fix according to the new packages api and kind names...
-# TODO[code]: move PackagesDialog class to resources.lib.ui.kodi.g2.py
+# (fixme) [code] move PackagesDialog class to resources.lib.ui.kodi.g2.py
 class PackagesDialog(xbmcgui.WindowXMLDialog):
-    sources_buttonid = 101
-    resolvers_buttonid =102
-    packages_listid =201
+    kinds_listid = 101
+    packages_listid = 201
 
     def __init__(self, strXMLname, strFallbackPath, strDefaultName, forceFallback):
-        self.__kind = None
-        self.items = []
+        self.kinds = []
+        self.packages = []
+        self.kindslst = None
+        self.packageslst = None
+        self.progress_dialog = None
+        self.displayed_kind = None
 
     def onInit(self):
-        self.lst = self.getControl(self.packages_listid)
-        self._renderitems('sources')
-        self.setFocusId(self.sources_buttonid)
+        self.kindslst = self.getControl(self.kinds_listid)
+        self.packageslst = self.getControl(self.packages_listid)
+        self.kindslst.reset()
+        self.kindslst.addItems(self.kinds)
+        self._update_packages_list('providers')
 
     def onClick(self, controlID):
-        if controlID == self.sources_buttonid:
-            self._renderitems('sources')
-        elif controlID == self.resolvers_buttonid:
-            self._renderitems('resolvers')
+        log.debug('onClick: %s', controlID)
+        if controlID == self.kinds_listid:
+            kind = self.kindslst.getSelectedItem().getLabel().lower()
+            self._update_packages_list(kind)
+
         elif controlID == self.packages_listid:
-            item = self.lst.getSelectedItem()
+            item = self.packageslst.getSelectedItem()
             kind = item.getProperty('kind')
             name = item.getProperty('name')
             if not g2.is_installed(kind, name):
@@ -66,80 +73,130 @@ class PackagesDialog(xbmcgui.WindowXMLDialog):
                 self.progress_dialog.create(_('Download Package')+' '+name)
                 self._update_progress_dialog(0)
                 if g2.install_or_update(kind, name, item.getProperty('site'), self._update_progress_dialog):
-                    _setListItemInstalledStatus(item, True)
+                    _set_item_installed_status(item, True)
                 self.progress_dialog.close()
+                try:
+                    missing = []
+                    kindmod = __import__('g2.%s'%kind, globals(), locals(), [name], -1)
+                    pkgmod = getattr(kindmod, name)
+                    for addon in pkgmod.addons if pkgmod.addons else []:
+                        if not xbmc.getCondVisibility('System.HasAddon(%s)'%addon):
+                            missing.append(addon)
+                    if not missing:
+                        kindmod.info()
+                    else:
+                        xbmcgui.Dialog().ok('PACKAGE MANAGER', '[CR]'.join([
+                            _('The installed package requires these addons:'),
+                            ' '.join(missing),
+                            _('Please, install them'),
+                            ]))
+                except Exception as ex:
+                    log.error('packages.dialog: %s', ex)
+                    ui.infoDialog(_('Failure to load the package'))
+
             elif ui.yesnoDialog(_('Are you sure?'), '', '', heading=_('Uninstall Package')+' '+name) and g2.uninstall(kind, name):
-                _setListItemInstalledStatus(item, False)
+                _set_item_installed_status(item, False)
                 if not item.getProperty('site'):
-                    self.items = [i for i in self.items if i.getProperty('kind') != kind or i.getProperty('name') != name]
-                    self._renderitems(force=True)
+                    self.packages = [i for i in self.packages if i.getProperty('kind') != kind or i.getProperty('name') != name]
+                    self._update_packages_list(force=True)
+                try:
+                    kindmod = getattr(__import__('g2', globals(), locals(), [kind], -1), kind)
+                    kindmod.info()
+                except Exception as ex:
+                    log.error('packages.dialog: %s', ex)
 
     def _update_progress_dialog(self, curitem, numitems=1):
         self.progress_dialog.update(curitem*100/(numitems if numitems else 1))
 
-    def _renderitems(self, kind=None, force=False):
-        if self.__kind != kind or force:
-            if not kind: kind = self.__kind
-            self.lst.reset()
-            self.lst.addItems([i for i in self.items if i.getProperty('kind') == kind])
-            self.lst.selectItem(0)
-            self.__kind = kind
+    def _update_packages_list(self, kind=None, force=False):
+        if self.displayed_kind != kind or force:
+            if not kind:
+                kind = self.displayed_kind
+            self.packageslst.reset()
+            self.packageslst.addItems([i for i in self.packages if i.getProperty('kind') == kind])
+            self.displayed_kind = kind
 
 
-def _setListItemInstalledStatus(listItem, installed):
-    if str(installed) != listItem.getProperty('installed'):
-        listItem.setProperty('installed', str(installed))
-        listItem.setInfo('video', {'overlay': 5 if installed else 4})
+def _set_item_installed_status(item, installed):
+    if str(installed) != item.getProperty('installed'):
+        item.setProperty('installed', str(installed))
+        item.setInfo('video', {'overlay': 5 if installed else 4})
 
 
 def dialog(**kwargs):
     addon_dir = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('path'))
-    w = PackagesDialog('PackagesDialog.xml', addon_dir, 'Default', '720p')
+    win = PackagesDialog('PackagesDialog.xml', addon_dir, 'Default', '720p')
 
     try:
         packages_urls = ast.literal_eval(platform.setting('packages_urls'))
-        if not packages_urls: raise Exception()
-    except:
+        if not packages_urls:
+            raise Exception()
+    except Exception:
         packages_urls = _DEFAULT_PACKAGES_URLS
 
     listed = {}
+    kinds = {}
     for url in packages_urls:
         try:
-            r = client.request(url)
-            r = client.parseDOM(r, 'table', attrs={'name': 'user-content-packages'})[0]
-            r = client.parseDOM(r, 'tr')
-        except:
+            res = client2.get(url, debug=True)
+            res = client2.parseDOM(res.content, 'tbody')[0]
+            res = client2.parseDOM(res, 'tr')
+        except Exception:
+            log.notice('{m}.{f}: %s: no packages directory found', url)
             continue
-        for package in r:
+
+        for pkg in res:
             try:
-                kind, description, site = client.parseDOM(package, 'td', noattrs=False)
-                log.notice('g2.dialog: %s: %s@%s'%(url, kind, site))
-                if kind not in ['sources', 'resolvers']: continue
+                kind, desc, site = client2.parseDOM(pkg, 'td')
+                log.debug('{m}.{f}: %s %s'%(kind, site))
+                if kind not in g2.kinds():
+                    log.notice('{m}.{f}: %s: kind %s not implemented', url, kind)
+                    continue
+ 
+                site = site.replace('<code>', '').replace('</code>', '')
                 name = g2.local_name(site)
-                if name is None: continue
+                if name is None:
+                    log.notice('{m}.{f}: %s: site url %s not implemented', url, site)
+                    continue
+
+                html_trans = {
+                    '<strong>': '[B]',
+                    '</strong>': '[/B]',
+                }
+                for html_code, kodi_code in html_trans.iteritems():
+                    desc = desc.replace(html_code, kodi_code)
+
                 item = ui.ListItem()
-                item.setLabel(description)
-                _setListItemInstalledStatus(item, g2.is_installed(kind, name))
+                item.setLabel(desc)
+                _set_item_installed_status(item, g2.is_installed(kind, name))
                 item.setProperty('kind', kind)
                 item.setProperty('name', name)
                 item.setProperty('site', site)
-                w.items.append(item)
+                win.packages.append(item)
+
                 listed[kind+'.'+name] = True
-            except:
+                kinds[kind] = True
+            except Exception:
                 pass
 
     for kind, name in g2.packages():
         if kind+'.'+name not in listed:
-            log.notice('g2.dialog: Orphaned: %s.%s'%(kind, name))
+            log.notice('{m}.{f}: orphaned package %s.%s'%(kind, name))
             item = ui.ListItem()
             item.setLabel(_('[Orphaned]')+' '+name)
-            _setListItemInstalledStatus(item, True)
+            _set_item_installed_status(item, True)
             item.setProperty('kind', kind)
             item.setProperty('name', name)
-            w.items.append(item)
+            win.packages.append(item)
 
-    w.doModal()
+    for kind in g2.kinds():
+        if kind in kinds:
+            item = ui.ListItem()
+            item.setLabel(kind.upper())
+            win.kinds.append(item)
+
+    win.doModal()
 
     g2.update_settings_skema()
 
-    del w
+    del win
