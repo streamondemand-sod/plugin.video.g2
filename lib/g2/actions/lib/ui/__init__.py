@@ -20,21 +20,18 @@
 
 
 try:
-    """
-    XBMC/KODI GUI dependent primitives
-    """
     import xbmc
     import xbmcgui
     import xbmcplugin
     import xbmcaddon
 
-    _ui = 'xbmc'
-except:
+    _UI = 'xbmc'
+except Exception:
     pass
 
 from g2.libraries import platform
 
-if _ui == 'xbmc':
+if _UI == 'xbmc':
     _homeWindow = xbmcgui.Window(10000)
     _addon = xbmcaddon.Addon()
 
@@ -63,7 +60,7 @@ if _ui == 'xbmc':
     def infoDialog(message, heading=_addon.getAddonInfo('name'), icon=platform.addonIcon(), time=3000):
         try:
             xbmcgui.Dialog().notification(heading, message, icon, time, sound=False)
-        except:
+        except Exception:
             xbmc.executebuiltin("Notification(%s,%s, %s, %s)"%(heading, message, time, icon))
 
     def yesnoDialog(line1, line2='', line3='', heading=_addon.getAddonInfo('name'), nolabel='', yeslabel=''):
@@ -79,10 +76,12 @@ if _ui == 'xbmc':
         return xbmc.executebuiltin('Container.Refresh')
 
     try:
-        from directory import *
-        from sourcesdialog import *
-        from player import *
-    except:
+        from .directory import *
+        from .sourcesdialog import *
+        from .packagesdialog import *
+        from .player import *
+    except Exception as ex:
+        xbmc.log(str(ex))
         pass
 else:
     raise Exception('Unknown host platform')
