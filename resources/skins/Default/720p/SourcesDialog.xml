@@ -209,7 +209,7 @@
                 <font>font30</font>
 				<align>center</align>
 				<!-- TODO: localize!!! -->
-			    <label>OK</label>
+			    <label>Play</label>
 			    <enable>false</enable>
 				<onup>21</onup>
 				<ondown>noop</ondown>

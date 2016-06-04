@@ -20,17 +20,21 @@
 
 
 import datetime
-import urlparse
 
 import xbmc
 import xbmcgui
 
 from g2.libraries import log
 from g2.libraries import workers
+from g2.libraries import platform
+from g2.libraries.language import _
+
+
+__all__ = ['SourcesDialog']
 
 
 # (fixme) ask boogiepop the permit to use this
-_host_images = "https://offshoregit.com/boogiepop/dataserver/ump/images/"
+_HOST_IMAGES = "https://offshoregit.com/boogiepop/dataserver/ump/images/"
 
 
 class SourcesDialog(xbmcgui.WindowXMLDialog):
@@ -65,12 +69,12 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
 
         self.resolver_lock = workers.Lock()
 
-        self.list_focused = False
         self.ok_button_focused = False
         self.stop_button_flag = False
         self.dialog_closed = False
-        self.selected = None
         self.start_time = None
+        self.selected = None
+        self.action = None
 
         self.thread = None
         self.sources_generator = sourcesGenerator
@@ -86,7 +90,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         for source in items:
             item = xbmcgui.ListItem()
             item.setLabel(source['label'])
-            item.setIconImage(_host_images+source['source'].lower()+'.png')
+            item.setIconImage(_HOST_IMAGES+source['source'].lower()+'.png')
             item.setProperty('source_provider', source['provider'])
             item.setProperty('source_quality', source['quality'])
             item.setProperty('source_host', source['source'])
@@ -97,13 +101,11 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.items.append(item)
 
     def onInit(self):
-        log.notice('onInit')
-
         self.ok_button_focused = False
         self.stop_button_flag = False
         self.dialog_closed = False
-        self.selected = None
         self.start_time = None
+        self.selected = None
 
         self.title_label = self.getControl(self.title_label_id)
         self.list = self.getControl(self.list_id)
@@ -112,10 +114,14 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         self.progress = self.getControl(self.progress_id)
         self.elapsed_label = self.getControl(self.elapsed_label_id)
         self.progress_label = self.getControl(self.progress_label_id)
+        
         self.ok_button = self.getControl(self.ok_button_id)
+        self._toggle_ok_action()
+
         self.stop_button = self.getControl(self.stop_button_id)
         self.left_image = self.getControl(self.left_image_id)
         self.left_label = self.getControl(self.left_label_id)
+
         if not self.posterdata:
             self.left_image.setImage(platform.addonPoster())
             self.left_label.setLabel('')
@@ -163,15 +169,31 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         self.close()
 
     def onAction(self, action):
-        if self.list_focused:
+        focus_id = self.getFocusId()
+        if focus_id == self.list_id:
+            # Show on the bottom label the source info (e.g title quality, etc)
             self.info_label.setLabel(self.list.getSelectedItem().getProperty('source_info'))
+        elif focus_id == self.ok_button_id:
+            if action.getId() == 10:
+                return
+            elif action.getId() == 101:
+                self._toggle_ok_action()
+                return
         xbmcgui.WindowXMLDialog.onAction(self, action)
+
+    def _toggle_ok_action(self):
+        log.notice('onAction: action=%s', self.action)
+        if self.action != 'play':
+            self.ok_button.setLabel(_('Play'))
+            self.action = 'play'
+        else:
+            self.ok_button.setLabel(_('Download'))
+            self.action = 'download'
 
     def onFocus(self, controlID):
         log.notice('onFocus: %s'%controlID)
         if controlID == self.ok_button_id:
             self.list.selectItem(0)
-        self.list_focused = controlID == self.list_id
 
     def sources_worker(self):
         if self.sources_generator:
@@ -265,11 +287,16 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
                 item.setProperty('url', url)
                 media_label = '?'
                 if hasattr(url, 'meta') and url.meta:
-                    if url.meta['type']: media_label = url.meta['type']
+                    if url.meta['type']:
+                    	media_label = url.meta['type']
                     if url.meta['width'] and url.meta['height']:
                         media_label += ' %sx%s'%(url.meta['width'], url.meta['height'])
                         item.setProperty('media', media_label)
                         item.setProperty('resolution', str(url.meta['width']*url.meta['height']))
+                if hasattr(url, 'size'):
+                    item.setProperty('size', str(url.size))
+                if hasattr(url, 'acceptbyteranges') and url.acceptbyteranges:
+                    item.setProperty('rest', 'true')
                 item.setLabel(label_fmt%(media_label.upper(), label))
 
             log.notice('sources.dialog: completed %s: %s'%(label, 'OK' if item.getProperty('url') else 'KO'))

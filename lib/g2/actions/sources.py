@@ -47,7 +47,7 @@ _RESOLVER_TIMEOUT = 30 # seconds
 
 
 
-def url(action, title=None, url=None, **kwargs):
+def playurl(action, title=None, url=None, **kwargs):
     try:
         if not url:
             return
@@ -131,23 +131,38 @@ def dialog(action, title=None, year=None, imdb=None, tvdb=None, meta=None, **kwa
             if not item:
                 break
 
-            source = item.getLabel()
             url = item.getProperty('url')
 
-            if ui.Player().run(title, year, None, None, imdb, tvdb, meta, url,
-                               credits=_credits_message(item.getProperty('source_provider'),
-                                                        item.getProperty('source_host'),
-                                                        item.getProperty('media'))):
-                break
+            if win.action == 'play':
+                if ui.Player().run(title, year, None, None, imdb, tvdb, meta, url,
+                                   credits=_credits_message(item.getProperty('source_provider'),
+                                                            item.getProperty('source_host'),
+                                                            item.getProperty('media'))):
+                    break
+
+                log.notice('sources.dialog: player.run("%s", %s) FAILED'%(name, url))
+                source = item.getLabel()
+                ui.infoDialog(_('Not a valid stream'), heading=source)
+                ui.sleep(2000)
+
+            elif win.action == 'download':
+                poster = metadata.get('poster', '0')
+                if poster == '0':
+                    poster = platform.addonPoster()
+
+                if download('sources.dialog',
+                            name='%s (%s)'%(title, year),
+                            provider=item.getProperty('source_provider'),
+                            resolvedurl=(url,
+                                         item.getProperty('rest') == 'true',
+                                         item.getProperty('size'),
+                                         item.getProperty('media')),
+                            image=poster):
+                    break
 
             # Invalidate the erroneous stream item
             item.setProperty('source_url', '')
             item.setProperty('url', '')
-
-            ui.infoDialog(_('Not a valid stream'), heading=source)
-            ui.sleep(2000)
-
-            log.notice('sources.dialog: player.run("%s", %s) FAILED'%(name, url))
 
             win.show()
 
@@ -362,40 +377,51 @@ def playitem(action, title=None, year=None, imdb=None, tvdb=None, source=None, *
         ui.infoDialog(_('No stream available'))
 
 
-def download(action, name=None, provider=None, url=None, image=None, **kwargs):
-    ui.busydialog()
-    def ui_cancel():
-        ui.sleep(1000)
-        return not ui.abortRequested()
-    thd = _resolve(provider, url, ui_update=ui_cancel)
-    ui.busydialog(stop=True)
-
-    if not thd or thd.is_alive():
-        return
-
-    if not isinstance(thd.result, basestring):
-        ui.infoDialog(_('Not a valid stream'))
-        return
-
-    url = thd.result
-    if not hasattr(url, 'size'):
-        media_size = ''
+def download(action, name=None, provider=None, url=None, resolvedurl=None, image=None, **kwargs):
+    if resolvedurl:
+        url, rest, media_size, media_format = resolvedurl
+        try:
+            media_size = int(media_size)
+        except Exception:
+            media_size = 0
     else:
-        media_size = _('Complete file is %dMB')%int(url.size/(1024*1024))
-        if hasattr(url, 'acceptbyteranges') and url.acceptbyteranges:
-            media_size += ' (r)'
-    if not hasattr(url, 'meta'):
-        media_format = ''
-    else:
-        media_format = _('Media format is %s')%url.meta['type']
-        if url.meta['width'] and url.meta['height']:
-            media_format += ', ' + _('Resolution %dx%d')%(url.meta['width'], url.meta['height'])
+        ui.busydialog()
+        def ui_cancel():
+            ui.sleep(1000)
+            return not ui.abortRequested()
+        thd = _resolve(provider, url, ui_update=ui_cancel)
+        ui.busydialog(stop=True)
 
-    if ui.yesnoDialog(media_size, media_format, _('Continue with download?')):
-        if downloader.addDownload(name, url, image):
-            ui.infoDialog(_('Item Added to Queue'), name)
+        if not thd or thd.is_alive():
+            return False
+
+        if not isinstance(thd.result, basestring):
+            ui.infoDialog(_('Not a valid stream'))
+            return False
+
+        url = thd.result
+
+        rest = hasattr(url, 'acceptbyteranges') and url.acceptbyteranges
+        media_size = 0 if not hasattr(url, 'size') else url.size
+        if not hasattr(url, 'meta'):
+            media_format = ''
         else:
-            ui.infoDialog(_('Item Already In Your Queue'), name)
+            media_format = url.meta['type']
+            if url.meta['width'] and url.meta['height']:
+                media_format += ' %dx%d'%(url.meta['width'], url.meta['height'])
+
+    media_size = '' if not media_size else _('Complete file is %dMB%s')%(int(media_size/(1024*1024)), ' (r)' if rest else '')
+    media_format = '' if not media_format else _('Media format is %s')%media_format
+
+    if not ui.yesnoDialog(media_size, media_format, _('Continue with download?')):
+        return False
+
+    if downloader.addDownload(name, url, image):
+        ui.infoDialog(_('Item Added to Queue'), name)
+    else:
+        ui.infoDialog(_('Item Already In Your Queue'), name)
+
+    return True
 
 
 def clearsourcescache(**kwargs):
