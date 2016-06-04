@@ -22,15 +22,14 @@
 from g2.libraries import platform
 from g2.libraries.language import _
 
-from lib import ui
+from .lib import ui
 
 
-# TODO[code]: rename to main.menu
 def menu(action, **kwargs):
     ui.addDirectoryItem(_('Movies'), 'movies.menu', 'movies.jpg', 'DefaultMovies.png')
-    ui.addDirectoryItem(_('My Genesis'), 'mygenesis.menu', 'mygenesis.jpg', 'DefaultVideoPlaylists.png')
+    ui.addDirectoryItem(_('My G2'), 'myg2.menu', 'mygenesis.jpg', 'DefaultVideoPlaylists.png')
     if platform.setting('movie_widget') != '0':
-        # TODO[UI]: show which provider is giving the list (see movies)
+        # (fixme)[UI]: show which provider is giving the list (see movies)
         ui.addDirectoryItem(_('Latest Movies'), 'movies.widget', 'moviesAdded.jpg', 'DefaultRecentlyAddedMovies.png')
     ui.addDirectoryItem(_('Tools'), 'tools.menu', 'tools.jpg', 'DefaultAddonProgram.png')
     ui.endDirectory(action)
