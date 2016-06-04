@@ -38,7 +38,7 @@ _info_lang = platform.setting('infoLang') or 'en'
 _default_db_priority = 10
 
 
-def info():
+def info(force=False):
     def db_info(package, module, m, paths):
         if not hasattr(m, 'info'):
             return []
@@ -53,7 +53,7 @@ def info():
         })
         return [nfo]
 
-    return g2.info('dbs', db_info)
+    return g2.info('dbs', db_info, force)
 
 
 def url(kind=None, **kwargs):

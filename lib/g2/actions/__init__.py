@@ -28,7 +28,7 @@ from .lib import ui
 _log_trace_on_error = True
 
 
-def info():
+def info(force=False):
     def action_info(dummy_package, dummy_module, mod, paths):
         if not hasattr(mod, 'info'):
             return []
@@ -38,7 +38,7 @@ def info():
             nfo = mod.info
         return [dict(nfo)]
 
-    return g2.info(__name__, action_info)
+    return g2.info(__name__, action_info, force)
 
 
 def execute(action, args=None):

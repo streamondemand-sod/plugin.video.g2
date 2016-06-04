@@ -49,7 +49,7 @@ class ResolvedURL(unicode):
         return self
 
 
-def info():
+def info(force=False):
     def resolver_info(package, dummy_module, mod, paths):
         if not hasattr(mod, 'info'):
             nfo = []
@@ -66,7 +66,7 @@ def info():
             })
         return nfo
 
-    return g2.info('resolvers', resolver_info)
+    return g2.info('resolvers', resolver_info, force)
 
 
 def _top_domain(url):

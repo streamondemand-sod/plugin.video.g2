@@ -45,7 +45,7 @@ _MIN_FUZZINESS_VALUE = 84
 _IGNORE_BODY_EXCEPTIONS = True
 
 
-def info():
+def info(force=False):
     def source_info(package, module, m, paths):
         content = set()
         if hasattr(m, 'get_movie'):
@@ -65,7 +65,7 @@ def info():
                 i['content'] = content
         return nfo
 
-    return g2.info(__name__, source_info)
+    return g2.info(__name__, source_info, force)
 
 
 def video_sources(ui_update, content, **kwargs):

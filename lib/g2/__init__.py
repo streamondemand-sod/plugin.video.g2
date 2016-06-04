@@ -36,7 +36,7 @@ from g2.libraries import platform
 from g2.libraries import language
 
 
-_log_debug = True
+# _log_debug = True
 
 
 _PACKAGES_KINDS = {
@@ -47,6 +47,8 @@ _PACKAGES_KINDS = {
         # User settings are generated at the package kind level (e.g. providers:::id)
         # See the code below
         'settings': {},
+        # '0': no content (e.g. disabled); '1': all contents
+        'module_enabled_setting_default': '1',
     },
     'resolvers': {
         'order': 2,
@@ -57,6 +59,7 @@ _PACKAGES_KINDS = {
         # User settings are generated at the package kind level (e.g. resolvers:::id)
         # See the code below
         'settings': {},
+        'module_enabled_setting_default': 'true',
     },
     'dbs': {
         'order': 3,
@@ -75,7 +78,7 @@ _PACKAGES_KINDS = {
     },
 }
 
-def _fill_packages_kinds():
+def _fill_packages_settings_category():
     def _ordinal(num):
         return "%d%s" % (num, "tsnrhtdd"[(num/10%10 != 1)*(num%10 < 4)*num%10::4])
 
@@ -91,7 +94,7 @@ def _fill_packages_kinds():
             }
 
 # python2.6 doesn't support {} comprehensions
-_fill_packages_kinds()
+_fill_packages_settings_category()
 
 _RESOURCES_PATH = os.path.join(platform.addonInfo('path'), 'resources') 
 
@@ -157,7 +160,7 @@ class Context:
         for dummy_path in self.search_paths:
             sys.path.pop(0)
         if not self.ignore_exc and exc_value:
-            log.notice('%s: %s', self.fullname, exc_value, trace=True)
+            log.error('%s: %s', self.fullname, exc_value, trace=True)
         return True
 
 
@@ -265,24 +268,29 @@ def uninstall(kind, name):
         return False
 
 
-def info(kind, infofunc):
+def info(kind, infofunc, force=False):
     kind = kind.split('.')[-1]
     response_infos = {}
     try:
-        infos_paths, infos_modules = cache.get(_info_get, 1, kind, infofunc, hash_args=1, response_info=response_infos) 
-        if 'cached' in response_infos:
-            log.debug('{m}.{f}: info cached %s, paths=%s', response_infos['cached'], infos_paths)
+        if force:
+            update_needed = True
+        else:
             update_needed = False
-            for path in infos_paths:
-                try:
-                    if not os.path.exists(path) or platform.Stat(path).st_mtime() > response_infos['cached']:
-                        raise
-                except Exception:
-                    update_needed = True
-            if update_needed:
-                infos_paths, infos_modules = cache.get(_info_get, 0, kind, infofunc, hash_args=1)
+            infos_paths, infos_modules = cache.get(_info_get, 1, kind, infofunc, hash_args=1, response_info=response_infos) 
+            if 'cached' in response_infos:
+                log.debug('{m}.{f}: %s packages: cached=%s, paths=%s', kind, response_infos['cached'], infos_paths)
+                for path in infos_paths:
+                    try:
+                        path = platform.translatePath(path)
+                        if not os.path.exists(path) or platform.Stat(path).st_mtime() > response_infos['cached']:
+                            raise
+                    except Exception:
+                        update_needed = True
+        if update_needed:
+            infos_paths, infos_modules = cache.get(_info_get, 0, kind, infofunc, hash_args=1)
+            log.notice('{m}.{f}: updated %s packages: %d modules', kind, len(infos_modules))
     except Exception as ex:
-        log.error('packages.info(%s): %s', kind, ex, trace=True)
+        log.error('{m}.{f}: %s: %s', kind, ex, trace=True)
         return {}
 
     return infos_modules
@@ -321,7 +329,7 @@ def _info_get(kind, infofunc):
                 continue
 
             if not hasattr(pac, 'site'):
-                log.debug('{m}.{f}: %s package %s does not specify a site origin; skip it!', kind, name)
+                log.notice('{m}.{f}: %s package %s does not specify a site origin; skip it!', kind, name)
                 continue
 
             addonpaths = []
@@ -346,8 +354,8 @@ def _info_get(kind, infofunc):
             for dummy_package, sname, is_pkg in importer.walk_packages(pac.__path__, onerror=ignore):
                 log.debug('{m}.{f}: sname=%s is_pkg=%s enabled=%s'%(sname, is_pkg, setting(kind, name, sname, name='enabled')))
 
-                # (fixme) found a way to disable providers configured with content == none
-                if is_pkg or '.' in sname or setting(kind, name, sname, name='enabled') == 'false':
+                if is_pkg or '.' in sname or setting(kind, name, sname, name='enabled') == 'false' \
+                or setting(kind, name, sname, name='enabled') == '0':
                     if not is_pkg and '.' not in sname:
                         log.debug('{m}.{f}: module %s.%s ignored, user enable setting is %s',
                                   name, sname, setting(kind, name, sname, name='enabled'))
@@ -359,7 +367,6 @@ def _info_get(kind, infofunc):
 
 
 def _info_get_module(infofunc, infos, kind, module, package='', paths=[]):
-    log.debug('{m}.{f}: %s.%s%s', kind, package+'.' if package else '', module)
     with Context(kind, package, [module], paths) as mods:
         if not mods:
             return
@@ -374,7 +381,6 @@ def _info_get_module(infofunc, infos, kind, module, package='', paths=[]):
             log.error('{m}: infofunc(%s, %s, ...): %s', package, module, ex, trace=True)
             nfo = []
 
-        log.debug('{m}.{f}: nfo=%s', nfo)
         for i in nfo:
             fullname = ('' if not package else package+'.') + module + ('' if 'name' not in i else '.'+i['name'])
             infos[fullname] = dict(i)
@@ -432,7 +438,7 @@ def update_settings_skema():
                 log.debug('update_settings_skema: name=%s.%s, is_pkg=%s'%(name, sname, is_pkg))
                 if is_pkg or '.' in sname:
                     continue
-                add_setting('enabled', 'true', kind, name, sname)
+                add_setting('enabled', kindesc.get('module_enabled_setting_default', 'true'), kind, name, sname)
 
     settings_skema_path = os.path.join(_RESOURCES_PATH, 'settings.xml')
     new_settings_skema = ''
@@ -484,11 +490,12 @@ def update_settings_skema():
                 if category in ['resolvers']:
                     settype = 'bool'
                     setlvalues = ''
-                    visible = 'true' if current_module > 2 or (index < len(settings_ids)-1 and settings_ids[index+1].split(':')[0:2] == current_package) else 'false'
+                    visible = 'true' if current_module > 2 or (index < len(settings_ids)-1 and
+                                                               settings_ids[index+1].split(':')[0:2] == current_package) else 'false'
 
                 elif category in ['providers']:
                     settype = 'enum'
-                    setlvalues = 'lvalues="%s" '%('|'.join([str(language.msgcode(t)) for t in ['None', 'Movies&TV', 'Movies', 'TV'] if language.msgcode(t)]))
+                    setlvalues = 'lvalues="%s" '%('|'.join(['None', 'Movies']))
                     visible = 'true'
 
                 new_settings_skema += '\t\t<setting id="%s" type="%s" label="%s" %sdefault="%s" enable="eq(-%d,true)" visible="%s" subsetting="true" />\n'%(
@@ -502,7 +509,6 @@ def update_settings_skema():
         for line in fil:
             new_settings_skema += line
 
-    # log.debug(new_settings_skema)
     if new_settings_skema != '':
         with open(settings_skema_path, 'w') as fil:
             fil.write(new_settings_skema)
@@ -564,6 +570,7 @@ def _get_addon_details(addon_id):
 
     # <import addon="script.module.simplejson" version="3.3.0"/>
     imported_addons = re.compile(r'<import.*?addon\s*=\s*"([^"]+)"', re.DOTALL).findall(addon_xml)
+    imported_addons = [a for a in imported_addons if not a.startswith('xbmc.')]
 
     log.debug('_get_addon_details(%s): path=%s, imported_addons=%s'%(addon_id, path, imported_addons))
 

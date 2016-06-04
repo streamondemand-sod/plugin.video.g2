@@ -31,7 +31,7 @@ from g2.libraries import platform
 # _log_trace_on_error = True
 
 
-def info():
+def info(force=False):
     def notifiers_info(dummy_package, dummy_module, mod, paths):
         if not hasattr(mod, 'INFO'):
             return []
@@ -41,7 +41,7 @@ def info():
             nfo = mod.INFO
         return [dict(nfo)]
 
-    return g2.info('notifiers', notifiers_info)
+    return g2.info('notifiers', notifiers_info, force)
 
 
 def notices(notes, targets=None, **kwargs):
