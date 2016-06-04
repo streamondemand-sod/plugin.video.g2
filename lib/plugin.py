@@ -37,7 +37,7 @@ from g2 import actions
 
 PARAMS = dict(urlparse.parse_qsl(sys.argv[2].replace('?', '')))
 ARGS_DEFAULT = {
-    'action': platform.setting('top_menu'),
+    'action': platform.setting('main_menu'),
     'name': None,
     'title': None,
     'year': None,
@@ -77,7 +77,7 @@ for arg, defvalue in ARGS_DEFAULT.iteritems():
         PARAMS[arg] = defvalue
 
 if not PARAMS['action']:
-    PARAMS['action'] = 'top.menu'
+    PARAMS['action'] = 'main.menu'
 
 log.notice('Thread ID:%s, ACTION:%s, QUERY:%s, IMDB:%s, URL:%s',
            sys.argv[1], PARAMS['action'], PARAMS['query'], PARAMS['imdb'], PARAMS['url'])

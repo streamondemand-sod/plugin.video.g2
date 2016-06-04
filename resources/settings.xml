@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
 	<category label="30800">
-		<setting id="top_menu" visible="false" default="top.menu" />
+		<setting id="main_menu" visible="false" default="main.menu" />
 		<setting id="packages_urls" visible="false" default="['http://j0rdyz65.github.io/']" />
 		<setting id="appearance" type="select" label="30801" values="-|4orbs|Clean|Embossed|GOne|Metro" default="GOne" />
 		<setting id="fanart" type="bool" label="30802" default="true" />
@@ -46,7 +46,7 @@
 		<setting type="lsep" label="[CR]" />
 		<setting id="providers:isod_providers_by_j0rdyz65_at_github::enabled" type="bool" label="Isod Providers By J0Rdyz65 At Github" default="true" />
 		<setting id="providers:isod_providers_by_j0rdyz65_at_github::priority" type="number" label="Priority" default="10" enable="eq(-1,true)" subsetting="true" />
-		<setting id="providers:isod_providers_by_j0rdyz65_at_github:isod_adapter:enabled" type="enum" label="Isod_Adapter" lvalues="30001|30100" default="true" enable="eq(-2,true)" visible="true" subsetting="true" />
+		<setting id="providers:isod_providers_by_j0rdyz65_at_github:isod_adapter:enabled" type="enum" label="Isod_Adapter" lvalues="None|Movies" default="1" enable="eq(-2,true)" visible="true" subsetting="true" />
 	</category>
 	<category label="30870">
 		<setting id="resolvers:::preferred_provider_1" type="select" label="30016" values="-|abysstream|adnstream|akstream|allmyvideos|backin|bitshare|bliptv|cloudifer|cloudzer|cloudzilla|cramit|cumlouder|dailymotion|depositfiles|directo|divxstage|documentary|exashare|extabit|facebook|fakingstv|fastvideo|fiberupload|filebox|filefactory|fileflyer|filejungle|filereactor|fileserve|filesmonster|filesonic|firedrive|flashx|fooget|fourshared|freakshare|gamovideo|gigasize|googledrive|googlevideo|hdload|hdplay|hotfile|hugefiles|hulkshare|ilfattoquotidiano|jumbofiles|junkyvideo|justintv|letitbit|letwatch|lumfile|magnovideo|mailru|mediafire|mega|megadrive|megahd|modovideo|moevideos|movreel|movshare|netload|nosvideo|novamov|nowdownload|nowvideo|nubestream|oboom|okru|one80upload|onefichier|openload|playedto|powvideo|publicvideohost|putlocker|putstream|rapidgator|rapidshare|rapidtube|rapidvideo|realvid|rocvideo|royalvids|rutube|sendvid|shareflare|sharpfile|sockshare|speedvid|speedvideo|stagero|stagevu|streamable|streamcloud|streaminto|tumitv|tunepk|turbobit|tutv|twitvid|ultramegabit|uploadedto|uploading|uploadstation|uploaz|uptobox|userporn|v4y|veehd|veevr|veoh|vidbull|vidbux|video4you|videobam|videomega|videopremium|videott|videoweed|videowood|videozed|videozer|vidhog|vidspot|vidtome|vidxden|vidxtreme|vidzi|vimeo|vimpleru|vk|vkpass|vodlocker|vureel|watchfreeinhd|xvideos|youtube|youwatch|zinwa|zippyshare" default="-" />
