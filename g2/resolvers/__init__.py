@@ -22,7 +22,6 @@ import os
 import re
 import sys
 import urllib
-import pkgutil
 import urlparse
 
 from contextlib import closing
