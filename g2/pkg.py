@@ -101,6 +101,8 @@ _RESOURCES_PATH = os.path.join(platform.addonInfo('path'), 'resources')
 # NOTE: This is the path relative to the one present in sys.path.
 # Remember to update it if you move the hierarchy around relative to sys.path
 PACKAGES_RELATIVE_PATH = 'g2.'
+
+from . import __path__
 _PACKAGES_ABSOLUTE_PATH = __path__[0]
 
 
