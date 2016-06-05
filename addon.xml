@@ -4,10 +4,10 @@
 		<import addon="xbmc.python" version="2.20.0" />
 		<import addon="script.module.requests" version="2.9.1" />
 	</requires>
-	<extension point="xbmc.python.pluginsource" library="lib/plugin.py">
+	<extension point="xbmc.python.pluginsource" library="plugin.py">
 		<provides>video</provides>
 	</extension>
-	<extension point="xbmc.service" library="lib/service.py" start="startup" />
+	<extension point="xbmc.service" library="service.py" start="startup" />
 	<extension point="xbmc.addon.metadata">
 		<summary lang="en">G2 is the Gio's own version of the famous G... addon.</summary>
 		<description lang="en">G2 addon</description>
