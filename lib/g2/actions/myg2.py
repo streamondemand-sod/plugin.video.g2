@@ -30,7 +30,7 @@ _trakt_user = platform.setting('trakt_user') if platform.setting('trakt_enabled'
 _imdb_user = platform.setting('imdb_user')
 
 
-# TODO[func]: _()-fy
+# (fixme) intl
 def menu(action, **kwargs):
     if _trakt_user:
         ui.addDirectoryItem(30081, 'movies.movielist&url='+dbs.url('movies_collection{trakt_user_id}', trakt_user_id=_trakt_user, quote_plus=True), 'moviesTraktcollection.jpg', 'DefaultMovies.png',

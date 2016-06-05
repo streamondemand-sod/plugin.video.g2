@@ -40,7 +40,6 @@ class DeleteRequest(urllib2.Request):
         return "DELETE"
 
 
-# TODO[code]: replace with the urlresolver net.py module!!!
 def request(url, method=None, close=True, error=False, proxy=None, post=None, headers=None, mobile=False, safe=False, referer=None, cookie=None, output='', timeout='30', debug=False):
     global _log_debug
     _log_debug = debug

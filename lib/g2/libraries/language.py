@@ -58,7 +58,6 @@ def _read_msgs():
 
     for msgid, codes in _msgs_codes.iteritems():
         if len(codes) > 1:
-            # TODO[code]: remove all duplicated strings!!!
             log.debug('lang: "%s": multiple codes: %s'%(msgid, ', '.join(map(lambda x: str(x), codes))))
 
 

@@ -28,7 +28,6 @@ from .lib import ui
 
 def menu(**kwargs):
     ui.addDirectoryItem(_('[B]SETTINGS[/B]'), 'tools.settings&query=0.0', 'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
-    # TODO[func]: insert an explicit link for sections higher than 3: (4=downloads->>library, 5=sottotitoli-->playback?!?)
     ui.addDirectoryItem(_('[B]SETTINGS[/B] : Resolvers'), 'tools.settings&query=6.0', 'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]SETTINGS[/B] : Sources'), 'tools.settings&query=7.0', 'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]G2[/B] : Clear sources...'), 'sources.clear', 'cache.jpg', 'DefaultAddonProgram.png', isFolder=False)

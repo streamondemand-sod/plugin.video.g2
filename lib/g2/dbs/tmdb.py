@@ -38,10 +38,10 @@ info = {
 _info_lang = platform.setting('infoLang') or 'en'
 _include_adult = 'false'
 
-# TODO[port]: make this a configuration parameter or platform dependent (eg. raspberry xbmc)
+# (fixme) make this a configuration parameter or platform dependent (eg. raspberry xbmc)
 _max_concurrent_threads = 10
 
-# TODO[user]: extract the TMDB key from the official package "metadata.common.themoviedb.org"
+# (fixme) user setting
 _tmdb_key = 'f7f51775877e0bb6703520952b3c7840'
 _tmdb_image = 'http://image.tmdb.org/t/p/original'
 _tmdb_poster = 'http://image.tmdb.org/t/p/w500'
@@ -406,7 +406,7 @@ def genres():
             items.append({
                 'name': name,
                 'id': genre_id,
-                # TODO[look]: it would be nice to have an icon per genre
+                # (fixme) it would be nice to have an icon per genre
                 'image': 'movieGenres.jpg',
             })
         except:
@@ -440,7 +440,7 @@ def certifications(country):
                 'name': name,
                 'meaning': meaning,
                 'order': order,
-                # TODO[look]: it would be nice to have an icon per certification type:
+                # (fixme) it would be nice to have an icon per certification type:
                 # [https://en.wikipedia.org/wiki/Motion_Picture_Association_of_America_film_rating_system]
                 'image': 'movieCertificates.jpg',
             })

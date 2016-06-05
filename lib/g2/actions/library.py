@@ -29,7 +29,7 @@ _traktMode = platform.setting('trakt_user') != ''
 _imdbMode = platform.setting('imdb_user') != ''
 
 
-# TODO[func]: _()-zation and action-ization
+# (fixme) intl and action fix
 def menu(**kwargs):
     ui.addDirectoryItem(30131, 'tools.settings&query=3.0', 'settings.jpg', 'DefaultAddonProgram.png')
     ui.addDirectoryItem(30132, 'updateLibrary&query=tool', 'update.jpg', 'DefaultAddonProgram.png')
@@ -46,7 +46,7 @@ def menu(**kwargs):
     ui.endDirectory()
 
     
-# TODO[func]: _()-zation and action-ization
+# (fixme) intl and actions fix
 def downloads(**kwargs):
     movie_downloads = platform.setting('movie_downloads')
     if len(platform.listDir(movie_downloads)[0]) > 0:
