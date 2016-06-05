@@ -19,9 +19,9 @@
 """
 
 
-import g2
-
+from g2 import pkg
 from g2.libraries import log
+
 from .lib import ui
 
 
@@ -38,7 +38,7 @@ def info(force=False):
             nfo = mod.info
         return [dict(nfo)]
 
-    return g2.info(__name__, action_info, force)
+    return pkg.info(__name__, action_info, force)
 
 
 def execute(action, args=None):
@@ -59,7 +59,7 @@ def execute(action, args=None):
         if action_ext:
             # if multiple modules redefine the same actions, use the first one without a particular order
             action_ext = action_ext[0]
-            with g2.Context(__name__, action_ext['package'], [action_ext['module']], action_ext['search_paths']) as mod:
+            with pkg.Context(__name__, action_ext['package'], [action_ext['module']], action_ext['search_paths']) as mod:
                 getattr(mod[0], action)(**args)
         else:
             mod = __import__(module, globals(), locals(), [], -1)

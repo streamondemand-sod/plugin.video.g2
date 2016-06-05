@@ -22,8 +22,7 @@
 import xbmc
 import xbmcgui
 
-import g2
-
+from g2 import pkg
 from g2.libraries import log
 from g2.libraries.language import _
 
@@ -67,16 +66,16 @@ class PackagesDialog(xbmcgui.WindowXMLDialog):
             kind = item.getProperty('kind')
             name = item.getProperty('name')
 
-            if not g2.is_installed(kind, name):
+            if not pkg.is_installed(kind, name):
                 self.progress_dialog = DialogProgressBG()
                 self.progress_dialog.create(_('Download Package')+' '+name)
                 self._update_progress_dialog(0)
-                if g2.install_or_update(kind, name, item.getProperty('site'), self._update_progress_dialog):
+                if pkg.install_or_update(kind, name, item.getProperty('site'), self._update_progress_dialog):
                     _update_package_item(item, 'true')
                 self.progress_dialog.close()
                 try:
                     missing = []
-                    kindmod = __import__('g2.%s'%kind, globals(), locals(), [name], -1)
+                    kindmod = __import__(pkg.PACKAGES_RELATIVE_PATH+kind, globals(), locals(), [name], -1)
                     pkgmod = getattr(kindmod, name)
                     for addon in pkgmod.addons if pkgmod.addons else []:
                         if not xbmc.getCondVisibility('System.HasAddon(%s)'%addon):
@@ -94,7 +93,7 @@ class PackagesDialog(xbmcgui.WindowXMLDialog):
                     infoDialog(_('Failure to load the package'))
 
             # (fixme) warn if the package is orphaned...
-            elif yesnoDialog(_('Are you sure?'), '', '', heading=_('Uninstall Package')+' '+name) and g2.uninstall(kind, name):
+            elif yesnoDialog(_('Are you sure?'), '', '', heading=_('Uninstall Package')+' '+name) and pkg.uninstall(kind, name):
                 _update_package_item(item, 'false')
                 if not item.getProperty('site'):
                     self.packages = [i for i in self.packages if i.getProperty('kind') != kind or i.getProperty('name') != name]

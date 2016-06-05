@@ -26,15 +26,13 @@ import time
 import urllib
 import urlparse
 
-import g2
-
+from g2 import pkg
+from g2 import providers
+from g2 import resolvers
 from g2.libraries import log
 from g2.libraries import workers
 from g2.libraries import platform
 from g2.libraries.language import _
-
-from g2 import providers
-from g2 import resolvers
 
 from .lib import ui
 from .lib import downloader
@@ -493,7 +491,7 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
     if provider:
         provider = provider.split('.')[-1].lower()
         for top in range(1, 10):
-            pref = g2.setting('providers', name='preferred_provider_%d'%top)
+            pref = pkg.setting('providers', name='preferred_provider_%d'%top)
             if not pref:
                 break
             if pref.lower() == provider:
@@ -503,7 +501,7 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
     if host:
         host = host.split('.')[-1].lower()
         for top in range(1, 10):
-            pref = g2.setting('resolvers', name='preferred_host_%d'%top)
+            pref = pkg.setting('resolvers', name='preferred_host_%d'%top)
             if not pref:
                 break
             if  pref.lower() == host:

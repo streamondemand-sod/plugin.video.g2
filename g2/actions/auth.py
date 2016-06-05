@@ -22,8 +22,8 @@
 from g2.libraries import log
 from g2.libraries import platform
 from g2.libraries.language import _
-import g2.dbs.trakt
-import g2.notifiers.pb
+from g2.dbs import trakt as trakt_db
+from g2.notifiers import pb as pb_notifier
 
 from .lib import ui
 
@@ -43,8 +43,8 @@ def trakt(action, **kwargs):
         trakt_user = platform.setting('trakt_user')
         if trakt_user:
             if ui.yesnoDialog(_('There is already an authorized account: ')+trakt_user,
-                                  _('Do you wanto to keep it?'),
-                                  heading='Trakt'):
+                              _('Do you wanto to keep it?'),
+                              heading='Trakt'):
                 return
 
         dialog_progress = ui.DialogProgress()
@@ -60,7 +60,7 @@ def trakt(action, **kwargs):
             ui.sleep(1000)
             return not ui.abortRequested() and not dialog_progress.iscanceled()
 
-        user = g2.dbs.trakt.authDevice(ui_update=ui_update)
+        user = trakt_db.authDevice(ui_update=ui_update)
 
         dialog_progress.close()
 
@@ -82,7 +82,7 @@ def pushbullet(action, **kwargs):
         return
 
     # (fixme) if auth fail, clear the pushbullet_email, otherwise set it to the email address
-    pbo = g2.notifiers.pb.PushBullet(platform.setting('pushbullet_apikey'))
+    pbo = pb_notifier.PushBullet(platform.setting('pushbullet_apikey'))
     try:
         user = pbo.getUser()
         if not user:

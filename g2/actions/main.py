@@ -27,7 +27,7 @@ from .lib import ui
 
 def menu(action, **kwargs):
     ui.addDirectoryItem(_('Movies'), 'movies.menu', 'movies.jpg', 'DefaultMovies.png')
-    ui.addDirectoryItem(_('My G2'), 'myg2.menu', 'mygenesis.jpg', 'DefaultVideoPlaylists.png')
+    ui.addDirectoryItem(_('My Movies'), 'my.menu', 'mygenesis.jpg', 'DefaultVideoPlaylists.png')
     if platform.setting('movie_widget') != '0':
         # (fixme)[UI]: show which provider is giving the list (see movies)
         ui.addDirectoryItem(_('Latest Movies'), 'movies.widget', 'moviesAdded.jpg', 'DefaultRecentlyAddedMovies.png')

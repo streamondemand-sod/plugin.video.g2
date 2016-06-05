@@ -27,10 +27,10 @@ import urlparse
 
 from contextlib import closing
 
-import g2
-
+from g2 import pkg
 from g2.libraries import log
 from g2.libraries import client2
+
 from .lib import metastream
 
 
@@ -62,11 +62,11 @@ def info(force=False):
         for i in nfo:
             i.update({
                 # User configurable priority at the package level 
-                'priority': g2.setting('resolvers', package, name='priority'),
+                'priority': pkg.setting('resolvers', package, name='priority'),
             })
         return nfo
 
-    return g2.info('resolvers', resolver_info, force)
+    return pkg.info('resolvers', resolver_info, force)
 
 
 def _top_domain(url):
@@ -113,7 +113,7 @@ def resolve(url, checkonly=False):
                 errors.append(err)
 
         res = None
-        with g2.Context('resolvers', resolver['package'], [resolver['module']], resolver['search_paths']) as mod:
+        with pkg.Context('resolvers', resolver['package'], [resolver['module']], resolver['search_paths']) as mod:
             res = None if not mod else mod[0].resolve(resolver['name'].split('.'), url)
 
         # On error, go to the next resolver for the same domain

@@ -25,8 +25,7 @@ import urlparse
 
 import importer
 
-import g2
-
+from g2 import pkg
 from g2.libraries import log
 from g2.libraries import platform
 
@@ -53,7 +52,7 @@ def info(force=False):
         })
         return [nfo]
 
-    return g2.info('dbs', db_info, force)
+    return pkg.info('dbs', db_info, force)
 
 
 def url(kind=None, **kwargs):
@@ -123,10 +122,10 @@ def _db_method(db, method, *args, **kwargs):
     result = None
     try:
         if 'package' in db:
-            with g2.Context('dbs', db['package'], [db['module']], db['search_paths']) as mod:
+            with pkg.Context('dbs', db['package'], [db['module']], db['search_paths']) as mod:
                 result = getattr(mod[0], method)(*args, **kwargs)
         else:
-            with g2.Context('dbs', db['module'], [], []) as mod:
+            with pkg.Context('dbs', db['module'], [], []) as mod:
                 result = getattr(mod, method)(*args, **kwargs)
     except Exception as ex:
         log.error('dbs.%s.%s(): %s'%(db['name'], method, ex))

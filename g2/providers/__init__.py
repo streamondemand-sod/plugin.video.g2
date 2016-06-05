@@ -29,12 +29,12 @@ try:
 except:
     from pysqlite2 import dbapi2 as database
 
-import g2
-
+from g2 import pkg
+from g2 import resolvers
 from g2.libraries import log
 from g2.libraries import workers
 from g2.libraries import platform
-from g2 import resolvers
+
 from .lib.fuzzywuzzy import fuzz
 
 
@@ -65,12 +65,12 @@ def info(force=False):
                 i['content'] = content
         return nfo
 
-    return g2.info(__name__, source_info, force)
+    return pkg.info(__name__, source_info, force)
 
 
 def video_sources(ui_update, content, **kwargs):
     providers = {}
-    for dummy_kind, package in g2.packages([__name__]):
+    for dummy_kind, package in pkg.packages([__name__]):
         providers[package] = [mi for mi in info().itervalues() if mi['package'] == package and content in mi['content']]
     all_providers = sum([len(providers[mi]) for mi in providers])
     if not all_providers:
@@ -84,7 +84,7 @@ def video_sources(ui_update, content, **kwargs):
 
         # (fixme) use the priority as sorting method
         modules = sorted(set([mi['module'] for mi in modulesinfo]))
-        with g2.Context(__name__, package, modules, modulesinfo[0]['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mods:
+        with pkg.Context(__name__, package, modules, modulesinfo[0]['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mods:
             if not mods:
                 continue
             threads = []
@@ -267,7 +267,7 @@ def get_movie(provider, **kwargs):
     except:
         raise Exception('Provider %s not available'%provider)
 
-    with g2.Context(__name__, provider['package'], [provider['module']], provider['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
+    with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
         return mod[0].get_movie(provider['name'].split('.'), **kwargs)
 
 
@@ -280,7 +280,7 @@ def get_sources(provider, url):
     except:
         raise Exception('Provider %s not available'%provider)
 
-    with g2.Context(__name__, provider['package'], [provider['module']], provider['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
+    with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
         sources = mod[0].get_sources(provider['name'].split('.'), url)
         for src in sources:
             src.update({
@@ -311,7 +311,7 @@ def resolve(provider, url):
 
     # Otherwise, try with the source resolver and then give the url back to the resolvers again
     try:
-        with g2.Context(__name__, provider['package'], [provider['module']], provider['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
+        with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
             # (fixme)[debug]: if successfull, enrich the resolvedurl with the source resolver too!
             url = mod[0].resolve(provider['name'].split('.'), url)
     except Exception:

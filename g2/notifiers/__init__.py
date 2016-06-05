@@ -21,8 +21,7 @@
 
 import importer
 
-import g2
-
+from g2 import pkg
 from g2.libraries import log
 from g2.libraries import platform
 
@@ -41,7 +40,7 @@ def info(force=False):
             nfo = mod.INFO
         return [dict(nfo)]
 
-    return g2.info('notifiers', notifiers_info, force)
+    return pkg.info('notifiers', notifiers_info, force)
 
 
 def notices(notes, targets=None, **kwargs):
@@ -61,10 +60,10 @@ def _all_modules_method(method, targets, *args, **kwargs):
     for module in [m for m in info().itervalues() if method in m['methods'] and (not targets or m['target'] in targets)]:
         try:
             if 'package' in module:
-                with g2.Context('notifiers', module['package'], [module['module']], module['search_paths']) as mod:
+                with pkg.Context('notifiers', module['package'], [module['module']], module['search_paths']) as mod:
                     res = getattr(mod[0], method)(*args, **kwargs)
             else:
-                with g2.Context('notifiers', module['module'], [], []) as mod:
+                with pkg.Context('notifiers', module['module'], [], []) as mod:
                     res = getattr(mod, method)(*args, **kwargs)
         except Exception as ex:
             log.error('notifiers.%s.%s: %s', module['name'], method, ex)

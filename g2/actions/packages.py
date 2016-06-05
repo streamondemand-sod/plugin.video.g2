@@ -18,15 +18,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 import ast
 
-
-import g2
-
+from g2 import pkg
 from g2.libraries import log
 from g2.libraries import client2
 from g2.libraries import platform
 from g2.libraries.language import _
+
 from .lib import ui
 
 
@@ -51,22 +51,22 @@ def dialog(**kwargs):
     for url in packages_urls:
         try:
             res = client2.get(url, debug=True)
-            res = client2.parseDOM(res.content, 'tbody')[0]
-            res = client2.parseDOM(res, 'tr')
+            pkgentries = client2.parseDOM(res.content, 'tbody')[0]
+            pkgentries = client2.parseDOM(pkgentries, 'tr')
         except Exception:
             log.notice('{m}.{f}: %s: no packages directory found', url)
             continue
 
-        for pkg in res:
+        for pkgentry in pkgentries:
             try:
-                kind, desc, site = client2.parseDOM(pkg, 'td')
+                kind, desc, site = client2.parseDOM(pkgentry, 'td')
                 log.debug('{m}.{f}: %s %s'%(kind, site))
-                if kind not in g2.kinds():
+                if kind not in pkg.kinds():
                     log.notice('{m}.{f}: %s: kind %s not implemented', url, kind)
                     continue
  
                 site = site.replace('<code>', '').replace('</code>', '')
-                name = g2.local_name(site)
+                name = pkg.local_name(site)
                 if name is None:
                     log.notice('{m}.{f}: %s: site url %s not implemented', url, site)
                     continue
@@ -83,7 +83,7 @@ def dialog(**kwargs):
                 item.setProperty('kind', kind)
                 item.setProperty('name', name)
                 item.setProperty('site', site)
-                item.setProperty('installed', 'true' if g2.is_installed(kind, name) else 'false')
+                item.setProperty('installed', 'true' if pkg.is_installed(kind, name) else 'false')
                 win.packages.append(item)
 
                 listed[kind+'.'+name] = True
@@ -91,7 +91,7 @@ def dialog(**kwargs):
             except Exception:
                 pass
 
-    for kind, name in g2.packages():
+    for kind, name in pkg.packages():
         if kind+'.'+name not in listed:
             log.notice('{m}.{f}: orphaned package %s.%s'%(kind, name))
             item = ui.ListItem()
@@ -101,7 +101,7 @@ def dialog(**kwargs):
             item.setProperty('installed', 'true')
             win.packages.append(item)
 
-    for kind in g2.kinds():
+    for kind in pkg.kinds():
         if kind in kinds:
             item = ui.ListItem()
             item.setLabel(kind.upper())
@@ -109,6 +109,6 @@ def dialog(**kwargs):
 
     win.doModal()
 
-    g2.update_settings_skema()
+    pkg.update_settings_skema()
 
     del win
