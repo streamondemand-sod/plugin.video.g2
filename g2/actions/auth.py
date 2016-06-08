@@ -70,6 +70,7 @@ def trakt(action, **kwargs):
         platform.setSetting('trakt_user', user)
 
     except Exception as ex:
+        dialog_progress.close()
         ui.infoDialog(str(ex), time=5000)
 
 
