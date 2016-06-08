@@ -23,6 +23,7 @@
 
 
 import re
+import HTMLParser
 
 import requests
 from requests.packages import urllib3
@@ -33,15 +34,24 @@ from g2.libraries import log
 urllib3.disable_warnings()
 
 
+codes = requests.codes
+
+
 class Session(requests.Session):
     def __init__(self, debug=False, **kwargs):
         requests.Session.__init__(self, **kwargs)
         self.session_debug = _set_debug(debug)
 
-    def get(self, url, debug=False, **kwargs):
+    def get(self, url, **kwargs):
+        return self._request(self._get, url, **kwargs)
+
+    def post(self, url, **kwargs):
+        return self._request(self._post, url, **kwargs)
+
+    def _request(self, method, url, debug=None, **kwargs):
         debug = self.session_debug | _set_debug(debug)
 
-        res = _get(self._get, url, debug=debug, **kwargs)
+        res = _request(method, url, debug=debug, **kwargs)
 
         if _debug(debug, 'adapter'):
             conn = self.get_adapter(url).poolmanager.connection_from_url(url)
@@ -52,24 +62,40 @@ class Session(requests.Session):
     def _get(self, url, **kwargs):
         return requests.Session.get(self, url, **kwargs)
 
+    def _post(self, url, **kwargs):
+        log.debug('session._post: %s, %s, %s', self, url, kwargs, debug=True)
+        return requests.Session.post(self, url, **kwargs)
+
 
 def get(url, debug=None, **kwargs):
-    return _get(requests.get, url, debug=_set_debug(debug), **kwargs)
+    return _request(requests.get, url, debug=_set_debug(debug), **kwargs)
 
 
-def _get(objget, url, raise_error=None, debug=None, **kwargs):
+def post(url, debug=None, **kwargs):
+    return _request(requests.post, url, debug=_set_debug(debug), **kwargs)
+
+
+def _request(method, url, raise_error=None, debug=None, **kwargs):
     if _debug(debug, 'request'):
-        log.debug('{m}.{f}: request.get.url: %s', url, debug=True)
+        log.debug('{m}.{f}: request.method: %s', method, debug=True)
+        log.debug('{m}.{f}: request.url: %s', url, debug=True)
+        if kwargs.get('data'):
+            for var, val in kwargs.get('data').iteritems():
+                log.debug('{m}.{f}: request.data: %s=%s', var, val, debug=True)
+        if type(kwargs.get('headers')) == dict:
+            for hdr, val in kwargs.get('headers').iteritems():
+                log.debug('{m}.{f}: request.headers: %s=%s', hdr, val, debug=True)
 
-    res = objget(url, **kwargs)
+    res = method(url, **kwargs)
 
-    if _debug(debug, 'headers'):
+    if _debug(debug, 'response'):
         for hdr, val in res.headers.iteritems():
             log.debug('{m}.{f}: response.headers: %s=%s', hdr, val, debug=True)
         for cke, val in res.cookies.iteritems():
             log.debug('{m}.{f}: response.cookies: %s=%s', cke, val, debug=True)
         if res.history:
             log.debug('{m}.{f}: response.history: %s', res.history, debug=True)
+        log.debug('{m}.{f}: response.status: %s', res.status_code, debug=True)
 
     if _debug(debug, 'content'):
         log.debug('{m}.{f}: response.content[%s]: %s', res.encoding, res.content, debug=True)
@@ -90,6 +116,14 @@ def _debug(debug, filters):
 
 def agent():
     return 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:39.0) Gecko/20100101 Firefox/39.0'
+
+
+def replaceHTMLCodes(txt):
+    txt = re.sub("(&#[0-9]+)([^;^0-9]+)", "\\1;\\2", txt)
+    txt = HTMLParser.HTMLParser().unescape(txt)
+    txt = txt.replace("&quot;", "\"")
+    txt = txt.replace("&amp;", "&")
+    return txt
 
 
 def parseDOM(html, name=u"", attrs=None, ret=False):
