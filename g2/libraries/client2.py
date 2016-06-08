@@ -38,20 +38,28 @@ codes = requests.codes
 
 
 class Session(requests.Session):
-    def __init__(self, debug=False, **kwargs):
+    def __init__(self, debug=False, raise_error=False, **kwargs):
         requests.Session.__init__(self, **kwargs)
         self.session_debug = _set_debug(debug)
+        self.session_raise_error = raise_error
+
+    def request(self, url, data=None, json=None, **kwargs):
+        if not data and not json:
+            return self._client_request(self._client_get, url, **kwargs)
+        else:
+            return self._client_request(self._client_post, url, data=data, json=json, **kwargs)
 
     def get(self, url, **kwargs):
-        return self._request(self._get, url, **kwargs)
+        return self._client_request(self._client_get, url, **kwargs)
 
     def post(self, url, **kwargs):
-        return self._request(self._post, url, **kwargs)
+        return self._client_request(self._client_post, url, **kwargs)
 
-    def _request(self, method, url, debug=None, **kwargs):
+    def _client_request(self, method, url, raise_error=False, debug=None, **kwargs):
         debug = self.session_debug | _set_debug(debug)
+        raise_error = raise_error or self.session_raise_error
 
-        res = _request(method, url, debug=debug, **kwargs)
+        res = _request(method, url, raise_error=raise_error, debug=debug, **kwargs)
 
         if _debug(debug, 'adapter'):
             conn = self.get_adapter(url).poolmanager.connection_from_url(url)
@@ -59,11 +67,11 @@ class Session(requests.Session):
 
         return res
 
-    def _get(self, url, **kwargs):
-        return requests.Session.get(self, url, **kwargs)
+    def _client_get(self, url, **kwargs):
+        return requests.Session.request(self, 'GET', url, **kwargs)
 
-    def _post(self, url, **kwargs):
-        return requests.Session.post(self, url, **kwargs)
+    def _client_post(self, url, **kwargs):
+        return requests.Session.request(self, 'POST', url, **kwargs)
 
 
 def request(url, debug=None, data=None, json=None, **kwargs):
