@@ -35,26 +35,44 @@ from g2.libraries import log
 from g2.libraries import platform
 from g2 import actions
 
-PARAMS = dict(urlparse.parse_qsl(sys.argv[2].replace('?', '')))
-ARGS_DEFAULT = {
-    'action': platform.setting('main_menu'),
-    'name': None,
-    'title': None,
-    'year': None,
-    'imdb': '0',
-    'tmdb': '0',
-    'tvdb': '0',
-    'url': None,
-    'image': None,
-    'meta': None,
-    'query': None,
-    'source': None,
-}
+def main():
+    params = dict(urlparse.parse_qsl(sys.argv[2].replace('?', '')))
+    # (fixme) remove ARGS_DEFAULT: let each action have its own defaults
+    ARGS_DEFAULT = {
+        'action': None,
+        'name': None,
+        'title': None,
+        'year': None,
+        'imdb': '0',
+        'tmdb': '0',
+        'tvdb': '0',
+        'url': None,
+        'image': None,
+        'meta': None,
+        'query': None,
+        'source': None,
+    }
 
-if 'action' not in PARAMS:
-    actions.execute('changelog.show')
+    if 'action' not in params:
+        actions.execute('changelog.show')
 
-elif PARAMS['action'] == 'service.thread':
+    elif params['action'] == 'service.thread':
+        service_monitor_setup()
+
+    # (fixme) remove, see above
+    for arg, defvalue in ARGS_DEFAULT.iteritems():
+        if arg not in params:
+            params[arg] = defvalue
+
+    if not params['action']:
+        params['action'] = 'main.menu'
+
+    log.notice('Thread ID:%s, ACTION:%s, ARGS=%.80s...', sys.argv[1], params['action'], sys.argv[2])
+
+    actions.execute(params['action'], params)
+
+
+def service_monitor_setup():
     # (fixme) [code] plugin.run(action, **kwargs) -> plugin.run('auth.trakt')
     from g2.actions import service
     service.monitor('trakt_enabled', 'setting', platform.execute, 'RunPlugin(%s?action=auth.trakt)'%sys.argv[0])
@@ -72,14 +90,6 @@ elif PARAMS['action'] == 'service.thread':
     service.monitor('notifiers.events', 'service', notifiers.events,
                     init_arg_name='start', on_push=push.new, on_push_delete=push.delete)
 
-for arg, defvalue in ARGS_DEFAULT.iteritems():
-    if arg not in PARAMS:
-        PARAMS[arg] = defvalue
 
-if not PARAMS['action']:
-    PARAMS['action'] = 'main.menu'
-
-log.notice('Thread ID:%s, ACTION:%s, QUERY:%s, IMDB:%s, URL:%s',
-           sys.argv[1], PARAMS['action'], PARAMS['query'], PARAMS['imdb'], PARAMS['url'])
-
-actions.execute(PARAMS['action'], PARAMS)
+if __name__ == '__main__':
+    sys.exit(main())
