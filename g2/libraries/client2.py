@@ -63,8 +63,14 @@ class Session(requests.Session):
         return requests.Session.get(self, url, **kwargs)
 
     def _post(self, url, **kwargs):
-        log.debug('session._post: %s, %s, %s', self, url, kwargs, debug=True)
         return requests.Session.post(self, url, **kwargs)
+
+
+def request(url, debug=None, data=None, json=None, **kwargs):
+    if not data and not json:
+        return _request(requests.get, url, debug=_set_debug(debug), **kwargs)
+    else:
+        return _request(requests.post, url, debug=_set_debug(debug), data=data, json=json, **kwargs)
 
 
 def get(url, debug=None, **kwargs):
