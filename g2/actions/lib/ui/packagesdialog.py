@@ -19,103 +19,71 @@
 """
 
 
-import xbmc
 import xbmcgui
-
-from g2 import pkg
-from g2.libraries import log
-from g2.libraries.language import _
-
-from . import DialogProgressBG, infoDialog, yesnoDialog
 
 
 __all__ = ['PackagesDialog']
-
-
-_log_debug = True
 
 
 class PackagesDialog(xbmcgui.WindowXMLDialog):
     kinds_listid = 101
     packages_listid = 201
 
-    def __init__(self, strXMLname, strFallbackPath, strDefaultName, forceFallback):
+    def __init__(self, strXMLname, strFallbackPath, strDefaultName, forceFallback, onPackageSelected, pkgInstalledStatus):
         self.kinds = []
         self.packages = []
         self.kinds_lst = None
         self.packages_lst = None
         self.progress_dialog = None
         self.displayed_kind = None
+        self.onPackageSelected = onPackageSelected
+        self.pkgInstalledStatus = pkgInstalledStatus
+
+    def addPackage(self, kind, name, desc, site=None):
+        item = xbmcgui.ListItem()
+        item.setProperty('kind', kind)
+        item.setProperty('name', name)
+        item.setLabel(desc)
+        if site:
+            item.setProperty('site', site)
+        self.packages.append(item)
+
+    def addKind(self, kind):
+        item = xbmcgui.ListItem()
+        item.setLabel(kind.upper())
+        self.kinds.append(item)
 
     def onInit(self):
         self.kinds_lst = self.getControl(self.kinds_listid)
         self.packages_lst = self.getControl(self.packages_listid)
         self.kinds_lst.reset()
         self.kinds_lst.addItems(self.kinds)
-        dummy = [_update_package_item(i) for i in self.packages]
+        for i in self.packages:
+            self._update_package_item(i)
         self._update_packages_list('providers')
 
     def onClick(self, controlID):
-        log.debug('onClick: %s', controlID)
         if controlID == self.kinds_listid:
             kind = self.kinds_lst.getSelectedItem().getLabel().lower()
             self._update_packages_list(kind)
 
         elif controlID == self.packages_listid:
             item = self.packages_lst.getSelectedItem()
-            kind = item.getProperty('kind')
-            name = item.getProperty('name')
-
-            if not pkg.is_installed(kind, name):
-                self.progress_dialog = DialogProgressBG()
-                self.progress_dialog.create(_('Download Package')+' '+name)
-                self._update_progress_dialog(0)
-                if pkg.install_or_update(kind, name, item.getProperty('site'), self._update_progress_dialog):
-                    _update_package_item(item, 'true')
-                self.progress_dialog.close()
-                try:
-                    missing = []
-                    kindmod = __import__(pkg.PACKAGES_RELATIVE_PATH+kind, globals(), locals(), [name], -1)
-                    pkgmod = getattr(kindmod, name)
-                    for addon in pkgmod.addons if pkgmod.addons else []:
-                        if not xbmc.getCondVisibility('System.HasAddon(%s)'%addon):
-                            missing.append(addon)
-                    if not missing:
-                        kindmod.info(force=True)
-                    else:
-                        xbmcgui.Dialog().ok('PACKAGE MANAGER', '[CR]'.join([
-                            _('The installed package requires these addons:'),
-                            ' '.join(missing),
-                            _('Please, install them'),
-                            ]))
-                except Exception as ex:
-                    log.error('packages.dialog: %s', ex)
-                    infoDialog(_('Failure to load the package'))
-
-            # (fixme) warn if the package is orphaned...
-            elif yesnoDialog(_('Are you sure?'), '', '', heading=_('Uninstall Package')+' '+name) and pkg.uninstall(kind, name):
-                _update_package_item(item, 'false')
-                if not item.getProperty('site'):
-                    self.packages = [i for i in self.packages if i.getProperty('kind') != kind or i.getProperty('name') != name]
-                    self._update_packages_list(force=True)
-                try:
-                    kindmod = getattr(__import__('g2', globals(), locals(), [kind], -1), kind)
-                    kindmod.info()
-                except Exception as ex:
-                    log.error('packages.dialog: %s', ex)
-
-    def _update_progress_dialog(self, curitem, numitems=1):
-        self.progress_dialog.update(curitem*100/(numitems if numitems else 1))
+            self.onPackageSelected(item.getProperty('kind'), item.getProperty('name'), item.getProperty('site'))
+            self._update_package_item(item)
+            self._update_packages_list(force=True)
 
     def _update_packages_list(self, kind=None, force=False):
         if self.displayed_kind != kind or force:
             if not kind:
                 kind = self.displayed_kind
             self.packages_lst.reset()
-            self.packages_lst.addItems([i for i in self.packages if i.getProperty('kind') == kind])
+            self.packages_lst.addItems([i for i in self.packages
+                                        if i.getProperty('kind') == kind and
+                                        (i.getProperty('site') or self.pkgInstalledStatus(i.getProperty('kind'), i.getProperty('name')))])
             self.displayed_kind = kind
 
-def _update_package_item(item, installed=None):
-    if installed:
-        item.setProperty('installed', installed)
-    item.setInfo('video', {'overlay': 5 if item.getProperty('installed') == 'true' else 4})
+    def _update_package_item(self, item):
+        item.setInfo('video', {
+            'overlay': 5 if self.pkgInstalledStatus(item.getProperty('kind'), item.getProperty('name')) else 4,
+        })

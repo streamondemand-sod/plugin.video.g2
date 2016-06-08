@@ -22,7 +22,6 @@
 import os
 import re
 import sys
-import json
 import errno
 import hashlib
 import urllib2
@@ -31,7 +30,7 @@ import importer
 
 from g2.libraries import log
 from g2.libraries import cache
-from g2.libraries import client
+from g2.libraries import client2
 from g2.libraries import platform
 from g2.libraries import language
 
@@ -78,6 +77,7 @@ _PACKAGES_KINDS = {
     },
 }
 
+# (fixme) change to explicit sentences to ease the translation
 def _fill_packages_settings_category():
     def _ordinal(num):
         return "%d%s" % (num, "tsnrhtdd"[(num/10%10 != 1)*(num%10 < 4)*num%10::4])
@@ -106,7 +106,6 @@ from . import __path__
 _PACKAGES_ABSOLUTE_PATH = __path__[0]
 
 
-# (fixme) [code]: use contextmanager decorator: https://docs.python.org/2.6/library/contextlib.html
 class Context:
     def __init__(self, kind, package=None, modules=[], search_paths=[], ignore_exc=False):
         self.kind = kind.split('.')[-1]
@@ -165,12 +164,13 @@ class Context:
         return True
 
 
-def local_name(site):
-    if site.startswith('github://'):
-        url = site.split('/')
-        return '%s_by_%s_at_github'%(url[-1].lower(), url[2].lower())
-    else:
-        return None
+def parse_site(site):
+    if not site.startswith('github://'):
+        return None, None
+
+    site = site.split('/')
+    return ('%s_by_%s_at_github'%(site[-1].lower(), site[2].lower()), 
+            'https://api.github.com/repos/' + '/'.join(site[2:4]) + '/contents/' + '/'.join(site[4:]))
 
 
 def kinds():
@@ -193,26 +193,54 @@ def _path(kind, name):
     return os.path.join(_PACKAGES_ABSOLUTE_PATH, kind, name)
 
 
-def install_or_update(kind, name, site, gui_update=None):
-    try:
-        if not site.startswith('github://'):
-            raise
-        url = site.split('/')
-        site = 'https://api.github.com/repos/' + '/'.join(url[2:4]) + '/contents/' + '/'.join(url[4:])
-    except Exception:
-        return False
+def install_or_update(site, ui_update=None):
+    name, url = parse_site(site)
+    if not name:
+        log.error('{m}.{f}: %s: site url not implemented', site)
+        return None, None
 
-    try:
-        repo = json.loads(client.request(site))
-    except Exception as ex:
-        log.error('install %s.%s: failed download from %s: %s'%(kind, name, site, ex))
-        return False
+    def fetch_pkg_attributes(session, repo):
+        init_module = [mod for mod in repo if mod['name'] == '__init__.py']
+        if not init_module:
+            raise Exception('missing __init__.py module')
+        init_source = session.get(init_module[0]['download_url']).content
+        log.debug('{m}.{f}: %s:\n%s', site, init_source)
+        init_attributes = {}
+        exec init_source in init_attributes
+        return init_attributes
 
-    package_path = os.path.join(_PACKAGES_ABSOLUTE_PATH, kind, name)
+    with client2.Session() as session:
+        try:
+            repo = session.get(url).json()
+            pkg_attributes = fetch_pkg_attributes(session, repo)
+            kind = pkg_attributes.get('kind')
+            if not kind:
+                raise Exception('kind missing in package __init__ module')
+            if kind not in kinds():
+                raise Exception('%s packages not implemented'%kind)
+        except Exception as ex:
+            log.error('{m}.{f}: %s: %s', site, repr(ex))
+            return None, None
+
+        log.debug('{m}.{f}: %s: removing old %s package...', name, kind)
+        uninstall(kind, name)
+
+        log.debug('{m}.{f}: %s: installing new %s package from %s...', name, kind, url)
+        if not _install_or_update(session, url, name, kind, repo=repo, ui_update=ui_update):
+            return None, None
+
+    return kind, name
+
+
+def _install_or_update(session, url, name, kind, repo=None, ui_update=None):
     try:
+        if not repo:
+            repo = session.get(url).json()
+        package_path = os.path.join(_PACKAGES_ABSOLUTE_PATH, kind, name)
         platform.makeDir(package_path)
     except Exception as ex:
-        log.error('name %s.%s: %s'%(kind, name, ex))
+        log.error('{m}.{f}: %s: %s', name, repr(ex))
+        return False
 
     def git_sha(path):
         try:
@@ -224,49 +252,43 @@ def install_or_update(kind, name, site, gui_update=None):
         except Exception:
             return None
 
-    actives = []
     for i, mod in enumerate(repo):
         try:
             if mod['type'] == 'dir':
-                install_or_update(kind, '%s/%s'%(name, mod['name']), '%s/%s'%(site, mod['name']))
+                _install_or_update(session, '%s/%s'%(url, mod['name']), os.path.join(name, mod['name']), kind)
             else:
                 module_path = os.path.join(package_path, mod['name'])
                 if mod['sha'] != git_sha(module_path):
-                    module = client.request(mod['download_url'])
+                    module_source = session.get(mod['download_url']).content
                     module_path_new = module_path + '.new'
                     with open(module_path_new, 'w') as fil:
-                        fil.write(module)
+                        fil.write(module_source)
                     if mod.get('sha') == git_sha(module_path_new):
                         os.rename(module_path_new, module_path)
-                        log.notice('install %s.%s: %s'%(kind, name, mod['name']))
+                        log.notice('pkg.install: %s.%s.%s downloaded'%(kind, name.replace('/', '.'), mod['name']))
 
-            actives.append(mod['name'])
-            if gui_update:
-                gui_update(i+1, len(repo))
+            if ui_update:
+                ui_update(i+1, len(repo))
         except Exception as ex:
-            log.error('install %s.%s.%s: %s'%(kind, name, mod.get('name'), ex))
-
-    for mod in os.listdir(package_path):
-        if mod not in actives and not re.search(r'\.py[co]$', mod):
-            module_path = os.path.join(package_path, mod)
-            try:
-                log.notice('install %s.%s: %s is obsolete, removing it...'%(kind, name, mod))
-                _remove(module_path)
-                if re.search(r'\.py$', mod):
-                    _remove(os.path.join(module_path+'c'))
-                    _remove(os.path.join(module_path+'o'))
-            except Exception as ex:
-                log.error('install %s.%s.%s: %s'%(kind, name, mod, ex))
+            log.error('{m}.{f}: %s package, module %s.%s: %s'%(kind, name, mod.get('name'), repr(ex)))
 
     return True
 
 
-def uninstall(kind, name):
+def uninstall(kind, name, raise_notfound=False):
     try:
-        return _remove(_path(kind, name))
+        if kind not in kinds():
+            raise Exception('%s packages not implemented'%kind)
+        log.notice('pkg.uninstall: removing %s.%s...'%(kind, name))
+        return _remove(_path(kind, name), raise_notfound)
     except Exception as ex:
-        log.error('uninstall %s.%s: %s'%(kind, name, ex))
+        log.error('uninstall %s.%s: %s'%(kind, name, repr(ex)))
         return False
+
+
+def refreshinfo(kind):
+    kind_module = getattr(__import__(PACKAGES_RELATIVE_PATH+kind, globals(), locals(), [], -1), kind)
+    return kind_module.info(force=True)
 
 
 def info(kind, infofunc, force=False):
@@ -283,13 +305,16 @@ def info(kind, infofunc, force=False):
                 for path in infos_paths:
                     try:
                         path = platform.translatePath(path)
-                        if not os.path.exists(path) or platform.Stat(path).st_mtime() > response_infos['cached']:
-                            raise
-                    except Exception:
+                        if not os.path.exists(path):
+                            raise Exception('path not existant')
+                        if platform.Stat(path).st_mtime() > response_infos['cached']:
+                            raise Exception('path newer than cached info')
+                    except Exception as ex:
+                        log.debug('{m}.{f}: %s: %s', path, repr(ex))
                         update_needed = True
         if update_needed:
             infos_paths, infos_modules = cache.get(_info_get, 0, kind, infofunc, hash_args=1)
-            log.notice('{m}.{f}: updated %s packages: %d modules', kind, len(infos_modules))
+            log.notice('pkg.info: %s packages: %d modules', kind, len(infos_modules))
     except Exception as ex:
         log.error('{m}.{f}: %s: %s', kind, ex, trace=True)
         return {}
@@ -333,7 +358,7 @@ def _info_get(kind, infofunc):
                 log.notice('{m}.{f}: %s package %s does not specify a site origin; skip it!', kind, name)
                 continue
 
-            addonpaths = []
+            pkgpaths = []
             if hasattr(pac, 'addons') and pac.addons:
                 required_addons_installed = True
                 addon_ids = [pac.addons] if isinstance(pac.addons, basestring) else pac.addons
@@ -341,14 +366,16 @@ def _info_get(kind, infofunc):
                     if not platform.condition('System.HasAddon(%s)'%addon_id):
                         required_addons_installed = False
                     else:
-                        addonpaths.extend(_get_addon_paths(addon_id))
-                        infos_paths.add(addonSettingsFile(addon_id))
-                    log.debug('{m}.{f}: package=%s.%s, addon=%s, paths=%s'%(kind, name, addon_id, addonpaths))
+                        addonpaths = _get_addon_paths(addon_id)
+                        pkgpaths.extend(addonpaths)
+                        infos_paths.add(addonpaths[0])
+                        if os.path.exists(os.path.join(addonpaths[0], 'resources', 'settings.xml')):
+                            infos_paths.add(addonSettingsFile(addon_id))
 
                 if not required_addons_installed:
                     log.notice('{m}: %s: required addons (%s) not installed'%(name, ', '.join(pac.addons)))
                     continue
-            addonpaths = addonpaths[0:1] + list(set(addonpaths[1:]))
+            pkgpaths = pkgpaths[0:1] + list(set(pkgpaths[1:]))
 
             infos_paths.add(os.path.join(_PACKAGES_ABSOLUTE_PATH, kind, name))
 
@@ -362,7 +389,7 @@ def _info_get(kind, infofunc):
                                   name, sname, setting(kind, name, sname, name='enabled'))
                     continue
 
-                _info_get_module(infofunc, infos_modules, kind, sname, name, addonpaths)
+                _info_get_module(infofunc, infos_modules, kind, sname, name, pkgpaths)
 
     return (infos_paths, infos_modules)
 
@@ -515,12 +542,13 @@ def update_settings_skema():
             fil.write(new_settings_skema)
 
 
-def _remove(path):
+def _remove(path, raise_notfound=True):
+    log.debug('{m}.{f}: %s', path)
     if not os.path.isdir(path):
         try:
             platform.removeFile(path)
         except OSError as ex:
-            if ex.errno != errno.ENOENT:
+            if ex.errno != errno.ENOENT or raise_notfound:
                 raise
         return True
     directories, filenames = platform.listDir(path)

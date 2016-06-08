@@ -19,8 +19,6 @@
 """
 
 
-import ast
-
 from g2 import pkg
 from g2.libraries import log
 from g2.libraries import client2
@@ -30,27 +28,22 @@ from g2.libraries.language import _
 from .lib import ui
 
 
-_log_debug = True
-
 _DEFAULT_PACKAGES_URLS = ['http://j0rdyz65.github.io/']
 
 
 def dialog(**kwargs):
     addon_dir = platform.translatePath(platform.addonInfo('path'))
-    win = ui.PackagesDialog('PackagesDialog.xml', addon_dir, 'Default', '720p')
+    win = ui.PackagesDialog('PackagesDialog.xml', addon_dir, 'Default', '720p',
+                            onPackageSelected=_manage_package,
+                            pkgInstalledStatus=pkg.is_installed)
 
-    try:
-        packages_urls = ast.literal_eval(platform.setting('packages_urls'))
-        if not packages_urls:
-            raise Exception()
-    except Exception:
-        packages_urls = _DEFAULT_PACKAGES_URLS
+    packages_urls = _DEFAULT_PACKAGES_URLS
 
     listed = {}
     kinds = {}
     for url in packages_urls:
         try:
-            res = client2.get(url, debug=True)
+            res = client2.get(url)
             pkgentries = client2.parseDOM(res.content, 'tbody')[0]
             pkgentries = client2.parseDOM(pkgentries, 'tr')
         except Exception:
@@ -66,7 +59,7 @@ def dialog(**kwargs):
                     continue
  
                 site = site.replace('<code>', '').replace('</code>', '')
-                name = pkg.local_name(site)
+                name, url = pkg.parse_site(site)
                 if name is None:
                     log.notice('{m}.{f}: %s: site url %s not implemented', url, site)
                     continue
@@ -78,13 +71,7 @@ def dialog(**kwargs):
                 for html_code, kodi_code in html_trans.iteritems():
                     desc = desc.replace(html_code, kodi_code)
 
-                item = ui.ListItem()
-                item.setLabel(desc)
-                item.setProperty('kind', kind)
-                item.setProperty('name', name)
-                item.setProperty('site', site)
-                item.setProperty('installed', 'true' if pkg.is_installed(kind, name) else 'false')
-                win.packages.append(item)
+                win.addPackage(kind, name, desc, site)
 
                 listed[kind+'.'+name] = True
                 kinds[kind] = True
@@ -94,21 +81,70 @@ def dialog(**kwargs):
     for kind, name in pkg.packages():
         if kind+'.'+name not in listed:
             log.notice('{m}.{f}: orphaned package %s.%s'%(kind, name))
-            item = ui.ListItem()
-            item.setLabel(_('[Orphaned]')+' '+name)
-            item.setProperty('kind', kind)
-            item.setProperty('name', name)
-            item.setProperty('installed', 'true')
-            win.packages.append(item)
+            win.addPackage(kind, name, '[%s] %s'%(_('Orphaned'), name))
 
     for kind in pkg.kinds():
         if kind in kinds:
-            item = ui.ListItem()
-            item.setLabel(kind.upper())
-            win.kinds.append(item)
+            win.addKind(kind)
 
     win.doModal()
 
+    del win
+
     pkg.update_settings_skema()
 
-    del win
+
+def _manage_package(kind, name, site):
+    if not pkg.is_installed(kind, name):
+        _install_package(site)
+    else:
+        _uninstall_package(kind, name, site)
+
+
+def _install_package(site):
+    try:
+        progress_dialog = ui.DialogProgressBG()
+        progress_dialog.create(site)
+
+        def update_progress_dialog(curitem, numitems=1):
+            progress_dialog.update(curitem*100/(numitems if numitems else 1))
+
+        update_progress_dialog(0)
+        kind, name = pkg.install_or_update(site, ui_update=update_progress_dialog)
+
+        if not kind:
+            raise Exception('package at %s not installed'%site)
+
+        missing_addons = []
+        mod = getattr(__import__(pkg.PACKAGES_RELATIVE_PATH+kind, globals(), locals(), [name], -1), name)
+        for addon in mod.addons if hasattr(mod, 'addons') and mod.addons else []:
+            if not platform.condition('System.HasAddon(%s)'%addon):
+                missing_addons.append(addon)
+
+        if not missing_addons:
+            pkg.refreshinfo(kind)
+        else:
+            ui.Dialog().ok('PACKAGE MANAGER',
+                           '[CR]'.join([_('The %s.%s package requires these addons:')%(kind, name),
+                                        ' '.join(missing_addons),
+                                        _('Please, install the missing addons')]))
+        progress_dialog.close()
+    except Exception as ex:
+        progress_dialog.close()
+        log.error('packages.dialog: %s: %s', site, repr(ex))
+        ui.infoDialog(_('Failure to install the package'))
+
+
+def _uninstall_package(kind, name, site):
+    if not ui.yesnoDialog(_('About to remove the %s.%s package')%(kind, name),
+                          _('Are you sure?'),
+                          _('Please note that this package is missing from the directory') if not site else _(''),
+                          heading=_('PACKAGE MANAGER')):
+        return
+
+    try:
+        pkg.uninstall(kind, name)
+        pkg.refreshinfo(kind)
+    except Exception as ex:
+        log.error('packages.dialog: %s.%s: %s', kind, name, repr(ex))
+        ui.infoDialog(_('Failure to uninstall the package'))        
