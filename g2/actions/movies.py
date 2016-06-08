@@ -290,6 +290,11 @@ def _add_movie_directory(action, items):
             item.setProperty('Video', 'true')
             item.addContextMenuItems(cmds, replaceItems=False)
             ui.addItem(handle=_systhread, url=url, listitem=item, isFolder=True)
+            # NOTE: The following del avoids the issue of the message:
+            # CPythonInvoker(114, /home/giordano/.kodi/addons/plugin.video.g2/plugin.py): the python script \
+            # "/home/giordano/.kodi/addons/plugin.video.g2/plugin.py" has left several classes in memory that \
+            # we couldn't clean up. The classes include: N9XBMCAddon7xbmcgui8ListItemE
+            del item
         except Exception:
             import traceback
             log.notice(traceback.format_exc())
