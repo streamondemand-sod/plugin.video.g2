@@ -25,31 +25,67 @@
 import re
 
 import requests
+from requests.packages import urllib3
 
 from g2.libraries import log
 
 
-# _log_debug = True
+urllib3.disable_warnings()
 
 
-def get(url, raise_error=True, debug=False, **kwargs):
-    # (fixme) if debug print also the request content
-    res = requests.get(url, **kwargs)
+class Session(requests.Session):
+    def __init__(self, debug=False, **kwargs):
+        requests.Session.__init__(self, **kwargs)
+        self.session_debug = _set_debug(debug)
 
-    if debug:
+    def get(self, url, debug=False, **kwargs):
+        debug = self.session_debug | _set_debug(debug)
+
+        res = _get(self._get, url, debug=debug, **kwargs)
+
+        if _debug(debug, 'adapter'):
+            conn = self.get_adapter(url).poolmanager.connection_from_url(url)
+            log.debug('{m}.{f}: request.conn: connections:%d, requests:%d', conn.num_connections, conn.num_requests, debug=True)
+
+        return res
+
+    def _get(self, url, **kwargs):
+        return requests.Session.get(self, url, **kwargs)
+
+
+def get(url, debug=None, **kwargs):
+    return _get(requests.get, url, debug=_set_debug(debug), **kwargs)
+
+
+def _get(objget, url, raise_error=None, debug=None, **kwargs):
+    if _debug(debug, 'request'):
+        log.debug('{m}.{f}: request.get.url: %s', url, debug=True)
+
+    res = objget(url, **kwargs)
+
+    if _debug(debug, 'headers'):
         for hdr, val in res.headers.iteritems():
-            log.debug('{m}.{f}: response.headers: %s=%s', hdr, val)
+            log.debug('{m}.{f}: response.headers: %s=%s', hdr, val, debug=True)
         for cke, val in res.cookies.iteritems():
-            log.debug('{m}.{f}: response.cookies: %s=%s', cke, val)
+            log.debug('{m}.{f}: response.cookies: %s=%s', cke, val, debug=True)
         if res.history:
-            log.debug('{m}.{f}: response.history: %s', res.history)
-        log.debug('{m}.{f}: response.code: %s', res.status_code)
-        log.debug('{m}.{f}: response.content[%s]: %s', res.encoding, res.content)
+            log.debug('{m}.{f}: response.history: %s', res.history, debug=True)
+
+    if _debug(debug, 'content'):
+        log.debug('{m}.{f}: response.content[%s]: %s', res.encoding, res.content, debug=True)
 
     if raise_error:
         res.raise_for_status()
 
     return res
+
+
+def _set_debug(debug):
+    return set() if not debug else set(debug) if type(debug) in [list, set, tuple] else set([debug])
+
+
+def _debug(debug, filters):
+    return debug and (filters in debug or True in debug)
 
 
 def agent():
