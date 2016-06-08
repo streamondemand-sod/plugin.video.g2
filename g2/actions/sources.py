@@ -558,7 +558,12 @@ def _resolve(provider, url, ui_update=None):
             host = '%s://%s/.../%s'%(urlparsed.scheme, urlparsed.netloc, urlparsed.path.split('/')[-1])
         except Exception:
             host = rurl
-        extrainfo = '%s"%s"'%('' if not hasattr(rurl, 'resolver') else 'by %s '%rurl.resolver, host)
+
+        extrainfo = '%s"%s"'%('' if not hasattr(rurl, 'resolver') else ' by %s '%rurl.resolver, host)
+        if hasattr(rurl, 'meta') and rurl.meta and 'first8bytes' in rurl.meta:
+            import string
+            extrainfo += ' [unknown header: %s]'%' '.join(
+                ['%02x%s'%(ord(b), ' (%s)'%b if b in string.printable else '') for b in rurl.meta['first8bytes']])
 
     log.notice('{m}.{f}(%s, %s): %s %.3f secs%s'%(provider, url, what, thd.elapsed(), extrainfo))
 
