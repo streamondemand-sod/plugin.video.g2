@@ -26,25 +26,26 @@ from g2.libraries import log
 
 
 # Do not read more that 100KB in the stream to look for the resolution
-_max_byte_read_for_resolution = 100 * 1024
+_MAX_BYTE_READ_FOR_RESOLUTION = 100 * 1024
 
 
-def video(file):
-    first8 = file.read(8)
+def video(fil):
+    first8 = fil.read(8)
     size, atom = struct.unpack('>i4s', first8)
     meta = {}
     if atom == 'ftyp':
         from . import mp4 as decoder
-        file.read(size-8)           # Skip to the next mp4 atom
+        fil.read(size-8)           # Skip to the next mp4 atom
         meta['type'] = 'mp4'
 
     elif first8[:3] == "FLV":
         from . import flv as decoder
-        file.read(1)                # Skip to the first flv header packet
+        fil.read(1)                # Skip to the first flv header packet
         meta['type'] = 'flv'
 
     else:
-        return None
+        meta['first8bytes'] = first8
+        return meta
 
-    meta['width'], meta['height'] = decoder.video_resolution(file, stop_at_bytes=_max_byte_read_for_resolution)
+    meta['width'], meta['height'] = decoder.video_resolution(fil, stop_at_bytes=_MAX_BYTE_READ_FOR_RESOLUTION)
     return None if meta['width'] < 0 or meta['height'] < 0 else meta

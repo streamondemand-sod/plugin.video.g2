@@ -27,7 +27,6 @@ import urlparse
 from contextlib import closing
 
 from g2 import pkg
-from g2.libraries import log
 from g2.libraries import client2
 
 from .lib import metastream
