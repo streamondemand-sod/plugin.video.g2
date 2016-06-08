@@ -27,7 +27,7 @@ from g2.libraries import platform
 from .lib.pushbullet import PushBullet
 
 
-_log_debug = True
+# _log_debug = True
 
 
 INFO = {

@@ -28,7 +28,7 @@ from g2.libraries import log
 from .ws4py.client.threadedclient import WebSocketClient
 
 
-_log_debug = True
+# _log_debug = True
 
 
 _HOST = "https://api.pushbullet.com/v2/"
