@@ -63,6 +63,9 @@ def error(msg, *args, **kwargs):
     return _log(msg, xbmc.LOGERROR, *args, **kwargs)
 
 
+_SPECIAL_TAGS = ['p', 'm', 'f', 't']
+
+
 def _log(msg, level, *args, **kwargs):
     try:
         level_info = ''
@@ -71,9 +74,9 @@ def _log(msg, level, *args, **kwargs):
             if newlevel != level:
                 level_info = 'DEBUG: ' if level == xbmc.LOGDEBUG else '[INFO]'
                 level = newlevel
-        if '{m}' in msg or '{f}' in msg or '{t}' in msg:
+        if any('{%s}'%tag in msg for tag in _SPECIAL_TAGS):
             ids = _fetch_ids()
-            for i in ['m', 'f', 't']:
+            for i in _SPECIAL_TAGS:
                 msg = msg.replace('{%s}'%i, ids[i])
         if len(args):
             msg = msg % args
@@ -110,12 +113,14 @@ def _fetch_ids():
             raise Exception()
         module = stack[3][1]
         ids.update({
+            'p': os.path.basename(os.path.dirname(module)),
             'm': os.path.basename(os.path.dirname(module)) if module.endswith('__init__.py') else
                  os.path.splitext(os.path.basename(module))[0],
             'f': stack[3][3],
         })
     except Exception:
         ids.update({
+            'p': '',
             'm': '',
             'f': '',
         })
