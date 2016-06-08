@@ -50,6 +50,7 @@ class PackagesDialog(xbmcgui.WindowXMLDialog):
 
     def addKind(self, kind):
         item = xbmcgui.ListItem()
+        item.setProperty('kind', kind)
         item.setLabel(kind.upper())
         self.kinds.append(item)
 
@@ -77,10 +78,13 @@ class PackagesDialog(xbmcgui.WindowXMLDialog):
         if self.displayed_kind != kind or force:
             if not kind:
                 kind = self.displayed_kind
+            for i in self.kinds:
+                i.setLabel(('[B]%s[/B]' if kind == i.getProperty('kind') else '%s')%i.getProperty('kind').upper())
             self.packages_lst.reset()
             self.packages_lst.addItems([i for i in self.packages
                                         if i.getProperty('kind') == kind and
-                                        (i.getProperty('site') or self.pkgInstalledStatus(i.getProperty('kind'), i.getProperty('name')))])
+                                        (i.getProperty('site') or
+                                         self.pkgInstalledStatus(i.getProperty('kind'), i.getProperty('name')))])
             self.displayed_kind = kind
 
     def _update_package_item(self, item):
