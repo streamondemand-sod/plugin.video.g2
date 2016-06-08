@@ -67,7 +67,7 @@ def _log(msg, level, *args, **kwargs):
     try:
         level_info = ''
         if level in [xbmc.LOGDEBUG, xbmc.LOGINFO]:
-            newlevel = _check_for_debug(level)
+            newlevel = xbmc.LOGNOTICE if kwargs.get('debug') else _check_for_debug(level)
             if newlevel != level:
                 level_info = 'DEBUG: ' if level == xbmc.LOGDEBUG else '[INFO]'
                 level = newlevel
