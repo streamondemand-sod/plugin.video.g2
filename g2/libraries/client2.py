@@ -38,8 +38,10 @@ codes = requests.codes
 
 
 class Session(requests.Session):
-    def __init__(self, debug=False, raise_error=False, **kwargs):
+    def __init__(self, debug=False, raise_error=False, headers=None, **kwargs):
         requests.Session.__init__(self, **kwargs)
+        if headers:
+            self.headers.update(headers)
         self.session_debug = _set_debug(debug)
         self.session_raise_error = raise_error
 
