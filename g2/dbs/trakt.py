@@ -103,9 +103,31 @@ def movies(url):
     query = (urllib.urlencode(query)).replace('%2C', ',')
     query_url = url.replace('?' + urlparse.urlparse(url).query, '') + '?' + query
 
-    res = json.loads(_traktreq(query_url))
-    log.debug('{m}.{f}: %s: %s', query_url, res)
+    res = _traktreq(query_url)
 
+    max_pages = 0
+    try:
+        page = int(res.headers['X-Pagination-Page'])
+        max_pages = int(res.headers['X-Pagination-Page-Count'])
+        if page >= max_pages:
+            raise Exception('last page reached')
+
+        page += 1
+        query = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))
+        query.update({'page': page})
+        query = (urllib.urlencode(query)).replace('%2C', ',')
+        next_url = url.replace('?' + urlparse.urlparse(url).query, '') + '?' + query
+        next_url = next_url.encode('utf-8')
+        next_page = page
+    except Exception as ex:
+        log.debug('{m}.{f}: %s: %s', query_url.replace(_BASE_URL, ''), repr(ex))
+        next_url = ''
+        next_page = 0
+
+    log.debug('{m}.{f}: %s: next_url=%s, next_page=%s, max_pages=%s',
+              query_url.replace(_BASE_URL, ''), next_url.replace(_BASE_URL, ''), next_page, max_pages)
+
+    res = res.json()
     results = []
     for i in res:
         if 'movie' in i:
@@ -117,20 +139,7 @@ def movies(url):
     if not results:
         results = res
 
-    try:
-        query = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))
-        page = str(int(query['page']) + 1)
-        query.update({'page': page})
-        query = (urllib.urlencode(query)).replace('%2C', ',')
-        next_url = url.replace('?' + urlparse.urlparse(url).query, '') + '?' + query
-        next_url = next_url.encode('utf-8')
-        next_page = int(page)
-    except Exception as ex:
-        log.debug('{m}.{f}: %s: %s', url, repr(ex))
-        next_url = ''
-        next_page = 0
-
-    log.debug('{m}.{f}: %s: next_url=%s, next_page=%s', url, next_url, next_page)
+    log.debug('{m}.{f}: %s: %d movies', query_url.replace(_BASE_URL, ''), len(results))
 
     items = []
     for item in results:
@@ -250,6 +259,8 @@ def movies(url):
                 'fanart': fanart,
                 'next_url': next_url,
                 'next_page': next_page,
+                # (fixme) support the max_pages also in the other dbs and use it in the visualization
+                'max_pages': max_pages,
             })
         except Exception:
             pass
@@ -258,9 +269,10 @@ def movies(url):
 
 
 def lists(url):
-    res = json.loads(_traktreq(url))
+    res = _traktreq(url)
+    res = res.json()
 
-    log.debug('{m}.{f}: %s: %s'%(url, res))
+    log.debug('{m}.{f}: %s: %s'%(url.replace(_BASE_URL, ''), res))
 
     items = []
     for item in res:
@@ -291,16 +303,24 @@ def watched(kind, seen=None, **kwargs):
     content, id_type, id_value = url_.split('.')
     if seen is None:
         indicators = _sync_movies(timeout=720)
-        log.debug('{m}.{f}: indicators=%s', indicators)
-        return True if len([i for i in indicators if str(i[content]['ids'][id_type]) == id_value]) else None
+        status = True if len([i for i in indicators if str(i[content]['ids'][id_type]) == id_value]) else None
+        if status:
+            log.debug('{m}.{f}: %s watched', url_)
+        return status
     else:
-        _traktreq('/sync/history' if seen else '/sync/history/remove', {content+'s': [{'ids': {id_type: id_value}}]})
-        _sync_movies() # Update the local cache
-        return None # Give a change to the other backends to store the flag too!
+        res = _traktreq('/sync/history' if seen else '/sync/history/remove', {content+'s': [{'ids': {id_type: id_value}}]})
+        if res.status_code == client2.codes.ok:
+            _sync_movies()
+        # Give a change to the other backends to store the flag too!
+        return None
 
 
 def _sync_movies(timeout=0):
-    return json.loads(cache.get(_traktreq, timeout, '/users/%s/watched/movies'%_TRAKT_USER, table='rel_trakt'))
+    def traktreq(url_):
+        return _traktreq(url_).content
+
+    movies_history = cache.get(traktreq, timeout, '/users/%s/watched/movies'%_TRAKT_USER, table='rel_trakt')
+    return json.loads(movies_history)
 
 
 def authDevice(ui_update):
@@ -369,14 +389,14 @@ def _traktreq(url, post=None):
         refresh_token = platform.setting('trakt.refresh')
 
         if not _TRAKT_USER or not token:
-            return session.request(url, json=post, raise_error=True).content
+            return session.request(url, json=post, raise_error=True)
 
         authorization = {'Authorization': 'Bearer %s'%token}
 
         url = urlparse.urljoin(_BASE_URL, url)
         res = session.request(url, json=post, headers=authorization)
         if res.status_code == client2.codes.ok:
-            return res.content
+            return res
 
         if res.status_code not in [401, 405]:
             res.raise_for_status()
@@ -399,4 +419,4 @@ def _traktreq(url, post=None):
 
         authorization = {'Authorization': 'Bearer %s'%token}
 
-        return session.request(url, json=post, headers=authorization, raise_error=True).content
+        return session.request(url, json=post, headers=authorization, raise_error=True)
