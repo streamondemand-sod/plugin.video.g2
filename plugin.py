@@ -71,6 +71,8 @@ def main():
 
     actions.execute(params['action'], params)
 
+    return 0
+
 
 def service_monitor_setup():
     # (fixme) [code] plugin.run(action, **kwargs) -> plugin.run('auth.trakt')
@@ -92,4 +94,5 @@ def service_monitor_setup():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    # (fixme) re-add sys.exit() to check for leftover classes?!?
+    main()
