@@ -67,23 +67,25 @@ def movies(url):
 def metas(metas):
     # (fixme) cache the results using cachemeta, move cachemeta here!
     work_items = []
-    for m in metas:
-        if m['item']:
+    for meta in metas:
+        if meta['item']:
             continue
-        if m.get('tmdb', '0') != '0':
-            m['url'] = url('movie_meta{tmdb_id}', tmdb_id=m['tmdb'], info_lang=m['lang'])
-        elif m.get('imdb', '0') != '0':
-            m['url'] = url('movie_meta{imdb_id}', imdb_id=m['imdb'], info_lang=m['lang'])
-        if m.get('url'):
-            work_items.append(m)
+        if meta.get('tmdb', '0') != '0':
+            meta['url'] = url('movie_meta{tmdb_id}', tmdb_id=meta['tmdb'], info_lang=meta['lang'])
+        elif meta.get('imdb', '0') != '0':
+            meta['url'] = url('movie_meta{imdb_id}', imdb_id=meta['imdb'], info_lang=meta['lang'])
+        if meta.get('url'):
+            work_items.append(meta)
 
-    for db in sorted([d for d in info().itervalues() if 'metas' in d['methods']], key=lambda d: d['priority']):
-        package_work_items = [w for w in work_items if not w['item'] and urlparse.urlparse(w['url']).netloc.lower() in db['domains']]
+    for dbp in sorted([d for d in info().itervalues() if 'metas' in d['methods']], key=lambda d: d['priority']):
+        package_work_items = [w for w in work_items
+                              if not w['item'] and urlparse.urlparse(w['url']).netloc.lower() in dbp['domains']]
         if package_work_items:
-            _db_method(db, 'metas', package_work_items)
+            _db_method(dbp, 'metas', package_work_items)
 
-    # (fixme) add time taken
-    log.notice('dbs.metas: %d submitted, %d processed, %d completed'%(len(metas), len(work_items), len([w for w in work_items if w['item']])))
+    # (fixme) add time taken to gather all meta info
+    log.notice('dbs.metas: %d submitted, %d processed, %d completed',
+               len(metas), len(work_items), len([w for w in work_items if w['item']]))
 
 
 def persons(url):
@@ -109,7 +111,7 @@ def watched(kind, seen=None, **kwargs):
 def _alldbs_method(method, url, *args, **kwargs):
     netloc = urlparse.urlparse(url).netloc.lower() if url else None
     for dbp in sorted([d for d in info().itervalues() if method in d['methods'] and (not netloc or netloc in d['domains'])],
-                    key=lambda d: d['priority']):
+                      key=lambda d: d['priority']):
         result = _db_method(dbp, method, *args, **kwargs)
         if result is not None:
             return result if not kwargs.get('db_provider') else dbp['module']
@@ -117,17 +119,17 @@ def _alldbs_method(method, url, *args, **kwargs):
     return None
 
 
-def _db_method(db, method, *args, **kwargs):
-    log.debug('dbs.%s.%s(%s, %s)'%(db['name'], method, args, kwargs))
+def _db_method(dbp, method, *args, **kwargs):
+    log.debug('dbs.%s.%s(%s, %s)'%(dbp['name'], method, args, kwargs))
     result = None
     try:
-        if 'package' in db:
-            with pkg.Context('dbs', db['package'], [db['module']], db['search_paths']) as mod:
+        if 'package' in dbp:
+            with pkg.Context('dbs', dbp['package'], [dbp['module']], dbp['search_paths']) as mod:
                 result = getattr(mod[0], method)(*args, **kwargs)
         else:
-            with pkg.Context('dbs', db['module'], [], []) as mod:
+            with pkg.Context('dbs', dbp['module'], [], []) as mod:
                 result = getattr(mod, method)(*args, **kwargs)
     except Exception as ex:
-        log.error('dbs.%s.%s(): %s'%(db['name'], method, ex))
+        log.error('dbs.%s.%s: %s'%(dbp['name'], method, repr(ex)))
 
     return result
