@@ -22,110 +22,121 @@
 import re
 import json
 import time
-import base64
 import urllib
 import urlparse
 
 from g2.libraries import log
 from g2.libraries import cache
-from g2.libraries import client
+from g2.libraries import client2
 from g2.libraries import platform
+from g2.libraries.language import _
 
 
-# _log_debug = True
+_log_debug = True
 _log_trace_on_error = True
 
 
-"""
-    When adding a DBS method please include its name in info['methods']!!!
-"""
 info = {
     'domains': ['api-v2launch.trakt.tv'],
     'methods': ['url', 'movies', 'lists', 'watched'],
 }
 
 
-_trakt_base = 'https://api-v2launch.trakt.tv'
-_urls = {
-    'lists{trakt_user_id}': _trakt_base+'/users/{trakt_user_id}/lists',
-    'movies{trakt_user_id}{trakt_list_id}': _trakt_base+'/users/{trakt_user_id}/lists/{trakt_list_id}/items',
-    'movies_collection{trakt_user_id}': _trakt_base+'/users/{trakt_user_id}/collection/movies',
-    'movies_watchlist{trakt_user_id}': _trakt_base+'/users/{trakt_user_id}/watchlist/movies',
-    'movies_ratings{trakt_user_id}': _trakt_base+'/users/{trakt_user_id}/ratings/movies',
-    'movies_trending{}': _trakt_base+'/movies/trending?limit=20',
-    'movies_recommendations{}': _trakt_base+'/recommendations/movies?limit=20',
-    'watched.movie{imdb_id}': 'movie.imdb.{imdb_id}',
+_BASE_URL = 'https://api-v2launch.trakt.tv'
+_URLS = {
+    'movies_trending{}': _BASE_URL+'/movies/trending?limit=20',
+    # For the below urls trakt must be enabled and with a valid user id
+    'lists{trakt_user_id}': _BASE_URL+'/users/{trakt_user_id}/lists -- {trakt_enabled}',
+    'movies{trakt_user_id}{trakt_list_id}': _BASE_URL+'/users/{trakt_user_id}/lists/{trakt_list_id}/items -- {trakt_enabled}',
+    'movies_collection{trakt_user_id}': _BASE_URL+'/users/{trakt_user_id}/collection/movies -- {trakt_enabled}',
+    'movies_watchlist{trakt_user_id}': _BASE_URL+'/users/{trakt_user_id}/watchlist/movies -- {trakt_enabled}',
+    'movies_ratings{trakt_user_id}': _BASE_URL+'/users/{trakt_user_id}/ratings/movies -- {trakt_enabled}',
+    # For the below urls trakt must be enabled and with a valid token
+    'movies_recommendations{}': _BASE_URL+'/recommendations/movies?limit=20 -- {trakt_enabled}{trakt_token}',
+    'watched.movie{imdb_id}': 'movie.imdb.{imdb_id} -- {trakt_enabled}{trakt_token}',
 }
 
-_trakt_user = platform.setting('trakt_user') 
-_trakt_client_id = 'c67fa3018aa2867c183261f4b2bb12ebb606c2b3fbb1449e24f2fbdbc3a8ffdb'
-_common_post_vars = {
-    'client_id': _trakt_client_id,
+_TRAKT_USER = platform.setting('trakt_user')
+
+# (fixme) move in defs
+TRAKT_CLIENT_ID = 'c67fa3018aa2867c183261f4b2bb12ebb606c2b3fbb1449e24f2fbdbc3a8ffdb'
+
+_COMMON_POST_VARS = {
+    'client_id': TRAKT_CLIENT_ID,
     'client_secret': '9899db3e81158f6ebbb7b5afbce043b99caa13fba98c527c00c44ca44eca72c5',
     'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob',
 }
 
-_common_headers = {
+_COMMON_HEADERS = {
     'Content-Type': 'application/json',
-    'trakt-api-key': _trakt_client_id,
+    'trakt-api-key': TRAKT_CLIENT_ID,
     'trakt-api-version': '2',
 }
 
 
 def url(kind=None, **kwargs):
-    if not kind: return _urls.keys()
-    if kind not in _urls: return None
-
-    for k, v in kwargs.iteritems():
-        kwargs[k] = urllib.quote_plus(str(v))
-
-    return _urls[kind].format(**kwargs)
-
-
-# (fixme) abort the calls if trakt_enabled is false!
-def movies(url):
-    try:
-        q = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))
-        q.update({'extended': 'full,images'})
-        q = (urllib.urlencode(q)).replace('%2C', ',')
-        u = url.replace('?' + urlparse.urlparse(url).query, '') + '?' + q
-
-        result = _get_trakt(u)
-        if not result: raise Exception('_get_trakt(%s) failed'%u)
-        result = json.loads(result)
-
-        results = []
-        for i in result:
-            if 'movie' in i:
-                item = i['movie']
-                if 'rating' in i:
-                    item['rating'] = i['rating']
-                results.append(item)
-        if not results:
-            results = result
-        log.debug('trackt.movies(%s): %s'%(url, results))
-    except Exception as e:
-        log.notice('trackt.movies(%s): %s'%(url, e))
+    if not kind:
+        return _URLS.keys()
+    if kind not in _URLS:
         return None
 
+    for key, val in {
+            'trakt_enabled': False if platform.setting('trakt_enabled') == 'false' else True,
+            'trakt_token': platform.setting('trakt.token'),
+        }.iteritems():
+        if key not in kwargs and val:
+            kwargs[key] = val
+
+    for key, val in kwargs.iteritems():
+        kwargs[key] = urllib.quote_plus(str(val))
+
     try:
-        q = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))
-        p = str(int(q['page']) + 1)
-        if p == '5': raise Exception()
-        q.update({'page': p})
-        q = (urllib.urlencode(q)).replace('%2C', ',')
-        next_url = url.replace('?' + urlparse.urlparse(url).query, '') + '?' + q
+        return _URLS[kind].format(**kwargs).split(' ')[0]
+    except Exception as ex:
+        log.debug('{m}.{f}: %s: %s', kind, repr(ex))
+        return None
+
+
+def movies(url):
+    query = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))
+    query.update({'extended': 'full,images'})
+    query = (urllib.urlencode(query)).replace('%2C', ',')
+    query_url = url.replace('?' + urlparse.urlparse(url).query, '') + '?' + query
+
+    res = json.loads(_traktreq(query_url))
+    log.debug('{m}.{f}: %s: %s', query_url, res)
+
+    results = []
+    for i in res:
+        if 'movie' in i:
+            item = i['movie']
+            # NOTE: if you have rated this movie, report your rating instead of the community rating
+            if 'rating' in i:
+                item['rating'] = i['rating']
+            results.append(item)
+    if not results:
+        results = res
+
+    try:
+        query = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))
+        page = str(int(query['page']) + 1)
+        query.update({'page': page})
+        query = (urllib.urlencode(query)).replace('%2C', ',')
+        next_url = url.replace('?' + urlparse.urlparse(url).query, '') + '?' + query
         next_url = next_url.encode('utf-8')
-        next_page = int(p)
-    except:
+        next_page = int(page)
+    except Exception as ex:
+        log.debug('{m}.{f}: %s: %s', url, repr(ex))
         next_url = ''
         next_page = 0
+
+    log.debug('{m}.{f}: %s: next_url=%s, next_page=%s', url, next_url, next_page)
 
     items = []
     for item in results:
         try:
             title = item['title']
-            title = client.replaceHTMLCodes(title)
+            title = client2.replaceHTMLCodes(title)
             title = title.encode('utf-8')
 
             year = item['year']
@@ -201,14 +212,14 @@ def movies(url):
 
             plot = item['overview']
             if plot == None: plot = '0'
-            plot = client.replaceHTMLCodes(plot)
+            plot = client2.replaceHTMLCodes(plot)
             plot = plot.encode('utf-8')
 
             try: tagline = item['tagline']
             except: tagline = None
             if tagline == None and not plot == '0': tagline = re.compile('[.!?][\s]{1,2}(?=[A-Z])').split(plot)[0]
             elif tagline == None: tagline = '0'
-            tagline = client.replaceHTMLCodes(tagline)
+            tagline = client2.replaceHTMLCodes(tagline)
             try: tagline = tagline.encode('utf-8')
             except: pass
 
@@ -240,27 +251,22 @@ def movies(url):
                 'next_url': next_url,
                 'next_page': next_page,
             })
-        except:
-            import traceback
-            log.notice(traceback.format_exc())
+        except Exception:
+            pass
 
     return items
 
 
 def lists(url):
-    try:
-        result = _get_trakt(url)
-        results = json.loads(result)
-        log.debug('trakt.lists(%s): %d lists'%(url, len(results)))
-    except Exception as e:
-        log.notice('trakt.lists(%s): %s'%(url, e))
-        return None
+    res = json.loads(_traktreq(url))
+
+    log.debug('{m}.{f}: %s: %s'%(url, res))
 
     items = []
-    for item in results:
+    for item in res:
         try:
             name = item['name']
-            name = client.replaceHTMLCodes(name)
+            name = client2.replaceHTMLCodes(name)
             name = name.encode('utf-8')
 
             listid = item['ids']['slug']
@@ -271,7 +277,7 @@ def lists(url):
                 'trakt_list_id': listid,
                 'image': 'movieUserlists.jpg',
             })
-        except:
+        except Exception:
             pass
 
     return items
@@ -279,130 +285,118 @@ def lists(url):
 
 def watched(kind, seen=None, **kwargs):
     url_ = url(kind, **kwargs)
-    log.debug('trakt.watched: url(%s, %s)=%s'%(kind, kwargs, url_))
     if not url_:
         return None
 
     content, id_type, id_value = url_.split('.')
     if seen is None:
         indicators = _sync_movies(timeout=720)
-        indicators = json.loads(indicators)
-        log.debug('trakt.watched: getSymcMovies()=%s'%indicators)
+        log.debug('{m}.{f}: indicators=%s', indicators)
         return True if len([i for i in indicators if str(i[content]['ids'][id_type]) == id_value]) else None
     else:
-        log.debug('trakt.watched: getTrackt(seen=%s, %s, %s=%s)'%(seen, content+'s', id_type, id_value))
-        r = _get_trakt('/sync/history' if seen else '/sync/history/remove', {content+'s': [{'ids': {id_type: id_value}}]})
+        _traktreq('/sync/history' if seen else '/sync/history/remove', {content+'s': [{'ids': {id_type: id_value}}]})
         _sync_movies() # Update the local cache
-        log.debug('trakt.watched: getTrackt(seen=%s, %s, %s=%s)=%s'%(seen, content+'s', id_type, id_value, r))
         return None # Give a change to the other backends to store the flag too!
+
+
+def _sync_movies(timeout=0):
+    return json.loads(cache.get(_traktreq, timeout, '/users/%s/watched/movies'%_TRAKT_USER, table='rel_trakt'))
 
 
 def authDevice(ui_update):
     try:
-        phase = 'code generation'
-        result = client.request(urlparse.urljoin(_trakt_base, '/oauth/device/code'), post=json.dumps(_common_post_vars), headers=_common_headers, debug=True)
-        result = json.loads(result)
+        phase = _('code generation failed')
+        platform.setSetting('trakt.token', '')
+        platform.setSetting('trakt.refresh', '')
 
-        code = result['user_code']
-        url = result['verification_url']
-        device_code = result['device_code']
-        expires_in = result['expires_in']
-        interval = result['interval']
+        with client2.Session(headers=_COMMON_HEADERS) as session:
+            res = session.post(urlparse.urljoin(_BASE_URL, '/oauth/device/code'), json=_COMMON_POST_VARS).json()
 
-        post = _common_post_vars
-        post.update({
-            'code': str(device_code),
-        })
+            code = res['user_code']
+            url = res['verification_url']
+            device_code = res['device_code']
+            expires_in = res['expires_in']
+            interval = res['interval']
 
-        phase = 'device authorization'
-        start_time = time.time()
-        next_check_at = start_time + interval
-        while time.time()-start_time < expires_in:
-            if not ui_update(code, url, time.time()-start_time, expires_in):
-                raise Exception('user aborted')
-            if time.time() < next_check_at:
-                continue
+            post = _COMMON_POST_VARS
+            post.update({
+                'code': str(device_code),
+            })
 
-            result = client.request(urlparse.urljoin(_trakt_base, '/oauth/device/token'), post=json.dumps(post), headers=_common_headers, output='response', error=True, debug=True)
-            next_check_at = time.time() + interval
+            phase = _('device authorization failed')
+            start_time = time.time()
+            next_check_at = start_time + interval
+            while time.time()-start_time < expires_in:
+                if not ui_update(code, url, time.time()-start_time, expires_in):
+                    raise Exception('aborted: '+_('user aborted authorization'))
+                if time.time() < next_check_at:
+                    continue
 
-            if 'HTTP Error 400' in result[0] or 'HTTP Error 429' in result[0]:
-                pass
+                res = session.post(urlparse.urljoin(_BASE_URL, '/oauth/device/token'), json=post)
+                next_check_at = time.time() + interval
 
-            elif 'HTTP Error' in result[0]:
-                raise Exception(result[0])
+                if res.status_code in [400, 429]:
+                    pass
 
-            else:
-                result = json.loads(result[1])
-                platform.setSetting('trakt.token', str(result['access_token']))
-                platform.setSetting('trakt.refresh', str(result['refresh_token']))
-                return _trakt_fetch_user()
+                elif res.status_code != client2.codes.ok:
+                    res.raise_for_status()
 
-        raise Exception('auhorization code expired')
+                else:
+                    tokens = res.json()
+                    platform.setSetting('trakt.token', str(tokens['access_token']))
+                    platform.setSetting('trakt.refresh', str(tokens['refresh_token']))
 
-    except Exception as e:
-        log.error('trakt.authDevice: %s: %s'%(phase, e))
-        raise Exception('%s %s'%('Failed', phase))
+                    authorization = {'Authorization': 'Bearer %s'%str(tokens['access_token'])}
+
+                    res = session.get(urlparse.urljoin(_BASE_URL, '/users/me'),
+                                      headers=authorization, raise_error=True).json()
+                    return res['username']
+
+        raise Exception('aborted: '+_('auhorization code expired'))
+
+    except Exception as ex:
+        if str(ex).startswith('aborted: '):
+            log.notice('{m}.{f}: %s', repr(ex))
+            raise Exception(str(ex)[9:])
+        else:
+            log.error('{m}.{f}: %s', repr(ex))
+            raise Exception(phase)
 
 
-def _sync_movies(timeout=0):
-    try:
-        return cache.get(_get_trakt, timeout, '/users/%s/watched/movies'%_trakt_user, table='rel_trakt')
-    except:
-        pass
-
-
-def _get_trakt(url, post=None):
-    try:
-        if not post == None: post = json.dumps(post)
-
-        url = urlparse.urljoin(_trakt_base, url)
-
-        if not _trakt_user:
-            return client.request(url, post=post, headers=_common_headers)
-
+def _traktreq(url, post=None):
+    with client2.Session(headers=_COMMON_HEADERS) as session:
         token = platform.setting('trakt.token')
         refresh_token = platform.setting('trakt.refresh')
-        if not token: return None
 
-        _common_headers['Authorization'] = 'Bearer %s' % token
+        if not _TRAKT_USER or not token:
+            return session.request(url, json=post, raise_error=True).content
 
-        result = client.request(url, post=post, headers=_common_headers, output='response', error=True)
-        if 'HTTP Error 401' not in result[0] and 'HTTP Error 405' not in result[0]:
-            return result[1]
+        authorization = {'Authorization': 'Bearer %s'%token}
 
-        oauth = urlparse.urljoin(_trakt_base, '/oauth/token')
-        opost = _common_post_vars
+        url = urlparse.urljoin(_BASE_URL, url)
+        res = session.request(url, json=post, headers=authorization)
+        if res.status_code == client2.codes.ok:
+            return res.content
+
+        if res.status_code not in [401, 405]:
+            res.raise_for_status()
+
+        # Token expired, refresh it
+        oauth = urlparse.urljoin(_BASE_URL, '/oauth/token')
+        opost = _COMMON_POST_VARS
         opost.update({
             'grant_type': 'refresh_token',
             'refresh_token': refresh_token,
         })
 
-        result = client.request(oauth, post=json.dumps(opost), headers=_common_headers)
-        if not result: raise Exception('failure to refresh the token')
-        result = json.loads(result)
+        res = session.post(oauth, json=opost, raise_error=True).json()
 
-        token = str(result['access_token'])
-        refresh = str(result['refresh_token'])
+        token = str(res['access_token'])
+        refresh = str(res['refresh_token'])
 
         platform.setSetting('trakt.token', token)
         platform.setSetting('trakt.refresh', refresh)
 
-        _common_headers['Authorization'] = 'Bearer %s' % token
+        authorization = {'Authorization': 'Bearer %s'%token}
 
-        return client.request(url, post=post, headers=_common_headers)
-    except Exception as e:
-        log.error('_get_trakt(%s): %s'%(url, e))
-
-
-def _trakt_fetch_user():
-    token = platform.setting('trakt.token')
-    if not token: return None
-
-    _common_headers['Authorization'] = 'Bearer %s' % token
-
-    result = client.request(urlparse.urljoin(_trakt_base, '/users/me'), headers=_common_headers, debug=True)
-    if not result: return None
-    result = json.loads(result)
-
-    return result.get('username')
+        return session.request(url, json=post, headers=authorization, raise_error=True).content
