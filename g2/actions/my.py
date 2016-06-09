@@ -23,30 +23,37 @@ from g2.libraries import platform
 from g2.libraries.language import _
 from g2 import dbs
 
-from lib import ui
+from .lib import ui
 
 
-_trakt_user = platform.setting('trakt_user') if platform.setting('trakt_enabled') else ''
-_imdb_user = platform.setting('imdb_user')
+_TRAKT_USER = platform.setting('trakt_user')
+_IMDB_USER = platform.setting('imdb_user')
 
 
 # (fixme) intl
 def menu(action, **kwargs):
-    if _trakt_user:
-        ui.addDirectoryItem(30081, 'movies.movielist&url='+dbs.url('movies_collection{trakt_user_id}', trakt_user_id=_trakt_user, quote_plus=True), 'moviesTraktcollection.jpg', 'DefaultMovies.png',
-            context=(30191, 'moviesToLibrary&url=traktcollection'))
-        ui.addDirectoryItem(30082, 'movies.movielist&url='+dbs.url('movies_watchlist{trakt_user_id}', trakt_user_id=_trakt_user, quote_plus=True), 'moviesTraktwatchlist.jpg', 'DefaultMovies.png',
-            context=(30191, 'moviesToLibrary&url=traktwatchlist'))
-        ui.addDirectoryItem(30083, 'movies.movielist&url='+dbs.url('movies_recommendations{}', quote_plus=True), 'movies.jpg', 'DefaultMovies.png')
-        ui.addDirectoryItem(30084, 'movies.movielist&url='+dbs.url('movies_ratings{trakt_user_id}', trakt_user_id=_trakt_user, quote_plus=True), 'movies.jpg', 'DefaultMovies.png')
+    if _TRAKT_USER:
+        url = dbs.url('movies_collection{trakt_user_id}', trakt_user_id=_TRAKT_USER, quote_plus=True)
+        if url:
+            ui.addDirectoryItem(_('[B]TRAKT[/B] : Collection'), 'movies.movielist&url='+url,
+                                'moviesTraktcollection.jpg', 'DefaultMovies.png')
+        url = dbs.url('movies_watchlist{trakt_user_id}', trakt_user_id=_TRAKT_USER, quote_plus=True)
+        if url:
+            ui.addDirectoryItem(_('[B]TRAKT[/B] : Watchlist'), 'movies.movielist&url='+url,
+                                'moviesTraktwatchlist.jpg', 'DefaultMovies.png')
+        url = dbs.url('movies_ratings{trakt_user_id}', trakt_user_id=_TRAKT_USER, quote_plus=True)
+        if url:
+            ui.addDirectoryItem(_('[B]TRAKT[/B] : Ratings'), 'movies.movielist&url='+url,
+                                'movies.jpg', 'DefaultMovies.png')
+    url = dbs.url('movies_recommendations{}', quote_plus=True)
+    if url:
+        ui.addDirectoryItem(_('[B]TRAKT[/B] : Recommendations'), 'movies.movielist&url='+url,
+                            'movies.jpg', 'DefaultMovies.png')
 
-    if _imdb_user:
-        ui.addDirectoryItem(30091, 'movies&url=imdbwatchlist', 'moviesImdbwatchlist.jpg', 'DefaultMovies.png', context=(30191, 'moviesToLibrary&url=imdbwatchlist'))
-
-    if _trakt_user or _imdb_user:
+    if _TRAKT_USER or _IMDB_USER:
         ui.addDirectoryItem(_('Movie Lists'), 'movies.userlists', 'movieUserlists.jpg', 'DefaultMovies.png')
 
     if platform.setting('downloads'):
-        ui.addDirectoryItem(30098, 'download.menu', 'downloads.jpg', 'DefaultFolder.png')
+        ui.addDirectoryItem(_('Downloads'), 'download.menu', 'downloads.jpg', 'DefaultFolder.png')
 
     ui.endDirectory()
