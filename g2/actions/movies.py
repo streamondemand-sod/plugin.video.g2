@@ -258,15 +258,13 @@ def _add_movie_directory(action, items):
                 })
 
             cmds = []
-            # (fixme)[user]: define a setting for choosing the Info / Trailer action to use
-            # - the string may have a number of placeholders to be used as id
+            cmds.append((_('Movie information'), 'Action(Info)'))
             if platform.condition('System.HasAddon(script.extendedinfo)'):
-                cmds.append((_('Movie information'), "RunScript(script.extendedinfo,info=extendedinfo,id=%s)"%tmdb))
-                cmds.append((_('Trailer'), 'RunScript(script.extendedinfo,info=playtrailer,id=%s)'%tmdb))
-            else:
-                cmds.append((_('Movie information'), 'Action(Info)'))
+                cmds.append((_('Movie information')+' (extendedinfo)',
+                             "RunScript(script.extendedinfo,info=extendedinfo,id=%s)"%tmdb))
+                cmds.append((_('Trailer')+' (extendedinfo)',
+                             'RunScript(script.extendedinfo,info=playtrailer,id=%s)'%tmdb))
 
-            cmds.append((_('Play items as folder once'), 'RunPlugin(%s?action=sources.usefolderonce)' % (_sysaddon)))
             if is_watched:
                 cmds.append((_('Mark as unwatched'), 'RunPlugin(%s?action=movies.unwatched&imdb=%s)' % (_sysaddon, imdb)))
             else:
@@ -358,8 +356,8 @@ def _add_directory(action, items, content=None):
             if addonFanart:
                 item.setProperty('Fanart_Image', addonFanart)
             ui.addItem(handle=_systhread, url=url, listitem=item, isFolder=True)
-        except Exception:
-            pass
+        except Exception as ex:
+            log.error('{m}.{f}: %s: %s', i, repr(ex))
 
     if len(items) and 'next_action' in items[0]:
         ui.endDirectory(content=content,
