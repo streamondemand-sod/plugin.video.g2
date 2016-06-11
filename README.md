@@ -10,19 +10,22 @@ Features at glance
 ------------------
 - Movie listing and metadata fetching from tmdb and imdb
 - Integration with your trakt account
-  - Users list, watched status, rating, etc.
+  - User lists, watched status, ratings, etc.
 - Integration with your pushbullet account (mostly for parental control)
   - Notification of start/stop video playing including the title, mpaa rating and imdb url
   - Forced stop from any connected device
   - Push of video urls that can be resolved in a playable stream
 - Sources manager
   - Dynamically update the dialog as new sources are found
-  - Check the found sources for validity and stream format/resolution (MP4 and FLV only)
+  - Check the sources validity and stream format/resolution (MP4 and FLV only)
 - Player manager
   - Bookmarking for video resume
-  - Sync the watched status on the trakt account
-- Easily extendible via packages (plugin)
-  - Sorry, for now, you have to reverse enginner the code to find out the API! :)
+  - Sync the watched status with the trakt account
+- Download manager
+  - Running in background
+  - Restartable servers support
+- Easily extensible via packages (plugin)
+  - Sorry, for now, you have to reverse engineer the code to find out the API! :)
   - Notable packages to install
     - iSOD channels and resolvers
     - URLResolvers resolvers
