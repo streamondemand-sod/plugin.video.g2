@@ -15,9 +15,12 @@ Features at glance
   - Notification of start/stop video playing including the title, mpaa rating and imdb url
   - Forced stop from any connected device
   - Push of video urls that can be resolved in a playable stream
+- Integration with script.extendinfo
+  - Movie information
+  - Trailers
 - Sources manager
   - Dynamically update the dialog as new sources are found
-  - Check the sources validity and stream format/resolution (MP4 and FLV only)
+  - Check the sources validity and stream resolution (MP4 and FLV formats only)
 - Player manager
   - Bookmarking for video resume
   - Sync the watched status with the trakt account
