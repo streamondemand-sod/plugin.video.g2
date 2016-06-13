@@ -19,22 +19,31 @@
 """
 
 
+import ast
 import time
 import urllib
 import urlparse
-
-import importer
+import hashlib
+try:
+    from sqlite3 import dbapi2 as database
+except:
+    from pysqlite2 import dbapi2 as database
 
 from g2 import pkg
 from g2.libraries import log
+from g2.libraries import cache
 from g2.libraries import platform
 
 
-# _log_debug = True
-# _log_trace_on_error = True
+_log_debug = True
+_log_trace_on_error = True
 
-_info_lang = platform.setting('infoLang') or 'en'
-_default_db_priority = 10
+# (fixme) move in g2.defs
+_DEFAULT_DB_PACKAGE_PRIORITY = 10
+# (fixme) move in g2.defs
+_METADATA_CACHE_LIFETIME = (30*24) # hours
+
+_INFO_LANG = platform.setting('infoLang') or 'en'
 
 
 def info(force=False):
@@ -48,59 +57,73 @@ def info(force=False):
         nfo = dict(nfo)
         nfo.update({
             # Fixed priority defined at the module level
-            'priority': nfo.get('priority', _default_db_priority),
+            'priority': nfo.get('priority', _DEFAULT_DB_PACKAGE_PRIORITY),
         })
         return [nfo]
 
     return pkg.info('dbs', db_info, force)
 
 
-def url(kind=None, **kwargs):
-    url = _alldbs_method('url', None, kind, **kwargs)
+def resolve(kind=None, **kwargs):
+    url = _alldbs_method('resolve', None, kind, **kwargs)
     return '' if not url else urllib.quote_plus(url) if kwargs.get('quote_plus') else url
 
 
-def movies(url):
+def movies(url, **kwargs):
+    url = resolve(url, **kwargs) or url
     return _alldbs_method('movies', url, url)
 
 
-def metas(metas):
-    # (fixme) cache the results using cachemeta, move cachemeta here!
-    work_items = []
-    for meta in metas:
-        if meta['item']:
-            continue
-        if meta.get('tmdb', '0') != '0':
-            meta['url'] = url('movie_meta{tmdb_id}', tmdb_id=meta['tmdb'], info_lang=meta['lang'])
-        elif meta.get('imdb', '0') != '0':
-            meta['url'] = url('movie_meta{imdb_id}', imdb_id=meta['imdb'], info_lang=meta['lang'])
-        if meta.get('url'):
-            work_items.append(meta)
+def meta(items, lang=_INFO_LANG):
+    metas = _fetch_meta(items, lang)
 
-    for dbp in sorted([d for d in info().itervalues() if 'metas' in d['methods']], key=lambda d: d['priority']):
+    work_items = []
+    for met in metas:
+        if met['item']:
+            continue
+        if met.get('tmdb', '0') != '0':
+            met['url'] = resolve('movie_meta{tmdb_id}', tmdb_id=met['tmdb'])
+        elif met.get('imdb', '0') != '0':
+            met['url'] = resolve('movie_meta{imdb_id}', imdb_id=met['imdb'])
+        if met.get('url'):
+            work_items.append(met)
+
+    started = time.time()
+    for dbp in sorted([d for d in info().itervalues() if 'meta' in d['methods']], key=lambda d: d['priority']):
         package_work_items = [w for w in work_items
                               if not w['item'] and urlparse.urlparse(w['url']).netloc.lower() in dbp['domains']]
         if package_work_items:
-            _db_method(dbp, 'metas', package_work_items)
+            _db_method(dbp, 'meta', package_work_items)
 
-    # (fixme) add time taken to gather all meta info
-    log.notice('dbs.metas: %d submitted, %d processed, %d completed',
-               len(metas), len(work_items), len([w for w in work_items if w['item']]))
+    log.notice('{m}.{f}: %d submitted, %d scheduled, %d completed in %.2f seconds',
+               len(items), len(work_items), len([w for w in work_items if w['item']]), time.time()-started)
+
+    # Update all item attributes except fanart and rating if present
+    for met, item in zip(metas, items):
+        if met['item']:
+            item.update(dict((k, v) for k, v in met['item'].iteritems()
+                             if k not in ['fanart', 'rating'] or (k in ['fanart', 'rating'] and item.get(k, '0') == '0')))
+
+    _save_meta(metas)
 
 
-def persons(url):
+def persons(url, **kwargs):
+    url = resolve(url, **kwargs) or url
     return _alldbs_method('persons', url, url)
 
 
 def genres():
-    return _alldbs_method('genres', None)
+    url = resolve('genres{}')
+    return _alldbs_method('genres', url, url)
 
 
 def certifications(country='US'):
-    return _alldbs_method('certifications', None, country)
+    url = resolve('certifications{}')
+    return _alldbs_method('certifications', url, url, country)
 
 
-def lists(url):
+def lists(url, **kwargs):
+    url = resolve(url, **kwargs) or url
     return _alldbs_method('lists', url, url)
 
 
@@ -108,19 +131,27 @@ def watched(kind, seen=None, **kwargs):
     return _alldbs_method('watched', None, 'watched.'+kind, seen, **kwargs)
 
 
-def _alldbs_method(method, url, *args, **kwargs):
+def _alldbs_method(method, url, urlarg, *args, **kwargs):
     netloc = urlparse.urlparse(url).netloc.lower() if url else None
     for dbp in sorted([d for d in info().itervalues() if method in d['methods'] and (not netloc or netloc in d['domains'])],
                       key=lambda d: d['priority']):
-        result = _db_method(dbp, method, *args, **kwargs)
+        if not url or '|' not in urlarg:
+            result = _db_method(dbp, method, urlarg, *args, **kwargs)
+            log.debug('{m}.%s.%s: %s %s %s: %s'%(dbp['name'], method, urlarg, args, kwargs, result))
+        else:
+            urlarg, timeout = urlarg.split('|')[0:2]
+            response_info = []
+            result = cache.get(_db_method, int(timeout), dbp, method, urlarg, *args, response_info=response_info)
+            log.debug('{m}.%s.%s: %s %s (timeout=%s): %s%s',
+                      dbp['name'], method, urlarg, args, timeout,
+                      '' if 'cached' not in response_info else '[cached] ', result)
         if result is not None:
-            return result if not kwargs.get('db_provider') else dbp['module']
+            return result if not kwargs.get('return_db_provider') else dbp['module']
 
     return None
 
 
 def _db_method(dbp, method, *args, **kwargs):
-    log.debug('dbs.%s.%s(%s, %s)'%(dbp['name'], method, args, kwargs))
     result = None
     try:
         if 'package' in dbp:
@@ -130,6 +161,84 @@ def _db_method(dbp, method, *args, **kwargs):
             with pkg.Context('dbs', dbp['module'], [], []) as mod:
                 result = getattr(mod, method)(*args, **kwargs)
     except Exception as ex:
-        log.error('dbs.%s.%s: %s'%(dbp['name'], method, repr(ex)))
+        log.error('{m}.%s.%s: %s'%(dbp['name'], method, repr(ex)))
 
     return result
+
+
+def _fetch_meta(items, lang):
+    try:
+        dbcon = database.connect(platform.metacacheFile)
+        dbcon.row_factory = database.Row
+    except Exception as ex:
+        log.error('{m}.{f}: %s: %s', platform.metacacheFile, repr(ex))
+        return []
+
+    metas = []
+    for i in items:
+        try:
+            metas.append({
+                'tmdb': i.get('tmdb', '0'),
+                'imdb': i.get('imdb', '0'),
+                'tvdb': i.get('tvdb', '0'),
+                'lang': lang,
+                'item': None,
+            })
+
+            dbcur = dbcon.execute("SELECT * FROM meta"
+                                  " WHERE lang = ? AND"
+                                  "  ((imdb = ? and imdb <> '0') OR"
+                                  "   (tmdb = ? and tmdb <> '0') OR"
+                                  "   (tvdb = ? and tvdb <> '0'))",
+                                  (lang, i['imdb'], i['tmdb'], i['tvdb'],))
+            sqlrow = dbcur.fetchone()
+            if not sqlrow or (time.time()-int(sqlrow['timestamp']))/3600 > _METADATA_CACHE_LIFETIME:
+                continue
+
+            item = ast.literal_eval(sqlrow['item'].encode('utf-8'))
+            if item:
+                item = dict((k, v) for k, v in item.iteritems() if v is not None and v != '0')
+                metas[-1]['item'] = item
+
+        except Exception as ex:
+            log.error('{m}.{f}: %s: %s', i, repr(ex))
+
+    return metas
+
+
+def _save_meta(metas):
+    try:
+        platform.makeDir(platform.dataPath)
+        dbcon = database.connect(platform.metacacheFile)
+        dbcon.row_factory = database.Row
+        dbcon.execute("CREATE TABLE IF NOT EXISTS meta ("
+                      " lang TEXT,"
+                      " imdb TEXT,"
+                      " tmdb TEXT,"
+                      " tvdb TEXT,"
+                      " item TEXT,"
+                      " timestamp TEXT,"
+                      " UNIQUE(lang, imdb, tmdb, tvdb))")
+    except Exception as ex:
+        log.error('{m}.{f}: %s: %s', platform.metacacheFile, repr(ex))
+        return
+
+    now = int(time.time())
+    for i in metas:
+        with dbcon:
+            try:
+                dbcon.execute("DELETE FROM meta"
+                              " WHERE lang = ? AND"
+                              "  ((imdb = ? and imdb <> '0') OR"
+                              "   (tmdb = ? and tmdb <> '0') OR"
+                              "   (tvdb = ? and tvdb <> '0'))",
+                              (i['lang'], i['imdb'], i['tmdb'], i['tvdb'],))
+            except Exception as ex:
+                log.debug('{m}.{f}: %s: %s', i, repr(ex))
+
+            if i.get('item'):
+                try:
+                    dbcon.execute("INSERT INTO meta VALUES (?, ?, ?, ?, ?, ?)",
+                                  (i['lang'], i['imdb'], i['tmdb'], i['tvdb'], repr(i['item']), now,))
+                except Exception as ex:
+                    log.error('{m}.{f}: %s: %s', i, repr(ex))

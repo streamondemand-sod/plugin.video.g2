@@ -33,7 +33,7 @@ _log_trace_on_error = True
 
 info = {
     'domains': ['www.imdb.com'],
-    'methods': ['url', 'movies', 'lists'],
+    'methods': ['resolve', 'movies', 'lists'],
 }
 
 
@@ -41,14 +41,18 @@ _IMDB_PAGE_COUNT = 20
 
 _BASE_URL = 'http://www.imdb.com'
 _URLS = {
-    'lists{imdb_user_id}': _BASE_URL+'/user/ur{imdb_user_id}/lists',
-    'movies{imdb_list_id}': _BASE_URL+'/list/{imdb_list_id}/?view=detail&sort=title:asc&title_type=feature,short,tv_movie,tv_special,video,documentary,game&start=1',
-    'movies_boxoffice{}': _BASE_URL+'/search/title?title_type=feature,tv_movie&sort=boxoffice_gross_us,desc&count=%d' % _IMDB_PAGE_COUNT,
-    'movies_oscar{}': _BASE_URL+'/search/title?title_type=feature,tv_movie&groups=oscar_best_picture_winners&sort=year,desc&count=%d' % _IMDB_PAGE_COUNT,
+    'lists{imdb_user_id}': '/user/ur{imdb_user_id}/lists|168',
+    'movies{imdb_list_id}': ('/list/{imdb_list_id}/?view=detail&sort=title:asc&'
+                             'title_type=feature,short,tv_movie,tv_special,video,documentary,game&start=1|168'),
+    'movies_boxoffice{}': ('/search/title?title_type=feature,tv_movie&sort=boxoffice_gross_us,desc&count=%d|168'%
+                           _IMDB_PAGE_COUNT),
+    'movies_oscar{}': ('/search/title?title_type=feature,tv_movie&groups=oscar_best_picture_winners&'
+                       'sort=year,desc&count=%d|720'%
+                       _IMDB_PAGE_COUNT),
 }
 
 
-def url(kind=None, **kwargs):
+def resolve(kind=None, **kwargs):
     if not kind:
         return _URLS.keys()
     if kind not in _URLS:
@@ -57,7 +61,7 @@ def url(kind=None, **kwargs):
     for key, val in kwargs.iteritems():
         kwargs[key] = urllib.quote_plus(str(val))
 
-    return _URLS[kind].format(**kwargs)
+    return _BASE_URL+_URLS[kind].format(**kwargs)
 
 
 def movies(url):

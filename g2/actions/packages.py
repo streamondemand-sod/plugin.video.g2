@@ -28,7 +28,8 @@ from g2.libraries.language import _
 from .lib import ui
 
 
-_DEFAULT_PACKAGES_URLS = ['http://j0rdyz65.github.io/']
+# (fixme) move to g2.defs
+_DEFAULT_PACKAGES_URLS = ['http://j0rdyz65.github.io/packages.html']
 
 
 def dialog(**kwargs):

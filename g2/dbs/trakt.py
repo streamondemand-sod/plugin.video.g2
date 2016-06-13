@@ -38,28 +38,16 @@ _log_trace_on_error = True
 
 info = {
     'domains': ['api-v2launch.trakt.tv'],
-    'methods': ['url', 'movies', 'lists', 'watched'],
+    'methods': ['resolve', 'movies', 'lists', 'watched'],
 }
 
-
-_BASE_URL = 'https://api-v2launch.trakt.tv'
-_URLS = {
-    'movies_trending{}': _BASE_URL+'/movies/trending?limit=20',
-    # For the below urls trakt must be enabled and with a valid user id
-    'lists{trakt_user_id}': _BASE_URL+'/users/{trakt_user_id}/lists -- {trakt_enabled}',
-    'movies{trakt_user_id}{trakt_list_id}': _BASE_URL+'/users/{trakt_user_id}/lists/{trakt_list_id}/items -- {trakt_enabled}',
-    'movies_collection{trakt_user_id}': _BASE_URL+'/users/{trakt_user_id}/collection/movies -- {trakt_enabled}',
-    'movies_watchlist{trakt_user_id}': _BASE_URL+'/users/{trakt_user_id}/watchlist/movies -- {trakt_enabled}',
-    'movies_ratings{trakt_user_id}': _BASE_URL+'/users/{trakt_user_id}/ratings/movies -- {trakt_enabled}',
-    # For the below urls trakt must be enabled and with a valid token
-    'movies_recommendations{}': _BASE_URL+'/recommendations/movies?limit=20 -- {trakt_enabled}{trakt_token}',
-    'watched.movie{imdb_id}': 'movie.imdb.{imdb_id} -- {trakt_enabled}{trakt_token}',
-}
 
 _TRAKT_USER = platform.setting('trakt_user')
 
 # (fixme) move in defs
 TRAKT_CLIENT_ID = 'c67fa3018aa2867c183261f4b2bb12ebb606c2b3fbb1449e24f2fbdbc3a8ffdb'
+# (fixme) move in defs
+TRAKT_MAX_RECOMMENDATIONS = 60
 
 _COMMON_POST_VARS = {
     'client_id': TRAKT_CLIENT_ID,
@@ -73,8 +61,23 @@ _COMMON_HEADERS = {
     'trakt-api-version': '2',
 }
 
+_BASE_URL = 'https://api-v2launch.trakt.tv'
+_URLS = {
+    'movies_trending{}': '/movies/trending?limit=20|168',
+    # For the below urls trakt must be enabled and with a valid user id
+    'lists{trakt_user_id}': '/users/{trakt_user_id}/lists -- {trakt_enabled}',
+    'movies{trakt_user_id}{trakt_list_id}': '/users/{trakt_user_id}/lists/{trakt_list_id}/items -- {trakt_enabled}',
+    'movies_collection{trakt_user_id}': '/users/{trakt_user_id}/collection/movies -- {trakt_enabled}',
+    'movies_watchlist{trakt_user_id}': '/users/{trakt_user_id}/watchlist/movies -- {trakt_enabled}',
+    'movies_ratings{trakt_user_id}': '/users/{trakt_user_id}/ratings/movies -- {trakt_enabled}',
+    # For the below urls trakt must be enabled and with a valid token
+    'movies_recommendations{}': ('/recommendations/movies?limit=%d -- {trakt_enabled}{trakt_token}'%
+                                 TRAKT_MAX_RECOMMENDATIONS),
+    'watched.movie{imdb_id}': 'movie.imdb.{imdb_id} -- {trakt_enabled}{trakt_token}',
+}
 
-def url(kind=None, **kwargs):
+
+def resolve(kind=None, **kwargs):
     if not kind:
         return _URLS.keys()
     if kind not in _URLS:
@@ -91,7 +94,8 @@ def url(kind=None, **kwargs):
         kwargs[key] = urllib.quote_plus(str(val))
 
     try:
-        return _URLS[kind].format(**kwargs).split(' ')[0]
+        url = _URLS[kind].format(**kwargs).split(' ')[0]
+        return url if not url.startswith('/') else _BASE_URL+url
     except Exception as ex:
         log.debug('{m}.{f}: %s: %s', kind, repr(ex))
         return None
@@ -296,28 +300,29 @@ def lists(url):
 
 
 def watched(kind, seen=None, **kwargs):
-    url_ = url(kind, **kwargs)
-    if not url_:
+    url = resolve(kind, **kwargs)
+    if not url:
         return None
 
-    content, id_type, id_value = url_.split('.')
+    content, id_type, id_value = url.split('.')
     if seen is None:
-        indicators = _sync_movies(timeout=720)
+        # (fixme) change to 10 minutes when cache will support minutes granularity
+        indicators = _sync_movies(timeout=1)
         status = True if len([i for i in indicators if str(i[content]['ids'][id_type]) == id_value]) else None
         if status:
-            log.debug('{m}.{f}: %s watched', url_)
+            log.debug('{m}.{f}: %s watched', url)
         return status
     else:
         res = _traktreq('/sync/history' if seen else '/sync/history/remove', {content+'s': [{'ids': {id_type: id_value}}]})
-        if res.status_code == client2.codes.ok:
+        if res.status_code in [client2.codes.ok, client2.codes.created, client2.codes.no_content]:
             _sync_movies()
         # Give a change to the other backends to store the flag too!
         return None
 
 
 def _sync_movies(timeout=0):
-    def traktreq(url_):
-        return _traktreq(url_).content
+    def traktreq(url):
+        return _traktreq(url).content
 
     movies_history = cache.get(traktreq, timeout, '/users/%s/watched/movies'%_TRAKT_USER, table='rel_trakt')
     return json.loads(movies_history)
@@ -383,8 +388,8 @@ def authDevice(ui_update):
             raise Exception(phase)
 
 
-def _traktreq(url, post=None):
-    with client2.Session(headers=_COMMON_HEADERS) as session:
+def _traktreq(url, post=None, **kwargs):
+    with client2.Session(headers=_COMMON_HEADERS, **kwargs) as session:
         token = platform.setting('trakt.token')
         refresh_token = platform.setting('trakt.refresh')
 
@@ -395,7 +400,7 @@ def _traktreq(url, post=None):
 
         url = urlparse.urljoin(_BASE_URL, url)
         res = session.request(url, json=post, headers=authorization)
-        if res.status_code == client2.codes.ok:
+        if res.status_code in [client2.codes.ok, client2.codes.created, client2.codes.no_content]:
             return res
 
         if res.status_code not in [401, 405]:

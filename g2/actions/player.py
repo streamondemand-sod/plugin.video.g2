@@ -27,7 +27,8 @@ import xbmc
 from g2.libraries import log
 from g2.libraries import platform
 from g2.libraries.language import _
-from g2.dbs import tmdb
+
+from g2 import dbs
 from g2 import notifiers
 
 
@@ -94,9 +95,11 @@ def notify(action, **dummy_kwargs):
 def _fetch_db_meta(imdb, title, year):
     if imdb:
         # If the IMDB id is known, fetch the metadata
-        meta = {'url': tmdb.url('movie_meta{imdb_id}', imdb_id=imdb)}
-        tmdb.metas([meta])
-        log.debug('{m}.{f}: tmdb.metas([%s]): %s', imdb, meta)
+        meta = {'imdb': imdb}
+        dbs.meta([meta])
+
+        log.debug('{m}.{f}: %s: meta=%s', imdb, meta)
+
         return meta.get('item')
 
     # If the IMDB id is not known, perform an heuristic check on the title / year
@@ -116,12 +119,16 @@ def _fetch_db_meta(imdb, title, year):
             title = re.sub(r'\[.*\]', '', title) # Anything within []
         return title
 
-    items = tmdb.movies(tmdb.url('movies{title}{year}', title=cleantitle(title), year=year))
-    log.debug('{m}.{f}: tmdb.movies("%s", %s): %s', title, year, items)
+    items = dbs.movies('movies{title}{year}', title=cleantitle(title), year=year)
+
+    log.debug('{m}.{f}: %s (%s): %d movies', title, year, len(items))
+
     if not items:
         return None
 
-    meta = {'url': tmdb.url('movie_meta{tmdb_id}', tmdb_id=items[0]['tmdb'])}
-    tmdb.metas([meta])
-    log.debug('{m}.{f}: tmdb.metas([%s]): %s', items[0]['tmdb'], meta)
+    meta = {'tmdb': items[0]['tmdb']}
+    dbs.meta([meta])
+
+    log.debug('{m}.{f}: %s: meta=%s', items[0]['tmdb'], meta)
+
     return meta.get('item')

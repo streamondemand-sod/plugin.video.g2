@@ -31,6 +31,8 @@ import xbmc
 from g2.libraries import log
 from g2.libraries import platform
 from g2.libraries.language import _
+
+from g2 import dbs
 from g2 import notifiers
 
 from .lib import ui
@@ -60,13 +62,13 @@ def new(push):
         sites = {
             'imdb.com': {
                 'type': 'db',
-                'id_name': 'imdb_id',
+                'id_name': 'imdb',
                 'id_value': r'/title/(tt[\d]+)',
                 'db_query': 'movie_meta{imdb_id}',
             },
             'themoviedb.org': {
                 'type': 'db',
-                'id_name': 'tmdb_id',
+                'id_name': 'tmdb',
                 'id_value': r'/movie/([\d]+)',
                 'db_query': 'movie_meta{tmdb_id}',
             },
@@ -101,20 +103,17 @@ def new(push):
             platform.execute(plugin)
 
         elif sites[netloc]['type'] == 'db':
-            dbs = sites[netloc]
-            from g2.dbs import tmdb
-            kwargs = {
-                dbs['id_name']: re.search(dbs['id_value'], path).group(1),
+            site = sites[netloc]
+            meta = {
+                site['id_name']: re.search(site['id_value'], path).group(1),
             }
-            meta = {'url': tmdb.url(dbs['db_query'], **kwargs)}
-            tmdb.metas([meta])
-            item = meta['item']
+            dbs.meta([meta])
 
-            log.debug('{m}.{f}: meta=%s', item)
+            log.debug('{m}.{f}: meta=%s', meta)
 
             platform.execute('RunPlugin(%s?action=sources.dialog&title=%s&year=%s&imdb=%s&tmdb=%s&meta=%s)'%
-                             (sys.argv[0], urllib.quote_plus(item['title']), urllib.quote_plus(item['year']),
-                              urllib.quote_plus(item['imdb']), '', urllib.quote_plus(json.dumps(item))))
+                             (sys.argv[0], urllib.quote_plus(meta['title']), urllib.quote_plus(meta['year']),
+                              urllib.quote_plus(meta['imdb']), '', urllib.quote_plus(json.dumps(meta))))
 
         else:
             raise Exception('unknown site type: %s'%sites[netloc])

@@ -30,22 +30,25 @@ _TRAKT_USER = platform.setting('trakt_user')
 _IMDB_USER = platform.setting('imdb_user')
 
 
-# (fixme) intl
 def menu(action, **kwargs):
-    if _TRAKT_USER:
-        url = dbs.url('movies_collection{trakt_user_id}', trakt_user_id=_TRAKT_USER, quote_plus=True)
+    if not _TRAKT_USER or platform.setting('trakt_enabled') != 'true':
+        ui.addDirectoryItem(_('Configure your Trakt account to unlock new functions'), 'tools.settings',
+                            'moviesTraktcollection.jpg', 'DefaultMovies.png')
+    else:
+        url = dbs.resolve('movies_collection{trakt_user_id}', trakt_user_id=_TRAKT_USER, quote_plus=True)
         if url:
             ui.addDirectoryItem(_('[B]TRAKT[/B] : Collection'), 'movies.movielist&url='+url,
                                 'moviesTraktcollection.jpg', 'DefaultMovies.png')
-        url = dbs.url('movies_watchlist{trakt_user_id}', trakt_user_id=_TRAKT_USER, quote_plus=True)
+        url = dbs.resolve('movies_watchlist{trakt_user_id}', trakt_user_id=_TRAKT_USER, quote_plus=True)
         if url:
             ui.addDirectoryItem(_('[B]TRAKT[/B] : Watchlist'), 'movies.movielist&url='+url,
                                 'moviesTraktwatchlist.jpg', 'DefaultMovies.png')
-        url = dbs.url('movies_ratings{trakt_user_id}', trakt_user_id=_TRAKT_USER, quote_plus=True)
+        url = dbs.resolve('movies_ratings{trakt_user_id}', trakt_user_id=_TRAKT_USER, quote_plus=True)
         if url:
             ui.addDirectoryItem(_('[B]TRAKT[/B] : Ratings'), 'movies.movielist&url='+url,
                                 'movies.jpg', 'DefaultMovies.png')
-    url = dbs.url('movies_recommendations{}', quote_plus=True)
+
+    url = dbs.resolve('movies_recommendations{}', quote_plus=True)
     if url:
         ui.addDirectoryItem(_('[B]TRAKT[/B] : Recommendations'), 'movies.movielist&url='+url,
                             'movies.jpg', 'DefaultMovies.png')

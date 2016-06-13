@@ -44,36 +44,38 @@ _trakt_user = platform.setting('trakt_user') if platform.setting('trakt_enabled'
 
 
 def menu(**kwargs):
-    if dbs.url('movies_recently_added{}'):
-        db_provider = dbs.url('movies_recently_added{}', db_provider=True)
+    if dbs.resolve('movies_recently_added{}'):
+        db_provider = dbs.resolve('movies_recently_added{}', return_db_provider=True)
         ui.addDirectoryItem(_('Latest Movies')+' ['+db_provider.upper()+']',
-                            'movies.movielist&url='+dbs.url('movies_recently_added{}', quote_plus=True),
+                            'movies.movielist&url='+dbs.resolve('movies_recently_added{}', quote_plus=True),
                             'moviesAdded.jpg', 'DefaultRecentlyAddedMovies.png')
+
     ui.addDirectoryItem(_('Search by Title'), 'movies.searchbytitle', 'movieSearch.jpg', 'DefaultMovies.png')
     ui.addDirectoryItem(_('Search by Person'), 'movies.searchbyperson', 'moviePerson.jpg', 'DefaultMovies.png')
     ui.addDirectoryItem(_('Search by Year'), 'movies.searchbyyear', 'movieYears.jpg', 'DefaultMovies.png')
     ui.addDirectoryItem(_('Genres'), 'movies.genres', 'movieGenres.jpg', 'DefaultMovies.png')
     ui.addDirectoryItem(_('Certificates'), 'movies.certifications', 'movieCertificates.jpg', 'DefaultMovies.png')
-    if dbs.url('movies_featured{}'):
-        ui.addDirectoryItem(_('Featured'), 'movies.movielist&url='+dbs.url('movies_featured{}', quote_plus=True),
+
+    if dbs.resolve('movies_featured{}'):
+        ui.addDirectoryItem(_('Featured'), 'movies.movielist&url='+dbs.resolve('movies_featured{}', quote_plus=True),
                             'movies.jpg', 'DefaultRecentlyAddedMovies.png')
-    if dbs.url('movies_trending{}'):
-        ui.addDirectoryItem(_('People Watching'), 'movies.movielist&url='+dbs.url('movies_trending{}', quote_plus=True),
+    if dbs.resolve('movies_trending{}'):
+        ui.addDirectoryItem(_('People Watching'), 'movies.movielist&url='+dbs.resolve('movies_trending{}', quote_plus=True),
                             'moviesTrending.jpg', 'DefaultRecentlyAddedMovies.png')
-    if dbs.url('movies_popular{}'):
-        ui.addDirectoryItem(_('Most Popular'), 'movies.movielist&url='+dbs.url('movies_popular{}', quote_plus=True),
+    if dbs.resolve('movies_popular{}'):
+        ui.addDirectoryItem(_('Most Popular'), 'movies.movielist&url='+dbs.resolve('movies_popular{}', quote_plus=True),
                             'moviesPopular.jpg', 'DefaultMovies.png')
-    if dbs.url('movies_toprated{}'):
-        ui.addDirectoryItem(_('Most Voted'), 'movies.movielist&url='+dbs.url('movies_toprated{}', quote_plus=True),
+    if dbs.resolve('movies_toprated{}'):
+        ui.addDirectoryItem(_('Most Voted'), 'movies.movielist&url='+dbs.resolve('movies_toprated{}', quote_plus=True),
                             'moviesViews.jpg', 'DefaultMovies.png')
-    if dbs.url('movies_boxoffice{}'):
-        ui.addDirectoryItem(_('Box Office'), 'movies.movielist&url='+dbs.url('movies_boxoffice{}', quote_plus=True),
+    if dbs.resolve('movies_boxoffice{}'):
+        ui.addDirectoryItem(_('Box Office'), 'movies.movielist&url='+dbs.resolve('movies_boxoffice{}', quote_plus=True),
                             'moviesBoxoffice.jpg', 'DefaultMovies.png')
-    if dbs.url('movies_oscar{}'):
-        ui.addDirectoryItem(_('Oscar Winners'), 'movies.movielist&url='+dbs.url('movies_oscar{}', quote_plus=True),
+    if dbs.resolve('movies_oscar{}'):
+        ui.addDirectoryItem(_('Oscar Winners'), 'movies.movielist&url='+dbs.resolve('movies_oscar{}', quote_plus=True),
                             'moviesOscars.jpg', 'DefaultMovies.png')
-    if dbs.url('movies_theaters{}'):
-        ui.addDirectoryItem(_('In Theaters'), 'movies.movielist&url='+dbs.url('movies_theaters{}', quote_plus=True),
+    if dbs.resolve('movies_theaters{}'):
+        ui.addDirectoryItem(_('In Theaters'), 'movies.movielist&url='+dbs.resolve('movies_theaters{}', quote_plus=True),
                             'moviesTheaters.jpg', 'DefaultRecentlyAddedMovies.png')
     ui.endDirectory()
 
@@ -81,47 +83,47 @@ def menu(**kwargs):
 def searchbytitle(action, **kwargs):
     query = ui.doQuery(_('Title'))
     if query:
-        url = dbs.url('movies{title}', title=query)
+        url = dbs.resolve('movies{title}', title=query)
         movielist(action, url)
 
 
 def searchbyperson(action, **kwargs):
     query = ui.doQuery(_('Person'))
     if query:
-        url = dbs.url('persons{name}', name=query)
+        url = dbs.resolve('persons{name}', name=query)
         personlist(action, url)
 
 
 def searchbyyear(action, **kwargs):
     query = ui.doQuery(_('Year'))
     if query:
-        url = dbs.url('movies{year}', year=query)
+        url = dbs.resolve('movies{year}', year=query)
         movielist(action, url)
 
 
 def genres(action, **kwargs):
-    items = cache.get(dbs.genres, 24)
+    items = dbs.genres()
     for i in items:
         i.update({
             'action': 'movies.movielist',
-            'url': dbs.url('movies{genre_id}', genre_id=i['id']),
+            'url': dbs.resolve('movies{genre_id}', genre_id=i['id']),
         })
     _add_directory(action, items)
 
 
 def certifications(action, **kwargs):
-    items = cache.get(dbs.certifications, 24)
+    items = dbs.certifications()
     items = sorted(items, key=lambda c: c['order'])
     for i in items:
         i.update({
             'action': 'movies.movielist',
-            'url': dbs.url('movies{certification}', certification=i['name']),
+            'url': dbs.resolve('movies{certification}', certification=i['name']),
         })
     _add_directory(action, items)
 
 
 def movielist(action, url, **kwargs):
-    items = cache.get(dbs.movies, 24, url)
+    items = dbs.movies(url)
     if not items:
         ui.infoDialog(_('No results'))
         return
@@ -132,14 +134,14 @@ def movielist(action, url, **kwargs):
 
 
 def personlist(action, url, **kwargs):
-    items = cache.get(dbs.persons, 24, url)
+    items = dbs.persons(url)
     if not items:
         ui.infoDialog(_('No results'))
         return
     for i in items:
         i.update({
             'action': 'movies.movielist',
-            'url': dbs.url('movies{person_id}', person_id=i['id']),
+            'url': dbs.resolve('movies{person_id}', person_id=i['id']),
             'next_action': 'movies.tmdbpersonlist',
         })
     _add_directory(action, items)
@@ -149,32 +151,32 @@ def widget(action, **kwargs):
     setting = platform.setting('movie_widget')
 
     if setting == '2':
-        url = dbs.url('movies_featured{}')
+        url = dbs.resolve('movies_featured{}')
     elif setting == '3':
-        url = dbs.url('movies_trending{}')
+        url = dbs.resolve('movies_trending{}')
     else:
-        url = dbs.url('movies_recently_added{}')
+        url = dbs.resolve('movies_recently_added{}')
     movielist(action, url)
 
 
 def userlists(action, **kwargs):
     items = []
     if _trakt_user:
-        trakt_items = cache.get(dbs.lists, 0, dbs.url('lists{trakt_user_id}', trakt_user_id=_trakt_user))
+        trakt_items = cache.get(dbs.lists, 0, dbs.resolve('lists{trakt_user_id}', trakt_user_id=_trakt_user))
         for i in trakt_items:
             i.update({
                 'action': 'movies.movielist',
-                'url': dbs.url('movies{trakt_user_id}{trakt_list_id}',
+                'url': dbs.resolve('movies{trakt_user_id}{trakt_list_id}',
                                trakt_user_id=_trakt_user, trakt_list_id=i['trakt_list_id']),
             })
         items.extend(trakt_items)
 
     if _imdb_user:
-        imdb_items = cache.get(dbs.lists, 0, dbs.url('lists{imdb_user_id}', imdb_user_id=_imdb_user))
+        imdb_items = cache.get(dbs.lists, 0, dbs.resolve('lists{imdb_user_id}', imdb_user_id=_imdb_user))
         for i in imdb_items:
             i.update({
                 'action': 'movies.movielist',
-                'url': dbs.url('movies{imdb_list_id}', imdb_list_id=i['imdb_list_id']),
+                'url': dbs.resolve('movies{imdb_list_id}', imdb_list_id=i['imdb_list_id']),
             })
         items.extend(imdb_items)
 
@@ -188,27 +190,20 @@ def userlists(action, **kwargs):
 
 
 def watched(action, imdb, **kwargs):
+    ui.busydialog()
     dbs.watched('movie{imdb_id}', True, imdb_id=imdb)
     ui.refresh()
 
 
 def unwatched(action, imdb, **kwargs):
+    ui.busydialog()
     dbs.watched('movie{imdb_id}', False, imdb_id=imdb)
     ui.refresh()
 
 
 def _fetch_movie_info(items):
-    metas = metacache.fetch(items, _info_lang)
-    if metas:
-        dbs.metas(metas)
-
-        # Update all item attributes except fanart and rating if present
-        for meta, i in zip(metas, items):
-            if meta['item']:
-                i.update(dict((k, v) for k, v in meta['item'].iteritems()
-                              if k not in ['fanart', 'rating'] or (k in ['fanart', 'rating'] and i.get(k, '0') == '0')))
-
-        metacache.insert(metas)
+    # (fixme) re-add query-scope infolang
+    dbs.meta(items)
 
 
 def _add_movie_directory(action, items):

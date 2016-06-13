@@ -41,7 +41,7 @@ def menu(**kwargs):
 def settings(action, query='0.0', **kwargs):
     ui.idle()
     ui.execute('Addon.OpenSettings(%s)'%platform.addonInfo('id'))
-    context, setting = query.split('.')
+    context, setting = ('0', '0') if not query else query.split('.')
     ui.execute('SetFocus(%i)' % (int(context) + 100))
     ui.execute('SetFocus(%i)' % (int(setting) + 200))
 

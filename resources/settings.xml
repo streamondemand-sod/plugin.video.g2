@@ -19,6 +19,9 @@
 		<setting type="lsep" label="[CR]" />
 		<setting type="lsep" label="Pushbullet" />
 		<setting id="pushbullet_apikey" type="text" label="Pushbullet API key" default="" />
+		<setting type="lsep" label="[CR]" />
+		<setting type="lsep" label="TMDB" />
+		<setting id="tmdb_apikey" type="text" label="TMDB API key" default="" />
 	</category>
 	<category label="30860">
 		<setting id="providers:::preferred_provider_1" type="select" label="30011" values="-|altadefinizione01|altadefinizioneclick|altadefinizioneone|animestream|asiansubita|casacinema|cineblog01|cinemalibero|cinemastreaming|darkstream|documentaristreaming|eurostreaming|eurostreaminginfo|filmitaliatv|filmpertutti|filmsenzalimiti|filmstream|filmstreampw|filmsubitotv|guardarefilm|guardaserie|hdgratis|hdstreamingit|instreaminginfo|itafilmtv|italiafilm|italiafilmvideohd|italianstream|italiaserie|itastreaming|leserietv|liberoita|megafiletube|mondolunatico|pastebin|pianetastreaming|piratestreaming|playcinema|portalehd|scambiofile|seriehd|serietvsubita|solostreaming|streamblog|streaming01|strfilm|tantifilm|toonitalia|vediserie|youtube" default="-" />

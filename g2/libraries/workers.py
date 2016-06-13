@@ -53,18 +53,18 @@ class Thread(threading.Thread):
     def run(self):
         try:
             self.started = datetime.datetime.now()
-            log.debug('Thread.run(%s): started at %s'%(self.name, self.started))
+            log.debug('Thread.run: %s: started at %s'%(self.name, self.started))
             if self.__target:
                 self.result = self.__target(*self.__args, **self.__kwargs)
             # self.result = self.target(*self.args, **self.kwargs)
         except Exception as ex:
-            log.notice('Thread.run(%s): %s', self.name, ex, trace=True)
+            log.error('Thread.run: %s: %s', self.name, repr(ex), trace=True)
         finally:
             # Avoid a refcycle if the thread is running a function with
             # an argument that has a member that points to the thread.
             del self.__target, self.__args, self.__kwargs
             self.stopped = datetime.datetime.now()
-            log.debug('Thread.run(%s): elapsed for %.6fs%s',
+            log.debug('Thread.run: %s: elapsed for %.6fs%s',
                       self.name, self.elapsed(), '' if not self.die else ' (asked to die)')
 
     def elapsed(self):
