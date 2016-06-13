@@ -53,8 +53,15 @@ def menu(action, **kwargs):
         ui.addDirectoryItem(_('[B]TRAKT[/B] : Recommendations'), 'movies.movielist&url='+url,
                             'movies.jpg', 'DefaultMovies.png')
 
-    if _TRAKT_USER or _IMDB_USER:
-        ui.addDirectoryItem(_('Movie Lists'), 'movies.userlists', 'movieUserlists.jpg', 'DefaultMovies.png')
+    if _TRAKT_USER:
+        ui.addDirectoryItem(_('[B]TRAKT[/B] : Lists'),
+                            'movies.lists&kind_user_id=trakt_user_id&kind_list_id=trakt_list_id&user_id=%s'%_TRAKT_USER,
+                            'movieUserlists.jpg', 'DefaultMovies.png')
+    if _IMDB_USER:
+        # (fixme) should be the nickname
+        ui.addDirectoryItem(_('[B]IMDB[/B] : Lists by %s')%_IMDB_USER,
+                            'movies.lists&kind_user_id=imdb_user_id&kind_list_id=imdb_list_id&user_id=%s'%_IMDB_USER,
+                            'movieUserlists.jpg', 'DefaultMovies.png')
 
     if platform.setting('downloads'):
         ui.addDirectoryItem(_('Downloads'), 'download.menu', 'downloads.jpg', 'DefaultFolder.png')

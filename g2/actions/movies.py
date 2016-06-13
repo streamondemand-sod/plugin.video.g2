@@ -26,21 +26,16 @@ import json
 import urllib
 
 from g2.libraries import log
-from g2.libraries import cache
 from g2.libraries import platform
 from g2.libraries.language import _
 from g2 import dbs
 
-from .lib import metacache
 from .lib import ui
 
 
 _sysaddon = sys.argv[0]
 _systhread = int(sys.argv[1])
 
-_info_lang = platform.setting('infoLang') or 'en'
-_imdb_user = platform.setting('imdb_user').replace('ur', '')
-_trakt_user = platform.setting('trakt_user') if platform.setting('trakt_enabled') else ''
 
 
 def menu(**kwargs):
@@ -159,27 +154,18 @@ def widget(action, **kwargs):
     movielist(action, url)
 
 
-def userlists(action, **kwargs):
-    items = []
-    if _trakt_user:
-        trakt_items = cache.get(dbs.lists, 0, dbs.resolve('lists{trakt_user_id}', trakt_user_id=_trakt_user))
-        for i in trakt_items:
-            i.update({
-                'action': 'movies.movielist',
-                'url': dbs.resolve('movies{trakt_user_id}{trakt_list_id}',
-                               trakt_user_id=_trakt_user, trakt_list_id=i['trakt_list_id']),
-            })
-        items.extend(trakt_items)
+def lists(action, kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', user_id='', **kwargs):
+    args = {kind_user_id: user_id}
+    items = dbs.lists('lists{%s}'%kind_user_id, **args)
+    if not items:
+        items = []
 
-    if _imdb_user:
-        imdb_items = cache.get(dbs.lists, 0, dbs.resolve('lists{imdb_user_id}', imdb_user_id=_imdb_user))
-        for i in imdb_items:
-            i.update({
-                'action': 'movies.movielist',
-                'url': dbs.resolve('movies{imdb_list_id}', imdb_list_id=i['imdb_list_id']),
-            })
-        items.extend(imdb_items)
-
+    for i in items:
+        args[kind_list_id] = i[kind_list_id]
+        i.update({
+            'action': 'movies.movielist',
+            'url': dbs.resolve('movies{%s}{%s}'%(kind_user_id, kind_list_id), **args),
+        })
     if not items:
         ui.infoDialog(_('No results'))
         return

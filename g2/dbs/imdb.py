@@ -41,9 +41,9 @@ _IMDB_PAGE_COUNT = 20
 
 _BASE_URL = 'http://www.imdb.com'
 _URLS = {
-    'lists{imdb_user_id}': '/user/ur{imdb_user_id}/lists|168',
-    'movies{imdb_list_id}': ('/list/{imdb_list_id}/?view=detail&sort=title:asc&'
-                             'title_type=feature,short,tv_movie,tv_special,video,documentary,game&start=1|168'),
+    'lists{imdb_user_id}': '/user/{imdb_user_id}/lists|168',
+    'movies{imdb_user_id}{imdb_list_id}': ('/list/{imdb_list_id}/?view=detail&sort=title:asc&'
+                                           'title_type=feature,short,tv_movie,tv_special,video,documentary,game&start=1|168'),
     'movies_boxoffice{}': ('/search/title?title_type=feature,tv_movie&sort=boxoffice_gross_us,desc&count=%d|168'%
                            _IMDB_PAGE_COUNT),
     'movies_oscar{}': ('/search/title?title_type=feature,tv_movie&groups=oscar_best_picture_winners&'
