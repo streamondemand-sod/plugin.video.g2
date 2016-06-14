@@ -178,10 +178,10 @@ def _fetch_meta(items, lang):
     for i in items:
         try:
             metas.append({
+                'lang': lang,
                 'tmdb': i.get('tmdb', '0'),
                 'imdb': i.get('imdb', '0'),
                 'tvdb': i.get('tvdb', '0'),
-                'lang': lang,
                 'item': None,
             })
 
@@ -190,7 +190,7 @@ def _fetch_meta(items, lang):
                                   "  ((imdb = ? and imdb <> '0') OR"
                                   "   (tmdb = ? and tmdb <> '0') OR"
                                   "   (tvdb = ? and tvdb <> '0'))",
-                                  (lang, i['imdb'], i['tmdb'], i['tvdb'],))
+                                  (metas[-1]['lang'], metas[-1]['imdb'], metas[-1]['tmdb'], metas[-1]['tvdb'],))
             sqlrow = dbcur.fetchone()
             if not sqlrow or (time.time()-int(sqlrow['timestamp']))/3600 > _METADATA_CACHE_LIFETIME:
                 continue
