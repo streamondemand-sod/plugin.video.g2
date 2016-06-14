@@ -422,11 +422,11 @@ def download(action, name=None, provider=None, url=None, resolvedurl=None, image
     return True
 
 
-def clearsourcescache(**kwargs):
+def clearsourcescache(action, name='', **kwargs):
+    ui.busydialog()
+    if name and providers.clear_sources_cache(**kwargs):
+        ui.infoDialog(_('Cache cleared for %s')%name)
     ui.idle()
-    key = providers.clear_sources_cache(**kwargs)
-    if key:
-        ui.infoDialog(_('Cache cleared for')+' '+key)
 
 
 def _credits_message(provider, host, media_format):
@@ -560,10 +560,11 @@ def _resolve(provider, url, ui_update=None):
             host = rurl
 
         extrainfo = '%s"%s"'%('' if not hasattr(rurl, 'resolver') else ' by %s '%rurl.resolver, host)
-        if hasattr(rurl, 'meta') and rurl.meta and 'first8bytes' in rurl.meta:
+        if hasattr(rurl, 'meta') and rurl.meta and 'firstbytes' in rurl.meta:
             import string
-            extrainfo += ' [unknown header: %s]'%' '.join(
-                ['%02x%s'%(ord(b), ' (%s)'%b if b in string.printable else '') for b in rurl.meta['first8bytes']])
+            extrainfo += ' [first %d bytes: %s]'%(
+                len(rurl.meta['firstbytes']),
+                ' '.join(['%02x%s'%(ord(b), ' (%s)'%b if b in string.printable else '') for b in rurl.meta['firstbytes']]))
 
     log.notice('{m}.{f}(%s, %s): %s %.3f secs%s'%(provider, url, what, thd.elapsed(), extrainfo))
 
