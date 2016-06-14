@@ -164,7 +164,7 @@ def request(url, method=None, close=True, error=False, proxy=None, post=None, he
         return None
 
 
-def parseDOM(html, name=u"", attrs={}, ret=False, noattrs=True, debug=True):
+def parseDOM(html, name=u"", attrs={}, ret=False, noattrs=True, debug=False):
     # Copyright (C) 2010-2011 Tobias Ussing And Henrik Mosgaard Jensen
     global _log_debug
     _log_debug = debug
