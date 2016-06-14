@@ -205,12 +205,22 @@ def _meta_worker(meta):
     title = result.get('title', '')
     title = client2.replaceHTMLCodes(title)
     title = title.encode('utf-8')
-    if title: item.update({'title': title})
+    if title:
+        item.update({'title': title})
 
     year = result['release_date']
+    try:
+        # Update the release date with the local release date if existing
+        for localrel in result['releases']['countries']:
+            if localrel['iso_3166_1'].lower() == _INFO_LANG:
+                year = localrel['release_date']
+                break
+    except Exception:
+        pass
     year = re.compile(r'(\d{4})').findall(year)[-1]
     year = year.encode('utf-8')
-    if year: item.update({'year': year})
+    if year:
+        item.update({'year': year})
 
     name = '%s (%s)' % (title, year)
     try: name = name.encode('utf-8')
