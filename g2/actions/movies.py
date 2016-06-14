@@ -251,7 +251,8 @@ def _add_movie_directory(action, items):
             else:
                 cmds.append((_('Mark as watched'), 'RunPlugin(%s?action=movies.watched&imdb=%s)' % (_sysaddon, imdb)))
 
-            cmds.append((_('Clear sources cache'), 'RunPlugin(%s?action=sources.clearsourcescache&imdb=%s)' % (_sysaddon, imdb)))
+            cmds.append((_('Clear sources cache'), 'RunPlugin(%s?action=sources.clearsourcescache&name=%s&imdb=%s)'%
+                         (_sysaddon, urllib.quote_plus(label), imdb)))
 
             item = ui.ListItem(label=label, iconImage=poster, thumbnailImage=poster)
 
