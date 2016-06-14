@@ -31,8 +31,12 @@ _MAX_BYTE_READ_FOR_RESOLUTION = 100 * 1024
 
 def video(fil):
     first8 = fil.read(8)
-    size, atom = struct.unpack('>i4s', first8)
     meta = {}
+    if len(first8) < 8:
+        meta['firstbytes'] = first8
+        return meta
+
+    size, atom = struct.unpack('>i4s', first8)
     if atom == 'ftyp':
         from . import mp4 as decoder
         fil.read(size-8)           # Skip to the next mp4 atom
@@ -44,7 +48,7 @@ def video(fil):
         meta['type'] = 'flv'
 
     else:
-        meta['first8bytes'] = first8
+        meta['firstbytes'] = first8
         return meta
 
     meta['width'], meta['height'] = decoder.video_resolution(fil, stop_at_bytes=_MAX_BYTE_READ_FOR_RESOLUTION)
