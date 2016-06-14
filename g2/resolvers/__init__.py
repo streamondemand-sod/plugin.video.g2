@@ -27,9 +27,14 @@ import urlparse
 from contextlib import closing
 
 from g2 import pkg
+
+from g2.libraries import log
 from g2.libraries import client2
 
 from .lib import metastream
+
+
+_log_debug = True
 
 
 # Streams shorter than this are not considered valid
@@ -110,9 +115,13 @@ def resolve(url, checkonly=False):
             else:
                 errors.append(err)
 
+        log.debug('{m}.{f}: %s: resolving %s...', resolver['name'], url)
+
         res = None
         with pkg.Context('resolvers', resolver['package'], [resolver['module']], resolver['search_paths']) as mod:
             res = None if not mod else mod[0].resolve(resolver['name'].split('.'), url)
+
+        log.debug('{m}.{f}: %s: %s', resolver['name'], repr(res))
 
         # On error, go to the next resolver for the same domain
         if not isinstance(res, basestring):
@@ -124,12 +133,15 @@ def resolve(url, checkonly=False):
             continue
 
         # For non http(s) urls, do not check anything more
-        if not res.startswith('http'):
+        if not res.lstrip().startswith('http'):
             return ResolvedURL(res).enrich(resolver=resolver['name'])
 
         # Otherwise, check if the URL doesn't return errors
         try:
-            headers = dict(urlparse.parse_qsl(res.rsplit('|', 1)[1]))
+            headers = res.split('|')[1]
+            if ' ' in headers:
+                headers = urllib.quote_plus(headers, '=&')
+            headers = dict(urlparse.parse_qsl(headers))
         except Exception:
             headers = dict('')
 
@@ -138,7 +150,7 @@ def resolve(url, checkonly=False):
         if not 'Referer' in headers:
             headers['Referer'] = url
 
-        with closing(client2.get(res.split('|')[0], headers=headers, stream=True, timeout=20, raise_error=False)) as resp:
+        with closing(client2.get(res.split('|')[0], headers=headers, stream=True, timeout=20, debug=True)) as resp:
             try:
                 resp.raise_for_status()
             except Exception as ex:
