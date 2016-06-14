@@ -82,7 +82,6 @@ def video_sources(ui_update, content, **kwargs):
         if not modulesinfo:
             continue
 
-        # (fixme) use the priority as sorting method
         modules = sorted(set([mi['module'] for mi in modulesinfo]))
         with pkg.Context(__name__, package, modules, modulesinfo[0]['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mods:
             if not mods:
@@ -94,7 +93,6 @@ def video_sources(ui_update, content, **kwargs):
                 threads.extend([workers.Thread(_sources_worker, channel, mod, smodule, content, **kwargs)
                                 for smodule in sub_modules])
 
-            # (fixme)[opt]: start a maximum of # concurrent threads
             dummy = [t.start() for t in threads]
 
             completed_threads = []
@@ -193,7 +191,6 @@ def _sources_worker(channel, m, provider, content, **kwargs):
             title = kwargs['title']
             video_best_match = max(video_matches, key=lambda m: fuzz.token_sort_ratio(cleantitle(m[1]), title))
             confidence = fuzz.token_sort_ratio(cleantitle(video_best_match[1]), title)
-            # (fixme) [user]: add setting for fuzziness min value and also allow to change it via context menu
             if confidence >= _MIN_FUZZINESS_VALUE:
                 video_ref = video_best_match
             log.notice('{m}.{f}(%s): %d matches found; best has confidence %d (%s)',
@@ -218,9 +215,9 @@ def _sources_worker(channel, m, provider, content, **kwargs):
         log.notice('{m}.{f}(%s).video_ref(%s)', provider, video_ref)
         try:
             sources = m.get_sources(provider.split('.'), video_ref)
-        except Exception:
-            # get functions might fail because of no sources found
-            pass
+        except Exception as ex:
+            log.debug('{m}.{f}: %s(%s): %s', provider, video_ref, repr(ex))
+
         if not sources:
             sources = []
 
@@ -251,16 +248,15 @@ def clear_sources_cache(**kwargs):
         log.debug('{m}.{f}(...): key_video=%s', key_video)
         platform.makeDir(platform.dataPath)
         dbcon = database.connect(platform.sourcescacheFile, timeout=10)
-        # (fixme) store the title/year in the rel_src so that it can be returned on success!
         with dbcon:
             dbcon.execute("DELETE FROM rel_src WHERE key_video = ?", (key_video,))
+            dbcon.execute("DELETE FROM rel_url WHERE key_video = ?", (key_video,))
         return key_video
     except Exception as ex:
         log.error('{m}.{f}(...): %s', ex)
         return None
 
 
-# (fixme)[code]: get_movie -> movie
 def get_movie(provider, **kwargs):
     try:
         provider = info()[provider]
@@ -271,7 +267,6 @@ def get_movie(provider, **kwargs):
         return mod[0].get_movie(provider['name'].split('.'), **kwargs)
 
 
-# (fixme)[code]: get_sources -> sources
 def get_sources(provider, url):
     if not url:
         return []
@@ -289,7 +284,6 @@ def get_sources(provider, url):
         return sources
 
 
-# (fixme) cache the url resolution for 1day, clear them together with the sources
 def resolve(provider, url):
     if not url:
         return None
@@ -312,7 +306,6 @@ def resolve(provider, url):
     # Otherwise, try with the source resolver and then give the url back to the resolvers again
     try:
         with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
-            # (fixme)[debug]: if successfull, enrich the resolvedurl with the source resolver too!
             url = mod[0].resolve(provider['name'].split('.'), url)
     except Exception:
         # On any failure of the source resolver, return the error of the first resolvers invocation
