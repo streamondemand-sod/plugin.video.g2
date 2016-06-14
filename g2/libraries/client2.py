@@ -61,11 +61,15 @@ class Session(requests.Session):
         debug = self.session_debug | _set_debug(debug)
         raise_error = raise_error or self.session_raise_error
 
+        if _debug(debug, 'cookies') and self.cookies:
+            for cke, val in self.cookies.iteritems():
+                log.debug('{m}.{f}: session.cookie: %s=%s', cke, val, debug=True)
+
         res = _request(method, url, raise_error=raise_error, debug=debug, **kwargs)
 
         if _debug(debug, 'adapter'):
             conn = self.get_adapter(url).poolmanager.connection_from_url(url)
-            log.debug('{m}.{f}: request.conn: connections:%d, requests:%d', conn.num_connections, conn.num_requests, debug=True)
+            log.debug('{m}.{f}: session.adapter: connections:%d, requests:%d', conn.num_connections, conn.num_requests, debug=True)
 
         return res
 
@@ -98,6 +102,8 @@ def _request(method, url, raise_error=None, debug=None, **kwargs):
         if kwargs.get('data'):
             for var, val in kwargs.get('data').iteritems():
                 log.debug('{m}.{f}: request.data: %s=%s', var, val, debug=True)
+        if kwargs.get('json'):
+            log.debug('{m}.{f}: request.json: %s', kwargs.get('json'), debug=True)
         if type(kwargs.get('headers')) == dict:
             for hdr, val in kwargs.get('headers').iteritems():
                 log.debug('{m}.{f}: request.headers: %s=%s', hdr, val, debug=True)
@@ -107,14 +113,18 @@ def _request(method, url, raise_error=None, debug=None, **kwargs):
     if _debug(debug, 'response'):
         for hdr, val in res.headers.iteritems():
             log.debug('{m}.{f}: response.headers: %s=%s', hdr, val, debug=True)
-        for cke, val in res.cookies.iteritems():
-            log.debug('{m}.{f}: response.cookies: %s=%s', cke, val, debug=True)
+        if res.cookies:
+            for cke, val in res.cookies.iteritems():
+                log.debug('{m}.{f}: response.cookies: %s=%s', cke, val, debug=True)
         if res.history:
             log.debug('{m}.{f}: response.history: %s', res.history, debug=True)
         log.debug('{m}.{f}: response.status: %s', res.status_code, debug=True)
 
     if _debug(debug, 'content'):
-        log.debug('{m}.{f}: response.content[%s]: %s', res.encoding, res.content, debug=True)
+        if kwargs.get('stream'):
+            log.debug('{m}.{f}: response.content[%s]: not logged because of stream mode', res.encoding, debug=True)
+        else:
+            log.debug('{m}.{f}: response.content[%s]: %s', res.encoding, res.content, debug=True)
 
     if raise_error:
         res.raise_for_status()
@@ -170,21 +180,37 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
         lst = _getDOMElements(item, name, attrs)
 
         rets = []
+        item_offset = 0
         for match in lst:
             if isinstance(ret, basestring):
                 log.debug("{m}.{f}: Getting attribute %s content for %s"%(ret, match))
                 rets += _getDOMAttributes(match, name, ret)
+
             elif ret:
                 log.debug("{m}.{f}: Getting attributes %s content for %s"%(ret, match))
                 retdict = {}
                 for i in ret:
                     retdict[i] = _getDOMAttributes(match, name, i)
                 rets.append(retdict)
-            else:
+
+            elif isinstance(match, basestring):
                 log.debug("{m}.{f}: Getting element content for %s"%match)
-                temp = _getDOMContent(item, name, match).strip()
+                temp = _getDOMContent(item, 0, name, match).strip()
                 item = item[item.find(temp, item.find(match)) + len(temp):]
                 rets.append(temp)
+
+            # (fixme) for now proper matching of the DOM elements is implemented only if the attrs is set to {}
+            #   Any other value of attrs would return a list of strings that might result in DOM content to be
+            #   returned for the wrong element item.
+            elif match.start() < item_offset:
+                log.debug("{m}.{f}: Skipping %s@%d as included in the previous element", match.group(), match.start())
+
+            else:
+                log.debug("{m}.{f}: Getting element content for %s@%d", match.group(), match.start())
+                temp = _getDOMContent(item, item_offset, name, match.group()).strip()
+                item_offset = item.find(temp, item_offset) + len(temp)
+                rets.append(temp)
+
         ret_lst += rets
 
     log.debug("{m}.{f}: Done: " + repr(ret_lst))
@@ -197,8 +223,15 @@ def _getDOMElements(item, name, attrs):
     if attrs is None:
         log.debug("{m}.{f}: No attributes specified, matching on name only")
         lst = re.compile('(<' + name + '>)', re.M | re.S).findall(item)
+        # (fixme) To review!!!
         if len(lst) == 0:
             lst = re.compile('(<' + name + ' .*?>)', re.M | re.S).findall(item)
+
+    elif not attrs:
+        # NOTE: attrs == {} would return a list of re.MatchObject's
+        log.debug("{m}.{f}: Empty attributes dictionary, matching on name only")
+        # lst = re.compile('(<' + name + '(?:>| .*?>))', re.M | re.S).findall(item)
+        lst = re.compile('(<' + name + '(?:>| .*?>))', re.M | re.S).finditer(item)
 
     else:
         lst = []
@@ -224,12 +257,12 @@ def _getDOMElements(item, name, attrs):
     return lst
 
 
-def _getDOMContent(html, name, match):
+def _getDOMContent(html, offset, name, match):
     log.debug("{m}.{f}: Match: " + match)
 
     endstr = u"</" + name  # + ">"
 
-    start = html.find(match)
+    start = html.find(match, offset)
     end = html.find(endstr, start)
     pos = html.find("<" + name, start + 1)
 
