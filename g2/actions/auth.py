@@ -45,6 +45,7 @@ def trakt(action, **kwargs):
             if ui.yesnoDialog(_('There is already an authorized account: ')+trakt_user,
                               _('Do you wanto to keep it?'),
                               heading='Trakt'):
+                ui.refresh()
                 return
 
         dialog_progress = ui.DialogProgress()
@@ -68,6 +69,8 @@ def trakt(action, **kwargs):
         ui.Dialog().ok('Trakt', _('Authorized username')+' [COLOR orange]%s[/COLOR]'%user)
 
         platform.setSetting('trakt_user', user)
+
+        ui.refresh()
 
     except Exception as ex:
         dialog_progress.close()
