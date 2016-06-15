@@ -39,7 +39,7 @@ _log_debug = True
 _log_trace_on_error = True
 
 # (fixme) move in g2.defs
-_DEFAULT_DB_PACKAGE_PRIORITY = 10
+DEFAULT_PACKAGE_PRIORITY = 10
 # (fixme) move in g2.defs
 _METADATA_CACHE_LIFETIME = (30*24) # hours
 
@@ -57,7 +57,7 @@ def info(force=False):
         nfo = dict(nfo)
         nfo.update({
             # Fixed priority defined at the module level
-            'priority': nfo.get('priority', _DEFAULT_DB_PACKAGE_PRIORITY),
+            'priority': nfo.get('priority', DEFAULT_PACKAGE_PRIORITY),
         })
         return [nfo]
 
@@ -140,7 +140,7 @@ def _alldbs_method(method, url, urlarg, *args, **kwargs):
             log.debug('{m}.%s.%s: %s %s %s: %s'%(dbp['name'], method, urlarg, args, kwargs, result))
         else:
             urlarg, timeout = urlarg.split('|')[0:2]
-            response_info = []
+            response_info = {}
             result = cache.get(_db_method, int(timeout), dbp, method, urlarg, *args, response_info=response_info)
             log.debug('{m}.%s.%s: %s %s (timeout=%s): %s%s',
                       dbp['name'], method, urlarg, args, timeout,
