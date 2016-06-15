@@ -2,7 +2,10 @@
 
 """
     G2 Add-on
-    Copyright (C) 2015 lambda
+    Copyright (C) 2016 J0rdyZ65
+
+    parseDOM
+    Copyright (C) 2010-2011 Tobias Ussing And Henrik Mosgaard Jensen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,273 +23,125 @@
 
 
 import re
-import sys
-import urllib2
 import HTMLParser
+
+import requests
+from requests.packages import urllib3
 
 from g2.libraries import log
 
 
-_log_debug = False
+urllib3.disable_warnings()
 
 
-class HeadRequest(urllib2.Request):
-    def get_method(self):
-        return "HEAD"
+codes = requests.codes
 
 
-class DeleteRequest(urllib2.Request):
-    def get_method(self):
-        return "DELETE"
+class Session(requests.Session):
+    def __init__(self, debug=False, raise_error=False, headers=None, **kwargs):
+        requests.Session.__init__(self, **kwargs)
+        if headers:
+            self.headers.update(headers)
+        self.session_debug = _set_debug(debug)
+        self.session_raise_error = raise_error
 
-
-def request(url, method=None, close=True, error=False, proxy=None, post=None, headers=None, mobile=False, safe=False, referer=None, cookie=None, output='', timeout='30', debug=False):
-    global _log_debug
-    _log_debug = debug
-    try:
-        requesterr = False
-        handlers = []
-        if not proxy == None:
-            handlers += [urllib2.ProxyHandler({'http':'%s' % (proxy)}), urllib2.HTTPHandler]
-            opener = urllib2.build_opener(*handlers)
-            opener = urllib2.install_opener(opener)
-        if output == 'cookie' or not close == True or type(cookie) == list:
-            import cookielib
-            cookies = cookielib.LWPCookieJar()
-            handlers += [urllib2.HTTPHandler(), urllib2.HTTPSHandler(), urllib2.HTTPCookieProcessor(cookies)]
-            opener = urllib2.build_opener(*handlers)
-            opener = urllib2.install_opener(opener)
-        try:
-            if sys.version_info < (2, 7, 9):
-                raise Exception()
-            import ssl
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            handlers += [urllib2.HTTPSHandler(context=ssl_context)]
-            opener = urllib2.build_opener(*handlers)
-            opener = urllib2.install_opener(opener)
-        except Exception:
-            pass
-
-        try:
-            headers.update(headers)
-        except Exception:
-            headers = {}
-        if 'User-Agent' in headers:
-            pass
-        elif not mobile == True:
-            headers['User-Agent'] = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:39.0) Gecko/20100101 Firefox/39.0'
+    def request(self, url, data=None, json=None, **kwargs):
+        if not data and not json:
+            return self._client_request(self._client_get, url, **kwargs)
         else:
-            headers['User-Agent'] = 'Apple-iPhone/701.341'
-        if 'referer' in headers:
-            pass
-        elif referer == None:
-            headers['referer'] = url
-        else:
-            headers['referer'] = referer
-        if not 'Accept-Language' in headers:
-            headers['Accept-Language'] = 'en-US'
-        if 'cookie' in headers:
-            pass
-        elif not cookie == None:
-            headers['cookie'] = cookie
+            return self._client_request(self._client_post, url, data=data, json=json, **kwargs)
 
-        log.debug("client.request:url: %s"%url)
-        log.debug("client.request:post: %s"%post)
-        for hdr in headers:
-            log.debug("client.request:headers: %s=%s"%(hdr, headers[hdr]))
-        
-        if method == 'HEAD':
-            request = HeadRequest(url, headers=headers)
-        elif method == 'DELETE':
-            request = DeleteRequest(url, headers=headers)
-        else:
-            request = urllib2.Request(url, data=post, headers=headers)
+    def get(self, url, **kwargs):
+        return self._client_request(self._client_get, url, **kwargs)
 
-        log.debug("client.request: %s"%request)
+    def post(self, url, **kwargs):
+        return self._client_request(self._client_post, url, **kwargs)
 
-        requesterr = False
-        try:
-            response = urllib2.urlopen(request, timeout=int(timeout))
-        except urllib2.HTTPError as response:
-            requesterr = True
-            if error == 'raise':
-                raise response
+    def _client_request(self, method, url, raise_error=False, debug=None, **kwargs):
+        debug = self.session_debug | _set_debug(debug)
+        raise_error = raise_error or self.session_raise_error
 
-        if response:
-            log.debug("client.request:response: %s"%str(response))
-            for hdr in response.headers:
-                log.debug("client.request:response-headers: %s=%s"%(hdr, response.headers[hdr]))
-        if output == 'cookie' or not close == True or type(cookie) == list:
-            for cke in cookies:
-                log.debug("client.request:response-cookie: %s=%s"%(cke.name, cke.value))
+        if _debug(debug, 'cookies') and self.cookies:
+            for cke, val in self.cookies.iteritems():
+                log.debug('{m}.{f}: session.cookie: %s=%s', cke, val, debug=True)
 
-        if requesterr and error == False:
-            return None
+        res = _request(method, url, raise_error=raise_error, debug=debug, **kwargs)
 
-        if type(cookie) == list:
-            for cke in cookies: 
-                cookie.append('%s=%s' % (cke.name, cke.value))
+        if _debug(debug, 'adapter'):
+            conn = self.get_adapter(url).poolmanager.connection_from_url(url)
+            log.debug('{m}.{f}: session.adapter: connections:%d, requests:%d', conn.num_connections, conn.num_requests, debug=True)
 
-        if not close:
-            result = response
-        elif output == 'cookie':
-            result = []
-            for cke in cookies:
-                result.append('%s=%s' % (cke.name, cke.value))
-            result = "; ".join(result)
-        elif output == 'response':
-            if safe == True:
-                result = (str(response), response.read(224 * 1024))
-            else:
-                result = (str(response), response.read())
-        elif output == 'chunk':
-            result = (str(response), int(response.headers['Content-Length']))
-        elif output == 'geturl':
-            result = response.geturl()
-        elif output == 'headers':
-            result = response.headers
-        elif safe == True:
-            result = response.read(224 * 1024)
-        else:
-            result = response.read()
- 
-        if close:
-            response.close()
+        return res
 
-        log.debug('client.request:result(%s):\n%s'%(output, repr(result)))
+    def _client_get(self, url, **kwargs):
+        return requests.Session.request(self, 'GET', url, **kwargs)
 
-        return result
-    except Exception:
-        if requesterr and error == 'raise':
-            raise response
-        return None
+    def _client_post(self, url, **kwargs):
+        return requests.Session.request(self, 'POST', url, **kwargs)
 
 
-def parseDOM(html, name=u"", attrs={}, ret=False, noattrs=True, debug=False):
-    # Copyright (C) 2010-2011 Tobias Ussing And Henrik Mosgaard Jensen
-    global _log_debug
-    _log_debug = debug
-
-    if isinstance(html, str):
-        try:
-            html = [html.decode("utf-8")] # Replace with chardet thingy
-        except Exception:
-            html = [html]
-    elif isinstance(html, unicode):
-        html = [html]
-    elif not isinstance(html, list):
-        return u""
-
-    log.debug('client.parseDOM: name=%s'%name)
-    for key in attrs:
-        log.debug('client.parseDOM:attrs: %s=%s'%(key, attrs[key]))
-    log.debug('client.parseDOM: ret=%s, noattrs=%s'%(ret, noattrs))
-
-    if not name.strip():
-        return u""
-
-    ret_lst = []
-    for item in html:
-        temp_item = re.compile('(<[^>]*?\n[^>]*?>)').findall(item)
-        for match in temp_item:
-            item = item.replace(match, match.replace("\n", " "))
-
-        lst = []
-        for key in attrs:
-            try:
-                lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=[\'"]' + attrs[key] + '[\'"].*?>))', re.M | re.S).findall(item)
-            except Exception:
-                pass
-            if len(lst2) == 0 and attrs[key].find(" ") == -1:  # Try matching without quotation marks
-                try:
-                    lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=' + attrs[key] + '.*?>))', re.M | re.S).findall(item)
-                except Exception:
-                    pass
-
-            if len(lst) == 0:
-                lst = lst2
-                lst2 = []
-            else:
-                test = range(len(lst))
-                test.reverse()
-                for i in test:  # Delete anything missing from the next list.
-                    if not lst[i] in lst2:
-                        del lst[i]
-
-        if len(lst) == 0 and attrs == {}:
-            if noattrs:
-                lst = re.compile('(<' + name + '>)', re.M | re.S).findall(item)
-            if len(lst) == 0:
-                lst = re.compile('(<' + name + ' .*?>|<' + name + '>)', re.M | re.S).findall(item)
-
-        if isinstance(ret, str):
-            lst2 = []
-            for match in lst:
-                attr_lst = re.compile('<' + name + '.*?' + ret + '=([\'"].[^>]*?[\'"])>', re.M | re.S).findall(match)
-                if len(attr_lst) == 0:
-                    attr_lst = re.compile('<' + name + '.*?' + ret + '=(.[^>]*?)>', re.M | re.S).findall(match)
-                for tmp in attr_lst:
-                    cont_char = tmp[0]
-                    if cont_char in "'\"":
-                        # Limit down to next variable.
-                        if tmp.find('=' + cont_char, tmp.find(cont_char, 1)) > -1:
-                            tmp = tmp[:tmp.find('=' + cont_char, tmp.find(cont_char, 1))]
-
-                        # Limit to the last quotation mark
-                        if tmp.rfind(cont_char, 1) > -1:
-                            tmp = tmp[1:tmp.rfind(cont_char)]
-                    else:
-                        if tmp.find(" ") > 0:
-                            tmp = tmp[:tmp.find(" ")]
-                        elif tmp.find("/") > 0:
-                            tmp = tmp[:tmp.find("/")]
-                        elif tmp.find(">") > 0:
-                            tmp = tmp[:tmp.find(">")]
-
-                    lst2.append(tmp.strip())
-            lst = lst2
-        else:
-            lst2 = []
-            for match in lst:
-                endstr = u"</" + name
-
-                start = item.find(match)
-                end = item.find(endstr, start)
-                pos = item.find("<" + name, start + 1)
-
-                while pos < end and pos != -1:
-                    tend = item.find(endstr, end + len(endstr))
-                    if tend != -1:
-                        end = tend
-                    pos = item.find("<" + name, pos + 1)
-
-                if start == -1 and end == -1:
-                    temp = u""
-                elif start > -1 and end > -1:
-                    temp = item[start + len(match):end]
-                elif end > -1:
-                    temp = item[:end]
-                elif start > -1:
-                    temp = item[start + len(match):]
-
-                if ret:
-                    endstr = item[end:item.find(">", item.find(endstr)) + 1]
-                    temp = match + temp + endstr
-
-                item = item[item.find(temp, item.find(match)) + len(temp):]
-                lst2.append(temp)
-            lst = lst2
-        ret_lst += lst
-
-    if len(ret_lst):
-        for i in ret_lst:
-            log.debug('client.parseDOM:result: %s'%repr(i.encode('utf-8')))
+def request(url, debug=None, data=None, json=None, **kwargs):
+    if not data and not json:
+        return _request(requests.get, url, debug=_set_debug(debug), **kwargs)
     else:
-        log.debug('client.parseDOM:result: None')
+        return _request(requests.post, url, debug=_set_debug(debug), data=data, json=json, **kwargs)
 
-    return ret_lst
+
+def get(url, debug=None, **kwargs):
+    return _request(requests.get, url, debug=_set_debug(debug), **kwargs)
+
+
+def post(url, debug=None, **kwargs):
+    return _request(requests.post, url, debug=_set_debug(debug), **kwargs)
+
+
+def _request(method, url, raise_error=None, debug=None, **kwargs):
+    if _debug(debug, 'request'):
+        log.debug('{m}.{f}: request.method: %s', method, debug=True)
+        log.debug('{m}.{f}: request.url: %s', url, debug=True)
+        if kwargs.get('data'):
+            for var, val in kwargs.get('data').iteritems():
+                log.debug('{m}.{f}: request.data: %s=%s', var, val, debug=True)
+        if kwargs.get('json'):
+            log.debug('{m}.{f}: request.json: %s', kwargs.get('json'), debug=True)
+        if type(kwargs.get('headers')) == dict:
+            for hdr, val in kwargs.get('headers').iteritems():
+                log.debug('{m}.{f}: request.headers: %s=%s', hdr, val, debug=True)
+
+    res = method(url, **kwargs)
+
+    if _debug(debug, 'response'):
+        for hdr, val in res.headers.iteritems():
+            log.debug('{m}.{f}: response.headers: %s=%s', hdr, val, debug=True)
+        if res.cookies:
+            for cke, val in res.cookies.iteritems():
+                log.debug('{m}.{f}: response.cookies: %s=%s', cke, val, debug=True)
+        if res.history:
+            log.debug('{m}.{f}: response.history: %s', res.history, debug=True)
+        log.debug('{m}.{f}: response.status: %s', res.status_code, debug=True)
+
+    if _debug(debug, 'content'):
+        if kwargs.get('stream'):
+            log.debug('{m}.{f}: response.content[%s]: not logged because of stream mode', res.encoding, debug=True)
+        else:
+            log.debug('{m}.{f}: response.content[%s]: %s', res.encoding, res.content, debug=True)
+
+    if raise_error:
+        res.raise_for_status()
+
+    return res
+
+
+def _set_debug(debug):
+    return set() if not debug else set(debug) if type(debug) in [list, set, tuple] else set([debug])
+
+
+def _debug(debug, filters):
+    return debug and (filters in debug or True in debug)
+
+
+def agent():
+    return 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:39.0) Gecko/20100101 Firefox/39.0'
 
 
 def replaceHTMLCodes(txt):
@@ -297,5 +152,171 @@ def replaceHTMLCodes(txt):
     return txt
 
 
-def agent():
-    return 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:39.0) Gecko/20100101 Firefox/39.0'
+def parseDOM(html, name=u"", attrs=None, ret=False):
+    log.debug("{m}.{f}: Name: " + repr(name) + " - Attrs:" + repr(attrs) + " - Ret: " + repr(ret) + " - HTML: " + str(type(html)))
+
+    if not name.strip():
+        log.debug("{m}.{f}: Missing tag name")
+        return u""
+
+    if isinstance(html, str):
+        try:
+            html = [html.decode("utf-8")] # Replace with chardet thingy
+        except Exception:
+            log.debug("{m}.{f}: Couldn't decode html binary string. Data length: " + repr(len(html)))
+            html = [html]
+    elif isinstance(html, unicode):
+        html = [html]
+    elif not isinstance(html, list):
+        log.debug("{m}.{f}: Input isn't list or string/unicode.")
+        return u""
+
+    ret_lst = []
+    for item in html:
+        temp_item = re.compile('(<[^>]*?\n[^>]*?>)').findall(item)
+        for match in temp_item:
+            item = item.replace(match, match.replace("\n", " "))
+
+        lst = _getDOMElements(item, name, attrs)
+
+        rets = []
+        item_offset = 0
+        for match in lst:
+            if isinstance(ret, basestring):
+                log.debug("{m}.{f}: Getting attribute %s content for %s"%(ret, match))
+                rets += _getDOMAttributes(match, name, ret)
+
+            elif ret:
+                log.debug("{m}.{f}: Getting attributes %s content for %s"%(ret, match))
+                retdict = {}
+                for i in ret:
+                    retdict[i] = _getDOMAttributes(match, name, i)
+                rets.append(retdict)
+
+            elif isinstance(match, basestring):
+                log.debug("{m}.{f}: Getting element content for %s"%match)
+                temp = _getDOMContent(item, 0, name, match).strip()
+                item = item[item.find(temp, item.find(match)) + len(temp):]
+                rets.append(temp)
+
+            # (fixme) for now proper matching of the DOM elements is implemented only if the attrs is set to {}
+            #   Any other value of attrs would return a list of strings that might result in DOM content to be
+            #   returned for the wrong element item.
+            elif match.start() < item_offset:
+                log.debug("{m}.{f}: Skipping %s@%d as included in the previous element", match.group(), match.start())
+
+            else:
+                log.debug("{m}.{f}: Getting element content for %s@%d", match.group(), match.start())
+                temp = _getDOMContent(item, item_offset, name, match.group()).strip()
+                item_offset = item.find(temp, item_offset) + len(temp)
+                rets.append(temp)
+
+        ret_lst += rets
+
+    log.debug("{m}.{f}: Done: " + repr(ret_lst))
+    return ret_lst
+
+
+def _getDOMElements(item, name, attrs):
+    log.debug("{m}.{f}:")
+
+    if attrs is None:
+        log.debug("{m}.{f}: No attributes specified, matching on name only")
+        lst = re.compile('(<' + name + '>)', re.M | re.S).findall(item)
+        # (fixme) To review!!!
+        if len(lst) == 0:
+            lst = re.compile('(<' + name + ' .*?>)', re.M | re.S).findall(item)
+
+    elif not attrs:
+        # NOTE: attrs == {} would return a list of re.MatchObject's
+        log.debug("{m}.{f}: Empty attributes dictionary, matching on name only")
+        # lst = re.compile('(<' + name + '(?:>| .*?>))', re.M | re.S).findall(item)
+        lst = re.compile('(<' + name + '(?:>| .*?>))', re.M | re.S).finditer(item)
+
+    else:
+        lst = []
+        for key in attrs:
+            lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=[\'"]' + attrs[key] + '[\'"].*?>))', re.M | re.S).findall(item)
+            if len(lst2) == 0 and attrs[key].find(" ") == -1:  # Try matching without quotation marks
+                lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=' + attrs[key] + '.*?>))', re.M | re.S).findall(item)
+
+            if len(lst) == 0:
+                log.debug("{m}.{f}: Setting main list " + repr(lst2))
+                lst = lst2
+                lst2 = []
+            else:
+                log.debug("{m}.{f}: Setting new list " + repr(lst2))
+                test = range(len(lst))
+                test.reverse()
+                for i in test:  # Delete anything missing from the next list.
+                    if not lst[i] in lst2:
+                        log.debug("{m}.{f}: Purging mismatch " + str(len(lst)) + " - " + repr(lst[i]))
+                        del lst[i]
+
+    log.debug("{m}.{f}: Done: " + str(type(lst)))
+    return lst
+
+
+def _getDOMContent(html, offset, name, match):
+    log.debug("{m}.{f}: Match: " + match)
+
+    endstr = u"</" + name  # + ">"
+
+    start = html.find(match, offset)
+    end = html.find(endstr, start)
+    pos = html.find("<" + name, start + 1)
+
+    log.debug(str(start) + " < " + str(end) + ", pos = " + str(pos) + ", endpos: " + str(end))
+
+    while pos < end and pos != -1:  # Ignore too early </endstr> return
+        tend = html.find(endstr, end + len(endstr))
+        if tend != -1:
+            end = tend
+        pos = html.find("<" + name, pos + 1)
+        log.debug("{m}.{f}: loop: " + str(start) + " < " + str(end) + " pos = " + str(pos))
+
+    log.debug("{m}.{f}: start: %s, len: %s, end: %s" % (start, len(match), end))
+    if start == -1 and end == -1:
+        result = u""
+    elif start > -1 and end > -1:
+        result = html[start + len(match):end]
+    elif end > -1:
+        result = html[:end]
+    elif start > -1:
+        result = html[start + len(match):]
+
+    log.debug("{m}.{f}: done result length: " + str(len(result)))
+    return result
+
+
+def _getDOMAttributes(match, name, ret):
+    log.debug('{m}.{f}')
+    lst = re.compile('<' + name + '.*?' + ret + '=([\'"].[^>]*?[\'"])>', re.M | re.S).findall(match)
+    if len(lst) == 0:
+        lst = re.compile('<' + name + '.*?' + ret + '=(.[^>]*?)>', re.M | re.S).findall(match)
+    ret = []
+    for tmp in lst:
+        cont_char = tmp[0]
+        if cont_char in "'\"":
+            log.debug("{m}.{f}: Using %s as quotation mark" % cont_char)
+
+            # Limit down to next variable.
+            if tmp.find('=' + cont_char, tmp.find(cont_char)) > -1:
+                tmp = tmp[:tmp.find('=' + cont_char, tmp.find(cont_char))]
+
+            # Limit to the last quotation mark
+            if tmp.rfind(cont_char) > -1:
+                tmp = tmp[1:tmp.rfind(cont_char)]
+        else:
+            log.debug("{m}.{f}: No quotation mark found")
+            if tmp.find(" ") > 0:
+                tmp = tmp[:tmp.find(" ")]
+            elif tmp.find("/") > 0:
+                tmp = tmp[:tmp.find("/")]
+            elif tmp.find(">") > 0:
+                tmp = tmp[:tmp.find(">")]
+
+        ret.append(tmp.strip())
+
+    log.debug("{m}.{f}: done: " + repr(ret))
+    return ret
