@@ -37,6 +37,8 @@ from g2.libraries import language
 
 # _log_debug = True
 
+# (fixme) move in defs
+DEFAULT_PACKAGE_PRIORITY = 10
 
 _PACKAGES_KINDS = {
     'providers': {
@@ -295,9 +297,8 @@ def info(kind, infofunc, force=False):
     kind = kind.split('.')[-1]
     response_infos = {}
     try:
-        if force:
-            update_needed = True
-        else:
+        update_needed = True
+        if not force:
             update_needed = False
             infos_paths, infos_modules = cache.get(_info_get, 1, kind, infofunc, hash_args=1, response_info=response_infos) 
             if 'cached' in response_infos:
@@ -314,7 +315,6 @@ def info(kind, infofunc, force=False):
                         update_needed = True
         if update_needed:
             infos_paths, infos_modules = cache.get(_info_get, 0, kind, infofunc, hash_args=1)
-            log.notice('pkg.info: %s packages: %d modules', kind, len(infos_modules))
     except Exception as ex:
         log.error('{m}.{f}: %s: %s', kind, ex, trace=True)
         return {}
@@ -391,6 +391,8 @@ def _info_get(kind, infofunc):
 
                 _info_get_module(infofunc, infos_modules, kind, sname, name, pkgpaths)
 
+    log.notice('pkg.info: %s packages: %d modules', kind, len(infos_modules))
+
     return (infos_paths, infos_modules)
 
 
@@ -461,7 +463,7 @@ def update_settings_skema():
                 continue
 
             add_setting('enabled', 'true', kind, name)
-            add_setting('priority', '10', kind, name)
+            add_setting('priority', str(DEFAULT_PACKAGE_PRIORITY), kind, name)
             for dummy_imp, sname, is_pkg in importer.walk_packages([os.path.join(_PACKAGES_ABSOLUTE_PATH, kind, name)]):
                 log.debug('update_settings_skema: name=%s.%s, is_pkg=%s'%(name, sname, is_pkg))
                 if is_pkg or '.' in sname:
@@ -562,7 +564,7 @@ def _remove(path, raise_notfound=True):
 def setting(kind, package='', module='', name='enabled'):
     if not _PACKAGES_KINDS[kind]['settings_category']:
         # Implicit setting values for kind packages missing user settings
-        return 'true' if name == 'enabled' else '10' if name == 'priority' else 'false'
+        return 'true' if name == 'enabled' else str(DEFAULT_PACKAGE_PRIORITY) if name == 'priority' else 'false'
     return platform.setting(_setting_id(kind, package, module, name))
 
 
