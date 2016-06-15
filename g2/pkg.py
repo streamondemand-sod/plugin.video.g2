@@ -300,7 +300,7 @@ def info(kind, infofunc, force=False):
         update_needed = True
         if not force:
             update_needed = False
-            infos_paths, infos_modules = cache.get(_info_get, 1, kind, infofunc, hash_args=1, response_info=response_infos) 
+            infos_paths, infos_modules = cache.get(_info_get, 60, kind, infofunc, hash_args=1, response_info=response_infos) 
             if 'cached' in response_infos:
                 log.debug('{m}.{f}: %s packages: cached=%s, paths=%s', kind, response_infos['cached'], infos_paths)
                 for path in infos_paths:

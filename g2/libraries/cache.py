@@ -18,8 +18,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
+
 import re
+import ast
 import time
 import hashlib
 try:
@@ -31,21 +32,20 @@ from g2.libraries import log
 from g2.libraries import platform
 
 
-def get(function, timeout, *args, **kwargs):
-    # (fixme)[code]: remove explicit use of traceback, use trace=True on log.*
-    import traceback
+_log_debug = True
 
+
+def get(function, timeout, *args, **kwargs):
     table = kwargs.get('table', 'rel_list')
     response_info = kwargs.get('response_info', {})
     hash_args = kwargs.get('hash_args', 0)
 
+    log.debug('{m}.{f}: %s: timeout=%d, args=%s, kwargs=%s', function, timeout, args, kwargs)
+
     try:
-        response = None
-
-        f = repr(function)
-        f = re.sub('.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', f)
-
-        a = hashlib.md5()
+        fname = repr(function)
+        fname = re.sub(r'.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', fname)
+        hashargs = hashlib.md5()
         for i, arg in enumerate(args):
             if hash_args and i >= hash_args:
                 break
@@ -53,87 +53,81 @@ def get(function, timeout, *args, **kwargs):
                 arg = re.sub(r'\sat\s[^>]*', '', str(arg))
             else:
                 arg = str(arg)
-            log.debug('cache.get: hash argument: %s'%arg)
-            a.update(arg)
-        a = str(a.hexdigest())
-    except:
-        pass
+            hashargs.update(arg)
+        hashargs = str(hashargs.hexdigest())
+    except Exception as ex:
+        log.notice('{m}.{f}: %s: %s', function, repr(ex))
+        return function(args)
 
     try:
         platform.makeDir(platform.dataPath)
         dbcon = database.connect(platform.cacheFile)
-        dbcur = dbcon.cursor()
-        dbcur.execute("SELECT * FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
+        dbcon.row_factory = database.Row
+        dbcur = dbcon.execute("SELECT * FROM %s WHERE func = ? AND args = ?"%table, (fname, hashargs,))
         match = dbcur.fetchone()
-    except:
+    except Exception:
         match = None
 
     if not match:
-        log.debug('cache.get(%s, %d, %s): cache miss in %s'%(f, timeout, a, table))
+        log.debug('{m}.{f}: %s: cache miss in table %s', fname, table)
     else:
         try:
-            response = eval(match[2].encode('utf-8'))
-            t_cache = int(match[3])
+            res = ast.literal_eval(match['response'].encode('utf-8'))
+            t_cache = int(match['timestamp'])
             t_now = int(time.time())
-            if timeout < 0 or (t_now-t_cache)/3600 < timeout:
-                log.debug('cache.get(%s, %d, %s): returning cached value in %s at %d [now is %d]: %s'%(f, timeout, a, table, t_cache, t_now, response))
+            if timeout < 0 or (t_now-t_cache)/60 < timeout:
+                log.debug('{m}.{f}: %s: found valid cache entry in %s [%d secs]: %s', fname, table, t_now-t_cache, res)
                 response_info['cached'] = t_cache
-                return response
-            log.debug('cache.get(%s, %d, %s): cache (%d) is %dsecs older than now (%d)'%(f, timeout, a, t_cache, t_now-t_cache, t_now))
-        except:
-            log.notice('cache.get(%s, %d, %s):\n%s'%(f, timeout, a, traceback.format_exc()))
+                return res
+
+            log.debug('{m}.{f}: %s: expired cache entry in %s [%s secs]', fname, table, t_now-t_cache)
+        except Exception as ex:
+            log.notice('{m}.{f}: %s: cached entry %s: %s', fname, match['response'], repr(ex))
 
     try:
-        log.debug('cache.get(%s, %d, %s): refreshing the value...'%(f, timeout, a))
-        r = function(*args)
-        if (r == None or r == []) and not response == None:
-            log.debug('cache.get(%s, %d, %s): returning cached value in %s: %s'%(f, timeout, a, table, response))
-            response_info['cached'] = t_cache
-            return response
+        res = function(*args)
+    except Exception as ex:
+        log.notice('{m}.{f}: %s: %s', fname, repr(ex), trace=True)
+        res = None
 
-        log.debug('cache.get(%s, %d, %s): returning fresh value: %s'%(f, timeout, a, r))
-        if (r == None or r == []):
-            return r
-    except:
-        log.notice('cache.get(%s, %d, %s):\n%s'%(f, timeout, a, traceback.format_exc()))
-        response_info['error'] = traceback.format_exc()
-        return None
+    # (fixme) shouldn't we save also negative results?!?
+    if res is not None and res is not []:
+        try:
+            t_now = int(time.time())
+            with dbcon:
+                dbcon.execute("CREATE TABLE IF NOT EXISTS %s ("
+                              " func TEXT,"
+                              " args TEXT,"
+                              " response TEXT,"
+                              " timestamp TEXT,"
+                              " UNIQUE(func, args));"%table)
+                dbcon.execute("DELETE FROM %s WHERE func = ? AND args = ?"%table, (fname, hashargs,))
+                dbcon.execute("INSERT INTO %s VALUES (?, ?, ?, ?)"%table, (fname, hashargs, repr(res), t_now,))
+        except Exception as ex:
+            log.notice('{m}.{f}: %s: new entry %s: %s', fname, res, repr(ex))
 
+    log.debug('{m}.{f}: %s: %s', fname, res)
+
+    return res
+
+
+def clear(tables=None):
     try:
-        r = repr(r)
-        t = int(time.time())
-        dbcur.execute("CREATE TABLE IF NOT EXISTS %s (""func TEXT, ""args TEXT, ""response TEXT, ""added TEXT, ""UNIQUE(func, args)"");" % table)
-        dbcur.execute("DELETE FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
-        dbcur.execute("INSERT INTO %s Values (?, ?, ?, ?)" % table, (f, a, r, t))
-        dbcon.commit()
-    except:
-        log.notice('cache.get(%s, %d, %s):\n%s'%(f, timeout, a, traceback.format_exc()))
-
-    try:
-        r = eval(r.encode('utf-8'))
-        return r
-    except:
-        log.notice('cache.get(%s, %d, %s):\n%s'%(f, timeout, a, traceback.format_exc()))
-        response_info['error'] = traceback.format_exc()
-        return None
-
-
-def clear(table=None):
-    try:
-        if table == None: table = ['rel_list', 'rel_lib']
-        elif not type(table) == list: table = [table]
+        if tables == None:
+            tables = ['rel_list', 'rel_lib']
+        elif type(tables) not in [list, tuple]:
+            tables = [tables]
 
         dbcon = database.connect(platform.cacheFile)
-        dbcur = dbcon.cursor()
-
-        for t in table:
-            try:
-                dbcur.execute("DROP TABLE IF EXISTS %s" % t)
-                dbcur.execute("VACUUM")
-                dbcon.commit()
-            except:
-                pass
+        with dbcon:
+            for table in tables:
+                try:
+                    dbcon.execute("DROP TABLE IF EXISTS ?", (table,))
+                    dbcon.execute("VACUUM")
+                except Exception as ex:
+                    log.notice('{m}.{f}: %s: %s', table, repr(ex))
 
         return True
-    except:
+    except Exception as ex:
+        log.notice('{m}.{f}: %s: %s', tables, repr(ex))
         return False

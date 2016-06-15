@@ -141,7 +141,7 @@ def _alldbs_method(method, url, urlarg, *args, **kwargs):
         else:
             urlarg, timeout = urlarg.split('|')[0:2]
             response_info = {}
-            result = cache.get(_db_method, int(timeout), dbp, method, urlarg, *args, response_info=response_info)
+            result = cache.get(_db_method, int(timeout)*60, dbp, method, urlarg, *args, response_info=response_info)
             log.debug('{m}.%s.%s: %s %s (timeout=%s): %s%s',
                       dbp['name'], method, urlarg, args, timeout,
                       '' if 'cached' not in response_info else '[cached] ', result)

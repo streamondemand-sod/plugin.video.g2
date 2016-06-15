@@ -306,8 +306,7 @@ def watched(kind, seen=None, **kwargs):
 
     content, id_type, id_value = url.split('.')
     if seen is None:
-        # (fixme) change to 10 minutes when cache will support minutes granularity
-        indicators = _sync_movies(timeout=1)
+        indicators = _sync_movies(timeout=10)
         status = True if len([i for i in indicators if str(i[content]['ids'][id_type]) == id_value]) else None
         if status:
             log.debug('{m}.{f}: %s watched', url)
