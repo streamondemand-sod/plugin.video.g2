@@ -271,9 +271,9 @@ def _add_movie_directory(action, items):
             item.addContextMenuItems(cmds, replaceItems=False)
             ui.addItem(handle=_systhread, url=url, listitem=item, isFolder=True)
             # NOTE: The following del avoids the issue of the message:
-            # CPythonInvoker(114, /home/giordano/.kodi/addons/plugin.video.g2/plugin.py): the python script \
-            # "/home/giordano/.kodi/addons/plugin.video.g2/plugin.py" has left several classes in memory that \
-            # we couldn't clean up. The classes include: N9XBMCAddon7xbmcgui8ListItemE
+            # CPythonInvoker(114, ...plugin.py): the python script ".../plugin.py" has left several classes in memory
+            # that we couldn't clean up. The classes include: N9XBMCAddon7xbmcgui8ListItemE
+            # However this message appears only if the plugin.py exit with sys.exit()
             del item
         except Exception:
             import traceback
