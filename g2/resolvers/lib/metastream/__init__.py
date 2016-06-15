@@ -22,8 +22,6 @@
 
 import struct
 
-from g2.libraries import log
-
 
 # Do not read more that 100KB in the stream to look for the resolution
 _MAX_BYTE_READ_FOR_RESOLUTION = 100 * 1024
@@ -52,4 +50,7 @@ def video(fil):
         return meta
 
     meta['width'], meta['height'] = decoder.video_resolution(fil, stop_at_bytes=_MAX_BYTE_READ_FOR_RESOLUTION)
-    return None if meta['width'] < 0 or meta['height'] < 0 else meta
+    if meta['width'] < 0 or meta['height'] < 0:
+        meta['type'] += '?'
+
+    return meta
