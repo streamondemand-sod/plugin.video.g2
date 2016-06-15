@@ -14,75 +14,83 @@
             <height>400</height>
             <texture border="40">bg.png</texture>
 		</control>
+
 		<!-- Window title -->
 		<control type="label">
 			<left>10</left>
-			<top>0</top>
+			<top>10</top>
 			<width>960</width>
 			<height>20</height>
 			<align>center</align>
 			<textcolor>white</textcolor>
-			<!-- TODO: translate -->
-			<label>PACKAGE MANAGER</label>
+			<!-- fixme: translate -->
+			<label>G2 - PACKAGE MANAGER</label>
+			<font>font15_title</font>
 		</control>
 
 		<!-- List of buttons for selecting the packages kind -->
-		<control type="list" id="101">
+		<control type="group">
 			<left>10</left>
-			<top>25</top>
-			<width>200</width>
-			<height>320</height>
-			<orientation>vertical</orientation>
-	        <texture border="5">inner.png</texture>
-			<itemlayout width="200" height="50">
-				<control type="label">
-					<align>left</align>
-					<aligny>center</aligny>
-					<width>200</width>
-					<height>40</height>
-					<font>font30</font>
-					<textcolor>grey2</textcolor>
-					<label>$INFO[ListItem.Label]</label>
-				</control>
-			</itemlayout>
-			<focusedlayout width="200" height="50">
-				<control type="label">
-					<align>left</align>
-					<aligny>center</aligny>
-					<width>200</width>
-					<height>40</height>
-					<font>font30</font>
-					<textcolor>white</textcolor>
-					<label>$INFO[ListItem.Label]</label>
-				</control>
-                <control type="image">
-                    <left>0</left>
-                    <top>0</top>
-                    <width>200</width>
-                    <height>40</height>
-                    <texture border="4">listselect_fo.png</texture>
-                    <visible>Control.HasFocus(101)</visible>
-				</control>
-			</focusedlayout>
+			<top>45</top>
+	        <control type="image">
+		        <left>-1</left>
+		        <top>-2</top>
+		        <width>190</width>
+		        <height>310</height>
+		        <texture border="5">inner.png</texture>
+		    </control>
+			<control type="list" id="101">
+				<left>0</left>
+				<top>0</top>
+				<width>190</width>
+				<height>300</height>
+				<orientation>vertical</orientation>
+		        <texture border="5">inner.png</texture>
+				<itemlayout width="190" height="30">
+					<control type="label">
+						<align>right</align>
+						<aligny>center</aligny>
+						<width>180</width>
+						<textcolor>grey2</textcolor>
+						<font>font14</font>
+						<label>[CAPITALIZE]$INFO[ListItem.Label][/CAPITALIZE]</label>
+					</control>
+				</itemlayout>
+				<focusedlayout width="190" height="30">
+					<control type="label">
+						<align>right</align>
+						<aligny>center</aligny>
+						<width>180</width>
+						<textcolor>white</textcolor>
+						<font>font14</font>
+						<label>[CAPITALIZE]$INFO[ListItem.Label][/CAPITALIZE]</label>
+					</control>
+	                <control type="image">
+	                    <left>0</left>
+	                    <top>0</top>
+	                    <texture border="4">listselect_fo.png</texture>
+	                    <visible>Control.HasFocus(101)</visible>
+					</control>
+				</focusedlayout>
+			</control>
 		</control>
 
 		<!-- List of labels for selecting the package -->
 		<control type="group">
 			<left>210</left>
-			<top>25</top>
+			<top>45</top>
 	        <control type="image">
 		        <left>-1</left>
 		        <top>-2</top>
 		        <width>722</width>
-		        <height>334</height>
+		        <height>310</height>
 		        <texture border="5">inner.png</texture>
 		    </control>
-			<!-- Scrollable List of Plugin -->
 			<control type="list" id="201">
 				<left>0</left>
 				<top>0</top>
 				<width>720</width>
-				<height>320</height>
+				<height>300</height>
 				<orientation>vertical</orientation>
 				<pagecontrol>1001</pagecontrol>
 				<scrolltime tween="sine" easing="out">240</scrolltime>
@@ -93,6 +101,7 @@
 						<width>670</width>
 						<height>30</height>
 						<textcolor>grey2</textcolor>
+						<font>font14</font>
 						<label>$INFO[ListItem.Label]</label>
 					</control>
 					<control type="image">
@@ -118,6 +127,7 @@
 						<width>670</width>
 						<height>30</height>
 						<textcolor>white</textcolor>
+						<font>font14</font>
 						<label>$INFO[ListItem.Label]</label>
 					</control>
 					<control type="image">
