@@ -32,7 +32,7 @@ _IMDB_USER = platform.setting('imdb_user')
 
 def menu(action, **kwargs):
     if not _TRAKT_USER or platform.setting('trakt_enabled') != 'true':
-        ui.addDirectoryItem(_('Configure your Trakt account to unlock new functions'), 'tools.settings',
+        ui.addDirectoryItem(_('Configure your Trakt account to unlock new functions'), 'tools.settings&category=1&setting=1',
                             'moviesTraktcollection.jpg', 'DefaultMovies.png')
     else:
         url = dbs.resolve('movies_collection{trakt_user_id}', trakt_user_id=_TRAKT_USER, quote_plus=True)
@@ -54,7 +54,7 @@ def menu(action, **kwargs):
                             'movies.jpg', 'DefaultMovies.png')
 
     if _TRAKT_USER:
-        ui.addDirectoryItem(_('[B]TRAKT[/B] : Lists'),
+        ui.addDirectoryItem(_('[B]TRAKT[/B] : Lists by %s')%_TRAKT_USER,
                             'movies.lists&kind_user_id=trakt_user_id&kind_list_id=trakt_list_id&user_id=%s'%_TRAKT_USER,
                             'movieUserlists.jpg', 'DefaultMovies.png')
     if _IMDB_USER:
