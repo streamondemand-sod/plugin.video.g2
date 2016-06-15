@@ -37,6 +37,9 @@ from .lib import metastream
 _log_debug = True
 
 
+# (fixme) move into defs
+DEFAULT_PACKAGE_PRIORITY = 10
+
 # Streams shorter than this are not considered valid
 _MIN_STREAM_SIZE = 1024 * 1024
 
@@ -62,10 +65,14 @@ def info(force=False):
             nfo = mod.info
         if type(nfo) != list:
             nfo = [nfo]
+        try:
+            priority = int(pkg.setting('resolvers', package, name='priority'))
+        except Exception:
+            priority = DEFAULT_PACKAGE_PRIORITY
         for i in nfo:
             i.update({
                 # User configurable priority at the package level 
-                'priority': pkg.setting('resolvers', package, name='priority'),
+                'priority': priority,
             })
         return nfo
 
@@ -84,7 +91,8 @@ def _top_domain(url):
 
 
 def _netloc_match(resolver, url):
-    if _top_domain(url) in resolver.get('domains', []):
+    res_domains = resolver.get('domains', [])
+    if '*' in res_domains or _top_domain(url) in res_domains:
         return True
 
     if 'url_patterns' in resolver:
@@ -101,14 +109,16 @@ def _netloc_match(resolver, url):
 def resolve(url, checkonly=False):
     if not url:
         return [ResolverError('No resolver for the empty url')]
-    resolvers = [r for r in info().itervalues() if _netloc_match(r, url)]
+    resolvers = sorted([r for r in info().itervalues() if _netloc_match(r, url)], key=lambda r: r['priority'])
     if not resolvers:
         return [ResolverError('No resolver for %s'%_top_domain(url))]
     if checkonly:
         return url
 
+    log.debug('{m}.{f}: %s: %d resolvers: %s', url, len(resolvers), ', '.join([r['name'] for r in resolvers]))
+
     errors = []
-    for resolver in sorted(resolvers, key=lambda r: r['priority']):
+    for resolver in resolvers:
         def collect_resolver_error(resolver, err):
             if isinstance(err, basestring) or err is None or not str(err).startswith(resolver['name']):
                 errors.append(ResolverError('%s: %s'%(resolver['name'], str(err))))
