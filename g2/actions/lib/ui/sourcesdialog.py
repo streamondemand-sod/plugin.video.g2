@@ -289,10 +289,10 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
                 if hasattr(url, 'meta') and url.meta:
                     if url.meta.get('type'):
                         media_label = url.meta['type']
-                    if url.meta.get('width') and url.meta.get('height'):
+                    if url.meta.get('width') > 0 and url.meta.get('height') > 0:
                         media_label += ' %sx%s'%(url.meta['width'], url.meta['height'])
-                        item.setProperty('media', media_label)
                         item.setProperty('resolution', str(url.meta['width']*url.meta['height']))
+                item.setProperty('media', media_label)
                 if hasattr(url, 'size'):
                     item.setProperty('size', str(url.size))
                 if hasattr(url, 'acceptbyteranges') and url.acceptbyteranges:
