@@ -24,7 +24,7 @@ import urllib
 import urlparse
 
 from g2.libraries import log
-from g2.libraries import client2
+from g2.libraries import client
 
 
 _log_debug = True
@@ -65,24 +65,24 @@ def resolve(kind=None, **kwargs):
 
 
 def movies(url):
-    result = client2.get(url).content
+    result = client.get(url).content
     result = result.decode('iso-8859-1').encode('utf-8')
-    results = client2.parseDOM(result, 'tr', attrs={'class': '.+?'})
-    results += client2.parseDOM(result, 'div', attrs={'class': 'list_item.+?'})
+    results = client.parseDOM(result, 'tr', attrs={'class': '.+?'})
+    results += client.parseDOM(result, 'div', attrs={'class': 'list_item.+?'})
 
     log.debug('{m}.{f}: %s: %d movies', url.replace(_BASE_URL, ''), len(results))
 
     max_pages = 0
     try:
         try:
-            max_pages = client2.parseDOM(result, 'div', attrs={'id': 'left'})[0]
+            max_pages = client.parseDOM(result, 'div', attrs={'id': 'left'})[0]
             max_pages = int(re.search(r'of (\d+)', max_pages).group(1)/_IMDB_PAGE_COUNT+.5)
         except Exception:
             max_pages = 0
-        next_url = client2.parseDOM(result, 'span', attrs={'class': 'pagination'})[0]
-        next_url = client2.parseDOM(next_url, 'a', ret='href')[-1]
+        next_url = client.parseDOM(result, 'span', attrs={'class': 'pagination'})[0]
+        next_url = client.parseDOM(next_url, 'a', ret='href')[-1]
         next_url = url.replace(urlparse.urlparse(url).query, urlparse.urlparse(next_url).query)
-        next_url = client2.replaceHTMLCodes(next_url)
+        next_url = client.replaceHTMLCodes(next_url)
         next_url = next_url.encode('utf-8')
         next_page = (int(re.search(r'&start=(\d+)', next_url).group(1))-1)/_IMDB_PAGE_COUNT + 1
         if next_page > max_pages:
@@ -97,14 +97,14 @@ def movies(url):
     items = []
     for item in results:
         try:
-            try: title = client2.parseDOM(item, 'a')[1]
+            try: title = client.parseDOM(item, 'a')[1]
             except: pass
-            try: title = client2.parseDOM(item, 'a', attrs={'onclick': '.+?'})[-1]
+            try: title = client.parseDOM(item, 'a', attrs={'onclick': '.+?'})[-1]
             except: pass
-            title = client2.replaceHTMLCodes(title)
+            title = client.replaceHTMLCodes(title)
             title = title.encode('utf-8')
 
-            year = client2.parseDOM(item, 'span', attrs={'class': 'year_type'})[0]
+            year = client.parseDOM(item, 'span', attrs={'class': 'year_type'})[0]
             year = re.compile(r'(\d{4})').findall(year)[-1]
             year = year.encode('utf-8')
 
@@ -112,86 +112,86 @@ def movies(url):
             try: name = name.encode('utf-8')
             except: pass
 
-            imdb = client2.parseDOM(item, 'a', ret='href')[0]
+            imdb = client.parseDOM(item, 'a', ret='href')[0]
             imdb = 'tt' + re.sub('[^0-9]', '', imdb.rsplit('tt', 1)[-1])
             imdb = imdb.encode('utf-8')
 
             poster = '0'
-            try: poster = client2.parseDOM(item, 'img', ret='src')[0]
+            try: poster = client.parseDOM(item, 'img', ret='src')[0]
             except: pass
-            try: poster = client2.parseDOM(item, 'img', ret='loadlate')[0]
+            try: poster = client.parseDOM(item, 'img', ret='loadlate')[0]
             except: pass
             if not ('_SX' in poster or '_SY' in poster): poster = '0'
             poster = re.sub(r'_SX\d*|_SY\d*|_CR\d+?,\d+?,\d+?,\d*', '_SX500', poster)
-            poster = client2.replaceHTMLCodes(poster)
+            poster = client.replaceHTMLCodes(poster)
             poster = poster.encode('utf-8')
 
-            genre = client2.parseDOM(item, 'span', attrs={'class': 'genre'})
-            genre = client2.parseDOM(genre, 'a')
+            genre = client.parseDOM(item, 'span', attrs={'class': 'genre'})
+            genre = client.parseDOM(genre, 'a')
             genre = ' / '.join(genre)
             if genre == '': genre = '0'
-            genre = client2.replaceHTMLCodes(genre)
+            genre = client.replaceHTMLCodes(genre)
             genre = genre.encode('utf-8')
 
             try: duration = re.compile('(\d+?) mins').findall(item)[-1]
             except: duration = '0'
-            duration = client2.replaceHTMLCodes(duration)
+            duration = client.replaceHTMLCodes(duration)
             duration = duration.encode('utf-8')
 
-            try: rating = client2.parseDOM(item, 'span', attrs = {'class': 'rating-rating'})[0]
+            try: rating = client.parseDOM(item, 'span', attrs = {'class': 'rating-rating'})[0]
             except: rating = '0'
-            try: rating = client2.parseDOM(rating, 'span', attrs = {'class': 'value'})[0]
+            try: rating = client.parseDOM(rating, 'span', attrs = {'class': 'value'})[0]
             except: rating = '0'
             if rating == '' or rating == '-': rating = '0'
-            rating = client2.replaceHTMLCodes(rating)
+            rating = client.replaceHTMLCodes(rating)
             rating = rating.encode('utf-8')
 
-            try: votes = client2.parseDOM(item, 'div', ret='title', attrs = {'class': 'rating rating-list'})[0]
+            try: votes = client.parseDOM(item, 'div', ret='title', attrs = {'class': 'rating rating-list'})[0]
             except: votes = '0'
             try: votes = re.compile('[(](.+?) votes[)]').findall(votes)[0]
             except: votes = '0'
             if votes == '': votes = '0'
-            votes = client2.replaceHTMLCodes(votes)
+            votes = client.replaceHTMLCodes(votes)
             votes = votes.encode('utf-8')
 
-            try: mpaa = client2.parseDOM(item, 'span', attrs = {'class': 'certificate'})[0]
+            try: mpaa = client.parseDOM(item, 'span', attrs = {'class': 'certificate'})[0]
             except: mpaa = '0'
-            try: mpaa = client2.parseDOM(mpaa, 'span', ret='title')[0]
+            try: mpaa = client.parseDOM(mpaa, 'span', ret='title')[0]
             except: mpaa = '0'
             if mpaa == '' or mpaa == 'NOT_RATED': mpaa = '0'
             mpaa = mpaa.replace('_', '-')
-            mpaa = client2.replaceHTMLCodes(mpaa)
+            mpaa = client.replaceHTMLCodes(mpaa)
             mpaa = mpaa.encode('utf-8')
 
-            director = client2.parseDOM(item, 'span', attrs = {'class': 'credit'})
-            director += client2.parseDOM(item, 'div', attrs = {'class': 'secondary'})
+            director = client.parseDOM(item, 'span', attrs = {'class': 'credit'})
+            director += client.parseDOM(item, 'div', attrs = {'class': 'secondary'})
             try: director = [i for i in director if 'Director:' in i or 'Dir:' in i][0]
             except: director = '0'
             director = director.split('With:', 1)[0].strip()
-            director = client2.parseDOM(director, 'a')
+            director = client.parseDOM(director, 'a')
             director = ' / '.join(director)
             if director == '': director = '0'
-            director = client2.replaceHTMLCodes(director)
+            director = client.replaceHTMLCodes(director)
             director = director.encode('utf-8')
 
-            cast = client2.parseDOM(item, 'span', attrs = {'class': 'credit'})
-            cast += client2.parseDOM(item, 'div', attrs = {'class': 'secondary'})
+            cast = client.parseDOM(item, 'span', attrs = {'class': 'credit'})
+            cast += client.parseDOM(item, 'div', attrs = {'class': 'secondary'})
             try: cast = [i for i in cast if 'With:' in i or 'Stars:' in i][0]
             except: cast = '0'
             cast = cast.split('With:', 1)[-1].strip()
-            cast = client2.replaceHTMLCodes(cast)
+            cast = client.replaceHTMLCodes(cast)
             cast = cast.encode('utf-8')
-            cast = client2.parseDOM(cast, 'a')
+            cast = client.parseDOM(cast, 'a')
             if cast == []: cast = '0'
 
             plot = '0'
-            try: plot = client2.parseDOM(item, 'span', attrs = {'class': 'outline'})[0]
+            try: plot = client.parseDOM(item, 'span', attrs = {'class': 'outline'})[0]
             except: pass
-            try: plot = client2.parseDOM(item, 'div', attrs = {'class': 'item_description'})[0]
+            try: plot = client.parseDOM(item, 'div', attrs = {'class': 'item_description'})[0]
             except: pass
             plot = plot.rsplit('<span>', 1)[0].strip()
             if plot == '': plot = '0'
-            plot = client2.replaceHTMLCodes(plot)
+            plot = client.replaceHTMLCodes(plot)
             plot = plot.encode('utf-8')
 
             tagline = re.compile('[.!?][\s]{1,2}(?=[A-Z])').split(plot)[0]
@@ -234,31 +234,31 @@ def movies(url):
 
 
 def lists(url):
-    result = client2.get(url).content
+    result = client.get(url).content
     result = result.decode('iso-8859-1').encode('utf-8')
-    results = client2.parseDOM(result, 'div', attrs={'class': 'list-preview .*?'})
+    results = client.parseDOM(result, 'div', attrs={'class': 'list-preview .*?'})
 
     log.debug('{m}.{f}: %s: %d lists', url.replace(_BASE_URL, ''), len(results))
 
     items = []
     for item in results:
         try:
-            name = client2.parseDOM(item, 'div', attrs={'class': 'list_name'})[0]
-            name = client2.parseDOM(name, 'a')[0]
-            name = client2.replaceHTMLCodes(name)
+            name = client.parseDOM(item, 'div', attrs={'class': 'list_name'})[0]
+            name = client.parseDOM(name, 'a')[0]
+            name = client.replaceHTMLCodes(name)
             name = name.encode('utf-8')
 
-            listid = client2.parseDOM(item, 'a', ret='href')[0]
+            listid = client.parseDOM(item, 'a', ret='href')[0]
             listid = listid.split('/list/', 1)[-1].replace('/', '')
 
-            meta = client2.parseDOM(item, 'div', attrs={'class': 'list_meta'})[0]
-            meta = client2.replaceHTMLCodes(meta)
+            meta = client.parseDOM(item, 'div', attrs={'class': 'list_meta'})[0]
+            meta = client.replaceHTMLCodes(meta)
             meta = meta.encode('utf-8')
 
-            image = client2.parseDOM(item, 'div', attrs={'class': 'list-preview-item-wide'})[0]
-            image = client2.parseDOM(image, 'img', ret='src')
+            image = client.parseDOM(item, 'div', attrs={'class': 'list-preview-item-wide'})[0]
+            image = client.parseDOM(image, 'img', ret='src')
             if not image:
-                image = client2.parseDOM(image, 'img', ret='loadlate')
+                image = client.parseDOM(image, 'img', ret='loadlate')
 
             items.append({
                 'name': name,

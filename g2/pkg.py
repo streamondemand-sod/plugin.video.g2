@@ -30,7 +30,7 @@ import importer
 
 from g2.libraries import log
 from g2.libraries import cache
-from g2.libraries import client2
+from g2.libraries import client
 from g2.libraries import platform
 from g2.libraries import language
 
@@ -211,7 +211,7 @@ def install_or_update(site, ui_update=None):
         exec init_source in init_attributes
         return init_attributes
 
-    with client2.Session() as session:
+    with client.Session() as session:
         try:
             repo = session.get(url).json()
             pkg_attributes = fetch_pkg_attributes(session, repo)

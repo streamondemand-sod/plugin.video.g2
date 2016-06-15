@@ -23,7 +23,7 @@ import urllib
 import datetime
 
 from g2.libraries import log
-from g2.libraries import client2
+from g2.libraries import client
 from g2.libraries import workers
 from g2.libraries import platform
 
@@ -92,7 +92,7 @@ def resolve(kind=None, **kwargs):
 
 
 def movies(url):
-    result = client2.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
+    result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
     results = result['results']
 
     log.debug('{m}.{f}: %s: %d movies', url.replace(_BASE_URL, ''), len(results))
@@ -103,7 +103,7 @@ def movies(url):
     for i, item in enumerate(results):
         try:
             title = item['title']
-            title = client2.replaceHTMLCodes(title)
+            title = client.replaceHTMLCodes(title)
             title = title.encode('utf-8')
 
             year = item['release_date']
@@ -145,7 +145,7 @@ def movies(url):
 
             plot = item['overview']
             if plot == '' or plot == None: plot = '0'
-            plot = client2.replaceHTMLCodes(plot)
+            plot = client.replaceHTMLCodes(plot)
             plot = plot.encode('utf-8')
 
             tagline = re.compile(r'[.!?][\s]{1,2}(?=[A-Z])').split(plot)[0]
@@ -196,14 +196,14 @@ def meta(metas):
 
 def _meta_worker(meta):
     url = meta['url']
-    result = client2.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1), timeout=10).json()
+    result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1), timeout=10).json()
 
     log.debug('{m}.{f}: %s: %s', url.replace(_BASE_URL, ''), result)
 
     item = {}
 
     title = result.get('title', '')
-    title = client2.replaceHTMLCodes(title)
+    title = client.replaceHTMLCodes(title)
     title = title.encode('utf-8')
     if title:
         item.update({'title': title})
@@ -338,7 +338,7 @@ def _meta_worker(meta):
 
 
 def persons(url):
-    result = client2.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
+    result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
     results = result['results']
 
     log.debug('{m}.{f}: %s: %d persons', url.replace(_BASE_URL, ''), len(results))
@@ -385,7 +385,7 @@ def _tmdb_next_item(url, result):
 def genres(url):
     # For some reason, Finnish, Croatians and Norvegians doesn't like the traslated genre names
     url = re.sub('language=(fi|hr|no)', '', url)
-    result = client2.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
+    result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
     results = result['genres']
 
     log.debug('{m}.{f}: %d genres', len(results))
@@ -412,7 +412,7 @@ def genres(url):
 
 
 def certifications(url, country):
-    result = client2.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
+    result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
     results = result['certifications'][country]
 
     log.debug('{m}{f}: %s: %d certifications', country, len(results))

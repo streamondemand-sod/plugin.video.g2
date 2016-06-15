@@ -21,7 +21,7 @@
 
 from g2 import pkg
 from g2.libraries import log
-from g2.libraries import client2
+from g2.libraries import client
 from g2.libraries import platform
 from g2.libraries.language import _
 
@@ -44,16 +44,16 @@ def dialog(**kwargs):
     kinds = {}
     for url in packages_urls:
         try:
-            res = client2.get(url)
-            pkgentries = client2.parseDOM(res.content, 'tbody')[0]
-            pkgentries = client2.parseDOM(pkgentries, 'tr')
+            res = client.get(url)
+            pkgentries = client.parseDOM(res.content, 'tbody')[0]
+            pkgentries = client.parseDOM(pkgentries, 'tr')
         except Exception:
             log.notice('{m}.{f}: %s: no packages directory found', url)
             continue
 
         for pkgentry in pkgentries:
             try:
-                kind, desc, site = client2.parseDOM(pkgentry, 'td')
+                kind, desc, site = client.parseDOM(pkgentry, 'td')
                 log.debug('{m}.{f}: %s %s'%(kind, site))
                 if kind not in pkg.kinds():
                     log.notice('{m}.{f}: %s: kind %s not implemented', url, kind)

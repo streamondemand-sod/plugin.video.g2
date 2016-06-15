@@ -27,7 +27,7 @@ import urlparse
 
 from g2.libraries import log
 from g2.libraries import cache
-from g2.libraries import client2
+from g2.libraries import client
 from g2.libraries import platform
 from g2.libraries.language import _
 
@@ -149,7 +149,7 @@ def movies(url):
     for item in results:
         try:
             title = item['title']
-            title = client2.replaceHTMLCodes(title)
+            title = client.replaceHTMLCodes(title)
             title = title.encode('utf-8')
 
             year = item['year']
@@ -225,14 +225,14 @@ def movies(url):
 
             plot = item['overview']
             if plot == None: plot = '0'
-            plot = client2.replaceHTMLCodes(plot)
+            plot = client.replaceHTMLCodes(plot)
             plot = plot.encode('utf-8')
 
             try: tagline = item['tagline']
             except: tagline = None
             if tagline == None and not plot == '0': tagline = re.compile('[.!?][\s]{1,2}(?=[A-Z])').split(plot)[0]
             elif tagline == None: tagline = '0'
-            tagline = client2.replaceHTMLCodes(tagline)
+            tagline = client.replaceHTMLCodes(tagline)
             try: tagline = tagline.encode('utf-8')
             except: pass
 
@@ -282,7 +282,7 @@ def lists(url):
     for item in res:
         try:
             name = item['name']
-            name = client2.replaceHTMLCodes(name)
+            name = client.replaceHTMLCodes(name)
             name = name.encode('utf-8')
 
             listid = item['ids']['slug']
@@ -314,7 +314,7 @@ def watched(kind, seen=None, **kwargs):
         return status
     else:
         res = _traktreq('/sync/history' if seen else '/sync/history/remove', {content+'s': [{'ids': {id_type: id_value}}]})
-        if res.status_code in [client2.codes.ok, client2.codes.created, client2.codes.no_content]:
+        if res.status_code in [client.codes.ok, client.codes.created, client.codes.no_content]:
             _sync_movies()
         # Give a change to the other backends to store the flag too!
         return None
@@ -334,7 +334,7 @@ def authDevice(ui_update):
         platform.setSetting('trakt.token', '')
         platform.setSetting('trakt.refresh', '')
 
-        with client2.Session(headers=_COMMON_HEADERS) as session:
+        with client.Session(headers=_COMMON_HEADERS) as session:
             res = session.post(urlparse.urljoin(_BASE_URL, '/oauth/device/code'), json=_COMMON_POST_VARS).json()
 
             code = res['user_code']
@@ -363,7 +363,7 @@ def authDevice(ui_update):
                 if res.status_code in [400, 429]:
                     pass
 
-                elif res.status_code != client2.codes.ok:
+                elif res.status_code != client.codes.ok:
                     res.raise_for_status()
 
                 else:
@@ -389,7 +389,7 @@ def authDevice(ui_update):
 
 
 def _traktreq(url, post=None, **kwargs):
-    with client2.Session(headers=_COMMON_HEADERS, **kwargs) as session:
+    with client.Session(headers=_COMMON_HEADERS, **kwargs) as session:
         token = platform.setting('trakt.token')
         refresh_token = platform.setting('trakt.refresh')
 
@@ -400,7 +400,7 @@ def _traktreq(url, post=None, **kwargs):
 
         url = urlparse.urljoin(_BASE_URL, url)
         res = session.request(url, json=post, headers=authorization)
-        if res.status_code in [client2.codes.ok, client2.codes.created, client2.codes.no_content]:
+        if res.status_code in [client.codes.ok, client.codes.created, client.codes.no_content]:
             return res
 
         if res.status_code not in [401, 405]:

@@ -29,7 +29,7 @@ from contextlib import closing
 from g2 import pkg
 
 from g2.libraries import log
-from g2.libraries import client2
+from g2.libraries import client
 
 from .lib import metastream
 
@@ -156,11 +156,11 @@ def resolve(url, checkonly=False):
             headers = dict('')
 
         if not 'User-Agent' in headers:
-            headers['User-Agent'] = client2.agent()
+            headers['User-Agent'] = client.agent()
         if not 'Referer' in headers:
             headers['Referer'] = url
 
-        with closing(client2.get(res.split('|')[0], headers=headers, stream=True, timeout=20, debug=True)) as resp:
+        with closing(client.get(res.split('|')[0], headers=headers, stream=True, timeout=20, debug=True)) as resp:
             try:
                 resp.raise_for_status()
             except Exception as ex:
