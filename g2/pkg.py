@@ -393,7 +393,7 @@ def _info_get(kind, infofunc):
 
     log.notice('pkg.info: %s packages: %d modules', kind, len(infos_modules))
 
-    return (infos_paths, infos_modules)
+    return (list(infos_paths), infos_modules)
 
 
 def _info_get_module(infofunc, infos, kind, module, package='', paths=[]):
