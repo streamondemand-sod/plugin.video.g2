@@ -41,7 +41,7 @@ _PB = PushBullet(platform.setting('pushbullet_apikey'), user_agent=platform.addo
 # (fixme) add an enabled() method that returns True only if the auth key has been validated!
 # The enabled method also determine if the INFO should be defined or not.
 
-def notices(notes, origin=xbmc.getInfoLabel('System.FriendlyName'), identifier=None, url=None, **kwargs):
+def notices(notes, playing=None, origin=xbmc.getInfoLabel('System.FriendlyName'), identifier=None, url=None, **kwargs):
     """Push a comulative note to the pushbullet account"""
     body = '\n'.join(notes)
     if body:
