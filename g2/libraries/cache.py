@@ -32,66 +32,72 @@ from g2.libraries import log
 from g2.libraries import platform
 
 
-_log_debug = True
+_log_debug = False
 
 
 def get(function, timeout, *args, **kwargs):
+    global _log_debug
+    _log_debug = kwargs.get('debug', False)
     table = kwargs.get('table', 'rel_list')
     response_info = kwargs.get('response_info', {})
-    hash_args = kwargs.get('hash_args', 0)
-
-    log.debug('{m}.{f}: %s: timeout=%d, args=%s, kwargs=%s', function, timeout, args, kwargs)
+    hash_args = kwargs.get('hash_args', -1)
 
     try:
-        fname = repr(function)
-        fname = re.sub(r'.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', fname)
-        hashargs = hashlib.md5()
-        for i, arg in enumerate(args):
-            if hash_args and i >= hash_args:
-                break
-            if callable(arg):
-                arg = re.sub(r'\sat\s[^>]*', '', str(arg))
-            else:
-                arg = str(arg)
-            hashargs.update(arg)
-        hashargs = str(hashargs.hexdigest())
+        fname = re.sub(r'.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', repr(function))
+        log.debug('{m}.{f}: %s%s: timeout=%d, kwargs=%s', fname, args, timeout, kwargs)
+
+        if not hash_args or not len(args):
+            hashargs = ''
+        else:
+            hashargs = hashlib.md5()
+            for i, arg in enumerate(args):
+                if hash_args > 0 and i >= hash_args:
+                    break
+                if callable(arg):
+                    arg = re.sub(r'\sat\s[^>]*', '', str(arg))
+                else:
+                    arg = str(arg)
+                hashargs.update(arg)
+            hashargs = str(hashargs.hexdigest())
     except Exception as ex:
-        log.notice('{m}.{f}: %s: %s', function, repr(ex))
-        return function(args)
+        log.notice('{m}.{f}: %s%s: computing argument hash: %s', fname, args, repr(ex))
+        hashargs = None
 
-    try:
-        platform.makeDir(platform.dataPath)
-        dbcon = database.connect(platform.cacheFile)
-        dbcon.row_factory = database.Row
-        dbcur = dbcon.execute("SELECT * FROM %s WHERE func = ? AND args = ?"%table, (fname, hashargs,))
-        match = dbcur.fetchone()
-    except Exception:
-        match = None
+    match = None
+    if hashargs is not None:
+        try:
+            platform.makeDir(platform.dataPath)
+            dbcon = database.connect(platform.cacheFile)
+            dbcon.row_factory = database.Row
+            dbcur = dbcon.execute("SELECT * FROM %s WHERE func = ? AND args = ?"%table, (fname, hashargs,))
+            match = dbcur.fetchone()
+        except Exception:
+            pass
 
     if not match:
-        log.debug('{m}.{f}: %s: cache miss in table %s', fname, table)
+        log.debug('{m}.{f}: %s%s: cache miss in table %s', fname, args, table)
     else:
         try:
             res = ast.literal_eval(match['response'].encode('utf-8'))
             t_cache = int(match['timestamp'])
             t_now = int(time.time())
             if timeout < 0 or (t_now-t_cache)/60 < timeout:
-                log.debug('{m}.{f}: %s: found valid cache entry in %s [%d secs]: %s', fname, table, t_now-t_cache, res)
+                log.debug('{m}.{f}: %s%s: found valid cache entry in %s [%d secs]: %s',
+                          fname, args, table, t_now-t_cache, res)
                 response_info['cached'] = t_cache
                 return res
 
-            log.debug('{m}.{f}: %s: expired cache entry in %s [%s secs]', fname, table, t_now-t_cache)
+            log.debug('{m}.{f}: %s%s: expired cache entry in %s [%s secs]', fname, args, table, t_now-t_cache)
         except Exception as ex:
-            log.notice('{m}.{f}: %s: cached entry %s: %s', fname, match['response'], repr(ex))
+            log.notice('{m}.{f}: %s%s: retrieving cached entry %s: %s', fname, args, match['response'], repr(ex))
 
     try:
         res = function(*args)
     except Exception as ex:
-        log.notice('{m}.{f}: %s: %s', fname, repr(ex), trace=True)
-        res = None
+        log.notice('{m}.{f}: %s%s: refreshing cache entry: %s', fname, args, repr(ex), trace=True)
+        raise
 
-    # (fixme) shouldn't we save also negative results?!?
-    if res is not None and res is not []:
+    if hashargs is not None:
         try:
             t_now = int(time.time())
             with dbcon:
@@ -104,9 +110,9 @@ def get(function, timeout, *args, **kwargs):
                 dbcon.execute("DELETE FROM %s WHERE func = ? AND args = ?"%table, (fname, hashargs,))
                 dbcon.execute("INSERT INTO %s VALUES (?, ?, ?, ?)"%table, (fname, hashargs, repr(res), t_now,))
         except Exception as ex:
-            log.notice('{m}.{f}: %s: new entry %s: %s', fname, res, repr(ex))
+            log.notice('{m}.{f}: %s%s: storing new cache entry %s: %s', fname, args, res, repr(ex))
 
-    log.debug('{m}.{f}: %s: %s', fname, res)
+    log.debug('{m}.{f}: %s%s: %s', fname, args, res)
 
     return res
 
