@@ -22,8 +22,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-#_log_debug = True
-# _trace = True
 
 import os
 import time
@@ -37,42 +35,40 @@ from g2.libraries import workers
 from g2.libraries import platform
 
 
+_log_debug = False
+
 _MIN_PERCENTAGE_FOR_COMPLETITION = 99 # %
 _MIN_SAMPLE_TIME_FOR_DOWNLOAD_SPEED = 10 # secs
 _MAX_SAMPLE_TIME_FOR_DOWNLOAD_SPEED = 60 # secs
 _PERCENTAGE_DELTA_FOR_STATUS_UPDATE = 10 # %
 
 
-def addDownload(name, url, image):
-    def download():
-        return []
-    result = cache.get(download, -1, table='rel_dl')
+def addDownload(name, url, ext, size, resumable, image):
+    def download(result):
+        return result
+    result = cache.get(download, -1, [], hash_args=0, table='rel_dl', debug=_log_debug)
     if name in [i['name'] for i in result]:
         return False
 
-    # If the stream type is kwnon, use it as file suffix
-    ext = None if not hasattr(url, 'meta') else url.meta.get('type')
     if not ext:
-        # Otherwise derive the suffix from the path component of the url
         ext = os.path.splitext(urlparse.urlparse(url).path)[1][1:].lower()
         if ext not in ['mp4', 'mkv', 'flv', 'avi', 'mpg']:
             ext = 'mp4'
+
     # File name is derived by the title using these rules:
     # - Convert all contiguos spaces to a single '.'
     # - Remove leading and trailing spaces
     # - Remove special characters for typical FS
     filename = '.'.join(name.split()).translate(None, '\\/:*?"<>|').decode('utf-8').encode('latin1') + '.' + ext.encode('latin1')
 
-    def download():
-        return result + [{
-            'name': name,
-            'url': url,
-            'filename': filename,
-            'size': 0 if not hasattr(url, 'size') else url.size,
-            'resumable': hasattr(url, 'acceptbyteranges') and url.acceptbyteranges,
-            'image': image,
-        }]
-    cache.get(download, 0, table='rel_dl')
+    cache.get(download, 0,
+              result + [{'name': name,
+                         'url': url,
+                         'filename': filename,
+                         'size': size,
+                         'resumable': resumable,
+                         'image': image,
+                        }], hash_args=0, table='rel_dl', debug=_log_debug)
 
     try:
         filepath = _file_path(platform.translatePath(platform.freshsetting('downloads')), filename)
@@ -87,22 +83,15 @@ def addDownload(name, url, image):
 def listDownloads():
     def download():
         return []
-    return cache.get(download, -1, table='rel_dl')
+    return cache.get(download, -1, table='rel_dl', debug=_log_debug)
 
 
 def removeDownload(url):
-    def download():
-        return []
-    result = cache.get(download, -1, table='rel_dl')
-    if result == '':
-        result = []
-    result = [i for i in result if not i['url'] == url]
-    if result == []:
-        result = ''
-
-    def download():
+    def download(result):
         return result
-    cache.get(download, 0, table='rel_dl')
+    result = cache.get(download, -1, [], hash_args=0, table='rel_dl', debug=_log_debug)
+    result = [i for i in result if not i['url'] == url]
+    cache.get(download, 0, result, hash_args=0, table='rel_dl', debug=_log_debug)
 
     return True
 
@@ -142,9 +131,7 @@ def worker():
 
     items = None
     with workers.non_blocking(_WORKER_LOCK):
-        def download():
-            return []
-        items = cache.get(download, -1, table='rel_dl')
+        items = listDownloads()
 
         if not items:
             return log.error('%s aborted: no downloads to process', this.name)
@@ -181,11 +168,11 @@ def worker():
 
                 start_time = _meter(downloaded, start=True)
 
-                log.notice('downloader: %s: %s (%sresumable)'%(
+                log.notice('downloader: %s: %s (%sresumable)',
                            os.path.basename(dest),
                            'started download of %d bytes'%contentlength if not downloaded else
                            'restarted download at %d of %d bytes'%(downloaded, contentlength),
-                           '' if resumable else 'not '))
+                           '' if resumable else 'not ')
 
                 errors = 0
                 resumes = 0
@@ -204,7 +191,8 @@ def worker():
                     platform.property('downloader', completition_time, name='completition_time')
                     platform.property('downloader', dest, name='filepath')
 
-                    progress = '[%s%%, %s] %s'%(percent, completition_time, os.path.basename(dest))
+                    # json.loads(json.dumps(unicode(a, 'ISO-8859-1'))).encode('ISO-8859-1')
+                    progress = '[%s%%, %s] %s'%(percent, completition_time, unicode(os.path.basename(dest), 'ISO-8859-1'))
                     if log_progress is None:
                         log_progress = percent + (_PERCENTAGE_DELTA_FOR_STATUS_UPDATE-percent%_PERCENTAGE_DELTA_FOR_STATUS_UPDATE)
                     if percent > log_progress:
@@ -277,9 +265,9 @@ def worker():
                 if completed:
                     removeDownload(url)
 
-                log.notice('%s: %s: %s (%d secs, %d resumes)'%(
+                log.notice('%s: %s: %s (%d secs, %d resumes)',
                            this.name, os.path.basename(dest), 'completed' if completed else 'stopped',
-                           int(time.time()-start_time), resumes))
+                           int(time.time()-start_time), resumes)
 
             except Exception as ex:
                 log.error('%s: %s: %s', this.name, os.path.basename(dest), ex)

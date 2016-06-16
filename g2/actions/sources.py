@@ -408,13 +408,13 @@ def download(action, name=None, provider=None, url=None, resolvedurl=None, image
             if url.meta['width'] and url.meta['height']:
                 media_format += ' %dx%d'%(url.meta['width'], url.meta['height'])
 
-    media_size = '' if not media_size else _('Complete file is %dMB%s')%(int(media_size/(1024*1024)), ' (r)' if rest else '')
-    media_format = '' if not media_format else _('Media format is %s')%media_format
+    media_info1 = '' if not media_size else _('Complete file is %dMB%s')%(int(media_size/(1024*1024)), ' (r)' if rest else '')
+    media_info2 = '' if not media_format else _('Media format is %s')%media_format
 
-    if not ui.yesnoDialog(media_size, media_format, _('Continue with download?')):
+    if not ui.yesnoDialog(media_info1, media_info2, _('Continue with download?')):
         return False
 
-    if downloader.addDownload(name, url, image):
+    if downloader.addDownload(name, url, media_format, media_size, rest, image):
         ui.infoDialog(_('Item Added to Queue'), name)
     else:
         ui.infoDialog(_('Item Already In Your Queue'), name)
