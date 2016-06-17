@@ -134,15 +134,15 @@ def movies(url):
             duration = client.replaceHTMLCodes(duration)
             duration = duration.encode('utf-8')
 
-            try: rating = client.parseDOM(item, 'span', attrs = {'class': 'rating-rating'})[0]
+            try: rating = client.parseDOM(item, 'span', attrs={'class': 'rating-rating'})[0]
             except: rating = '0'
-            try: rating = client.parseDOM(rating, 'span', attrs = {'class': 'value'})[0]
+            try: rating = client.parseDOM(rating, 'span', attrs={'class': 'value'})[0]
             except: rating = '0'
             if rating == '' or rating == '-': rating = '0'
             rating = client.replaceHTMLCodes(rating)
             rating = rating.encode('utf-8')
 
-            try: votes = client.parseDOM(item, 'div', ret='title', attrs = {'class': 'rating rating-list'})[0]
+            try: votes = client.parseDOM(item, 'div', ret='title', attrs={'class': 'rating rating-list'})[0]
             except: votes = '0'
             try: votes = re.compile('[(](.+?) votes[)]').findall(votes)[0]
             except: votes = '0'
@@ -150,7 +150,7 @@ def movies(url):
             votes = client.replaceHTMLCodes(votes)
             votes = votes.encode('utf-8')
 
-            try: mpaa = client.parseDOM(item, 'span', attrs = {'class': 'certificate'})[0]
+            try: mpaa = client.parseDOM(item, 'span', attrs={'class': 'certificate'})[0]
             except: mpaa = '0'
             try: mpaa = client.parseDOM(mpaa, 'span', ret='title')[0]
             except: mpaa = '0'
@@ -159,8 +159,8 @@ def movies(url):
             mpaa = client.replaceHTMLCodes(mpaa)
             mpaa = mpaa.encode('utf-8')
 
-            director = client.parseDOM(item, 'span', attrs = {'class': 'credit'})
-            director += client.parseDOM(item, 'div', attrs = {'class': 'secondary'})
+            director = client.parseDOM(item, 'span', attrs={'class': 'credit'})
+            director += client.parseDOM(item, 'div', attrs={'class': 'secondary'})
             try: director = [i for i in director if 'Director:' in i or 'Dir:' in i][0]
             except: director = '0'
             director = director.split('With:', 1)[0].strip()
@@ -170,8 +170,8 @@ def movies(url):
             director = client.replaceHTMLCodes(director)
             director = director.encode('utf-8')
 
-            cast = client.parseDOM(item, 'span', attrs = {'class': 'credit'})
-            cast += client.parseDOM(item, 'div', attrs = {'class': 'secondary'})
+            cast = client.parseDOM(item, 'span', attrs={'class': 'credit'})
+            cast += client.parseDOM(item, 'div', attrs={'class': 'secondary'})
             try: cast = [i for i in cast if 'With:' in i or 'Stars:' in i][0]
             except: cast = '0'
             cast = cast.split('With:', 1)[-1].strip()
@@ -181,9 +181,9 @@ def movies(url):
             if cast == []: cast = '0'
 
             plot = '0'
-            try: plot = client.parseDOM(item, 'span', attrs = {'class': 'outline'})[0]
+            try: plot = client.parseDOM(item, 'span', attrs={'class': 'outline'})[0]
             except: pass
-            try: plot = client.parseDOM(item, 'div', attrs = {'class': 'item_description'})[0]
+            try: plot = client.parseDOM(item, 'div', attrs={'class': 'item_description'})[0]
             except: pass
             plot = plot.rsplit('<span>', 1)[0].strip()
             if plot == '': plot = '0'
