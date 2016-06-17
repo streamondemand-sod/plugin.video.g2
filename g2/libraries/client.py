@@ -182,26 +182,17 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
         rets = []
         item_offset = 0
         for match in lst:
-            if isinstance(ret, basestring):
-                log.debug("{m}.{f}: Getting attribute %s content for %s"%(ret, match))
-                rets += _getDOMAttributes(match, name, ret)
+            if ret:
+                match_string = match if isinstance(match, basestring) else match.group()
+                log.debug("{m}.{f}: Getting attribute(s) %s content for %s", ret, match_string)
+                if isinstance(ret, basestring):
+                    rets += _getDOMAttributes(match_string, name, ret)
+                else:
+                    retdict = {}
+                    for i in ret:
+                        retdict[i] = _getDOMAttributes(match_string, name, i)
+                    rets.append(retdict)
 
-            elif ret:
-                log.debug("{m}.{f}: Getting attributes %s content for %s"%(ret, match))
-                retdict = {}
-                for i in ret:
-                    retdict[i] = _getDOMAttributes(match, name, i)
-                rets.append(retdict)
-
-            elif isinstance(match, basestring):
-                log.debug("{m}.{f}: Getting element content for %s"%match)
-                temp = _getDOMContent(item, 0, name, match).strip()
-                item = item[item.find(temp, item.find(match)) + len(temp):]
-                rets.append(temp)
-
-            # (fixme) for now proper matching of the DOM elements is implemented only if the attrs is set to {}
-            #   Any other value of attrs would return a list of strings that might result in DOM content to be
-            #   returned for the wrong element item.
             elif match.start() < item_offset:
                 log.debug("{m}.{f}: Skipping %s@%d as included in the previous element", match.group(), match.start())
 
@@ -220,26 +211,21 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
 def _getDOMElements(item, name, attrs):
     log.debug("{m}.{f}:")
 
-    if attrs is None:
+    if not attrs:
         log.debug("{m}.{f}: No attributes specified, matching on name only")
-        lst = re.compile('(<' + name + '>)', re.M | re.S).findall(item)
-        # (fixme) To review!!!
-        if len(lst) == 0:
-            lst = re.compile('(<' + name + ' .*?>)', re.M | re.S).findall(item)
-
-    elif not attrs:
-        # NOTE: attrs == {} would return a list of re.MatchObject's
-        log.debug("{m}.{f}: Empty attributes dictionary, matching on name only")
-        # lst = re.compile('(<' + name + '(?:>| .*?>))', re.M | re.S).findall(item)
-        lst = re.compile('(<' + name + '(?:>| .*?>))', re.M | re.S).finditer(item)
+        lst = [m for m in re.compile('(<' + name + '(?:>| .*?>))', re.M|re.S).finditer(item)]
 
     else:
         lst = []
         for key in attrs:
-            lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=[\'"]' + attrs[key] + '[\'"].*?>))', re.M | re.S).findall(item)
+            # (fixme): collapse the two re.compile in a single one where the opening quote, if present,
+            #   must match the closing quote, otherwise in scenario where there is a mix of the two
+            #   format only the elements with the quotes are returned!
+            lst2 = [m for m in re.compile('(<' + name + '[^>]*?(?:' + key + '=[\'"]' + attrs[key] + '[\'"].*?>))',
+                                          re.M|re.S).finditer(item)]
             if len(lst2) == 0 and attrs[key].find(" ") == -1:  # Try matching without quotation marks
-                lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=' + attrs[key] + '.*?>))', re.M | re.S).findall(item)
-
+                lst2 = [m for m in re.compile('(<' + name + '[^>]*?(?:' + key + '=' + attrs[key] + '.*?>))',
+                                              re.M|re.S).finditer(item)]
             if len(lst) == 0:
                 log.debug("{m}.{f}: Setting main list " + repr(lst2))
                 lst = lst2
@@ -249,8 +235,8 @@ def _getDOMElements(item, name, attrs):
                 test = range(len(lst))
                 test.reverse()
                 for i in test:  # Delete anything missing from the next list.
-                    if not lst[i] in lst2:
-                        log.debug("{m}.{f}: Purging mismatch " + str(len(lst)) + " - " + repr(lst[i]))
+                    if lst[i].group() not in lst2.group():
+                        log.debug("{m}.{f}: Purging mismatch " + str(len(lst)) + " - " + repr(lst[i].group()))
                         del lst[i]
 
     log.debug("{m}.{f}: Done: " + str(type(lst)))
@@ -291,6 +277,10 @@ def _getDOMContent(html, offset, name, match):
 
 def _getDOMAttributes(match, name, ret):
     log.debug('{m}.{f}')
+
+    # (fixme): collapse the two re.compile in a single one where the opening quote, if present,
+    #   must match the closing quote, otherwise in scenario where there is a mix of the two
+    #   format only the elements with the quotes are returned!
     lst = re.compile('<' + name + '.*?' + ret + '=([\'"].[^>]*?[\'"])>', re.M | re.S).findall(match)
     if len(lst) == 0:
         lst = re.compile('<' + name + '.*?' + ret + '=(.[^>]*?)>', re.M | re.S).findall(match)
