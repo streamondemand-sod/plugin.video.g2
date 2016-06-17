@@ -188,7 +188,12 @@ def packages(kinds_=kinds()):
 
 
 def is_installed(kind, name):
-    return os.path.exists(os.path.join(_path(kind, name), ''))
+    if not os.path.exists(os.path.join(_path(kind, name), '')):
+        return 0
+
+    nfos = kindinfo(kind)
+    modules = [m for m in nfos.itervalues() if m.get('package') == name]
+    return len(modules) or -1
 
 
 def _path(kind, name):
@@ -288,9 +293,9 @@ def uninstall(kind, name, raise_notfound=False):
         return False
 
 
-def refreshinfo(kind):
+def kindinfo(kind, refresh=False):
     kind_module = getattr(__import__(PACKAGES_RELATIVE_PATH+kind, globals(), locals(), [], -1), kind)
-    return kind_module.info(force=True)
+    return kind_module.info(refresh)
 
 
 def info(kind, infofunc, force=False):

@@ -123,7 +123,7 @@ def _install_package(site):
                 missing_addons.append(addon)
 
         if not missing_addons:
-            pkg.refreshinfo(kind)
+            pkg.kindinfo(kind, refresh=True)
         else:
             ui.Dialog().ok('PACKAGE MANAGER',
                            '[CR]'.join([_('The %s.%s package requires these addons:')%(kind, name),
@@ -145,7 +145,7 @@ def _uninstall_package(kind, name, site):
 
     try:
         pkg.uninstall(kind, name)
-        pkg.refreshinfo(kind)
+        pkg.kindinfo(kind, refresh=True)
     except Exception as ex:
         log.error('packages.dialog: %s.%s: %s', kind, name, repr(ex))
         ui.infoDialog(_('Failure to uninstall the package'))        

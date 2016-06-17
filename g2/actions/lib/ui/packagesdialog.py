@@ -86,6 +86,8 @@ class PackagesDialog(xbmcgui.WindowXMLDialog):
             self.displayed_kind = kind
 
     def _update_package_item(self, item):
+        modules = self.pkgInstalledStatus(item.getProperty('kind'), item.getProperty('name'))
         item.setInfo('video', {
-            'overlay': 5 if self.pkgInstalledStatus(item.getProperty('kind'), item.getProperty('name')) else 4,
+            'overlay': 5 if modules else 4,
         })
+        item.setLabel2(str(modules) if modules else '')

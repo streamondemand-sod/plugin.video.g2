@@ -98,11 +98,21 @@
 					<control type="label">
 						<left>10</left>
 						<top>0</top>
-						<width>670</width>
+						<width>620</width>
 						<height>30</height>
 						<textcolor>grey2</textcolor>
 						<font>font14</font>
 						<label>$INFO[ListItem.Label]</label>
+					</control>
+					<control type="label">
+						<left>630</left>
+						<top>0</top>
+						<width>50</width>
+						<height>30</height>
+						<align>right</align>
+						<textcolor>grey2</textcolor>
+						<font>font14</font>
+						<label>$INFO[ListItem.Label2]</label>
 					</control>
 					<control type="image">
 						<left>680</left>
@@ -124,11 +134,21 @@
 					<control type="label">
 						<left>10</left>
 						<top>0</top>
-						<width>670</width>
+						<width>620</width>
 						<height>30</height>
 						<textcolor>white</textcolor>
 						<font>font14</font>
 						<label>$INFO[ListItem.Label]</label>
+					</control>
+					<control type="label">
+						<left>630</left>
+						<top>0</top>
+						<width>50</width>
+						<height>30</height>
+						<align>right</align>
+						<textcolor>white</textcolor>
+						<font>font14</font>
+						<label>$INFO[ListItem.Label2]</label>
 					</control>
 					<control type="image">
 						<left>680</left>
