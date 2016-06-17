@@ -32,9 +32,6 @@ from g2 import dbs
 from g2 import notifiers
 
 
-_log_debug = True
-
-
 _PLAYER = xbmc.Player()
 
 

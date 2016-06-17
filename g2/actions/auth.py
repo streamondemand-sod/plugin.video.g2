@@ -22,13 +22,11 @@
 from g2.libraries import log
 from g2.libraries import platform
 from g2.libraries.language import _
+
 from g2.dbs import trakt as trakt_db
 from g2.notifiers import pb as pb_notifier
 
 from .lib import ui
-
-
-_log_debug = True
 
 
 def trakt(action, **kwargs):

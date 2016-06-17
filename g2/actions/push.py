@@ -38,8 +38,6 @@ from g2 import notifiers
 from .lib import ui
 
 
-_log_debug = True
-
 _PLAYER = xbmc.Player()
 
 

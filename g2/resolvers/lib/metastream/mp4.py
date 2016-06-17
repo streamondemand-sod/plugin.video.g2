@@ -237,7 +237,7 @@ def video_resolution(file, stop_at_bytes=0):
     def traverse(atoms, depth=0):
         from g2.libraries import log
         for atom in atoms:
-            log.notice('mp4.video_resolution: %s%s'%('    ' * depth, atom))
+            log.debug('mp4.video_resolution: %s%s'%('    ' * depth, atom))
             traverse(atom.children, depth+1)
     traverse(mp4.children)      # debugging mp4 decoding...
 

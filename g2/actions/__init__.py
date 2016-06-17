@@ -25,9 +25,6 @@ from g2.libraries import log
 from .lib import ui
 
 
-_log_trace_on_error = True
-
-
 def info(force=False):
     def action_info(dummy_package, dummy_module, mod, paths):
         if not hasattr(mod, 'info'):
@@ -65,4 +62,4 @@ def execute(action, args=None):
             mod = __import__(module, globals(), locals(), [], -1)
             getattr(mod, action)(**args)
     except Exception as ex:
-        log.error('{m}.{f}(%s.%s, ...): %s', module, action, ex)
+        log.error('{m}.{f}(%s.%s, ...): %s', module, action, ex, trace=True)

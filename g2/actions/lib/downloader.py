@@ -35,8 +35,6 @@ from g2.libraries import workers
 from g2.libraries import platform
 
 
-_log_debug = False
-
 _MIN_PERCENTAGE_FOR_COMPLETITION = 99 # %
 _MIN_SAMPLE_TIME_FOR_DOWNLOAD_SPEED = 10 # secs
 _MAX_SAMPLE_TIME_FOR_DOWNLOAD_SPEED = 60 # secs
@@ -46,7 +44,7 @@ _PERCENTAGE_DELTA_FOR_STATUS_UPDATE = 10 # %
 def addDownload(name, url, ext, size, resumable, image):
     def download(result):
         return result
-    result = cache.get(download, -1, [], hash_args=0, table='rel_dl', debug=_log_debug)
+    result = cache.get(download, -1, [], hash_args=0, table='rel_dl', debug=log.debugactive())
     if name in [i['name'] for i in result]:
         return False
 
@@ -68,7 +66,7 @@ def addDownload(name, url, ext, size, resumable, image):
                          'size': size,
                          'resumable': resumable,
                          'image': image,
-                        }], hash_args=0, table='rel_dl', debug=_log_debug)
+                        }], hash_args=0, table='rel_dl', debug=log.debugactive())
 
     try:
         filepath = _file_path(platform.translatePath(platform.freshsetting('downloads')), filename)
@@ -83,15 +81,15 @@ def addDownload(name, url, ext, size, resumable, image):
 def listDownloads():
     def download():
         return []
-    return cache.get(download, -1, table='rel_dl', debug=_log_debug)
+    return cache.get(download, -1, table='rel_dl', debug=log.debugactive())
 
 
 def removeDownload(url):
     def download(result):
         return result
-    result = cache.get(download, -1, [], hash_args=0, table='rel_dl', debug=_log_debug)
+    result = cache.get(download, -1, [], hash_args=0, table='rel_dl', debug=log.debugactive())
     result = [i for i in result if not i['url'] == url]
-    cache.get(download, 0, result, hash_args=0, table='rel_dl', debug=_log_debug)
+    cache.get(download, 0, result, hash_args=0, table='rel_dl', debug=log.debugactive())
 
     return True
 

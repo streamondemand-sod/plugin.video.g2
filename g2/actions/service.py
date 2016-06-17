@@ -31,9 +31,6 @@ from g2 import notifiers
 from .lib import ui
 
 
-_log_debug = True
-
-
 class Monitor(xbmc.Monitor):
     def __init__(self):
         xbmc.Monitor.__init__(self)
@@ -73,7 +70,7 @@ def monitor(monitorid, kind, callback, *args, **kwargs):
         })
         del _MONITOR_OBJECTS[monitorid]['kwargs']['init_arg_name']
 
-    log.debug('{m}.{f}(%s): %s', monitorid, _MONITOR_OBJECTS[monitorid])
+    log.debug('{m}.{f}: %s: %s', monitorid, _MONITOR_OBJECTS[monitorid])
 
 
 def _get_objectvalue(monitorid, kind):
@@ -110,6 +107,7 @@ def _check_changes(kind):
         
         log.debug('service[{t}]: monitored object %s %s changed: %s -> %s',
                   moid, mobj['kind'], mobj['value'], new_value)
+
         mobj['value'] = new_value
         if mobj['thread']:
             # For service threads to be stopped, the new value should evaluate False

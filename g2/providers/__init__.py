@@ -38,8 +38,6 @@ from g2.libraries import platform
 from .lib.fuzzywuzzy import fuzz
 
 
-_log_debug = True
-
 _SOURCE_CACHE_LIFETIME = 3600 # secs
 _MIN_FUZZINESS_VALUE = 84
 _IGNORE_BODY_EXCEPTIONS = True

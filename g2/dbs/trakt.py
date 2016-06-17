@@ -32,10 +32,6 @@ from g2.libraries import platform
 from g2.libraries.language import _
 
 
-_log_debug = True
-_log_trace_on_error = True
-
-
 info = {
     'domains': ['api-v2launch.trakt.tv'],
     'methods': ['resolve', 'movies', 'lists', 'watched'],

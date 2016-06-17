@@ -19,8 +19,6 @@
 """
 
 
-import re
-import sys
 import json
 import time
 import hashlib
@@ -39,9 +37,6 @@ from g2 import dbs
 
 
 __all__ = ['Player']
-
-
-_log_debug = True
 
 
 class Player(xbmc.Player):

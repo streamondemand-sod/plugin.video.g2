@@ -34,9 +34,6 @@ from g2.libraries import client
 from .lib import metastream
 
 
-_log_debug = True
-
-
 # (fixme) move into defs
 DEFAULT_PACKAGE_PRIORITY = 10
 
@@ -160,7 +157,7 @@ def resolve(url, checkonly=False):
         if not 'Referer' in headers:
             headers['Referer'] = url
 
-        with closing(client.get(res.split('|')[0], headers=headers, stream=True, timeout=20, debug=True)) as resp:
+        with closing(client.get(res.split('|')[0], headers=headers, stream=True, timeout=20, debug=log.debugactive())) as resp:
             try:
                 resp.raise_for_status()
             except Exception as ex:

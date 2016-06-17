@@ -27,10 +27,6 @@ from g2.libraries import log
 from g2.libraries import client
 
 
-_log_debug = True
-_log_trace_on_error = True
-
-
 info = {
     'domains': ['www.imdb.com'],
     'methods': ['resolve', 'movies', 'lists'],

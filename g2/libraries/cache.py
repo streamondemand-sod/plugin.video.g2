@@ -32,19 +32,15 @@ from g2.libraries import log
 from g2.libraries import platform
 
 
-_log_debug = False
-
-
 def get(function, timeout, *args, **kwargs):
-    global _log_debug
-    _log_debug = kwargs.get('debug', False)
+    debug = kwargs.get('debug')
     table = kwargs.get('table', 'rel_list')
     response_info = kwargs.get('response_info', {})
     hash_args = kwargs.get('hash_args', -1)
 
     try:
         fname = re.sub(r'.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', repr(function))
-        log.debug('{m}.{f}: %s%s: timeout=%d, kwargs=%s', fname, args, timeout, kwargs)
+        log.debug('{m}.{f}: %s%s: timeout=%d, kwargs=%s', fname, args, timeout, kwargs, debug=debug)
 
         if not hash_args or not len(args):
             hashargs = ''
@@ -75,7 +71,7 @@ def get(function, timeout, *args, **kwargs):
             pass
 
     if not match:
-        log.debug('{m}.{f}: %s%s: cache miss in table %s', fname, args, table)
+        log.debug('{m}.{f}: %s%s: cache miss in table %s', fname, args, table, debug=debug)
     else:
         try:
             res = ast.literal_eval(match['response'].encode('utf-8'))
@@ -83,11 +79,11 @@ def get(function, timeout, *args, **kwargs):
             t_now = int(time.time())
             if timeout < 0 or (t_now-t_cache)/60 < timeout:
                 log.debug('{m}.{f}: %s%s: found valid cache entry in %s [%d secs]: %s',
-                          fname, args, table, t_now-t_cache, res)
+                          fname, args, table, t_now-t_cache, res, debug=debug)
                 response_info['cached'] = t_cache
                 return res
 
-            log.debug('{m}.{f}: %s%s: expired cache entry in %s [%s secs]', fname, args, table, t_now-t_cache)
+            log.debug('{m}.{f}: %s%s: expired cache entry in %s [%s secs]', fname, args, table, t_now-t_cache, debug=debug)
         except Exception as ex:
             log.notice('{m}.{f}: %s%s: retrieving cached entry %s: %s', fname, args, match['response'], repr(ex))
 
@@ -112,7 +108,7 @@ def get(function, timeout, *args, **kwargs):
         except Exception as ex:
             log.notice('{m}.{f}: %s%s: storing new cache entry %s: %s', fname, args, res, repr(ex))
 
-    log.debug('{m}.{f}: %s%s: %s', fname, args, res)
+    log.debug('{m}.{f}: %s%s: %s', fname, args, res, debug=debug)
 
     return res
 
