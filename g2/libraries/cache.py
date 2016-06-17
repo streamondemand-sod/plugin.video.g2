@@ -116,7 +116,7 @@ def get(function, timeout, *args, **kwargs):
 def clear(tables=None):
     try:
         if tables == None:
-            tables = ['rel_list', 'rel_lib']
+            tables = ['rel_list', 'rel_trakt']
         elif type(tables) not in [list, tuple]:
             tables = [tables]
 
@@ -124,7 +124,7 @@ def clear(tables=None):
         with dbcon:
             for table in tables:
                 try:
-                    dbcon.execute("DROP TABLE IF EXISTS ?", (table,))
+                    dbcon.execute("DROP TABLE IF EXISTS %s"%table)
                     dbcon.execute("VACUUM")
                 except Exception as ex:
                     log.notice('{m}.{f}: %s: %s', table, repr(ex))
