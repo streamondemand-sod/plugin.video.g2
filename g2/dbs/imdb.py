@@ -84,7 +84,8 @@ def movies(url):
         next_page = (int(re.search(r'&start=(\d+)', next_url).group(1))-1)/_IMDB_PAGE_COUNT + 1
         if max_pages and next_page > max_pages:
             raise Exception('last page reached')
-    except Exception:
+    except Exception as ex:
+        log.debug('{m}.{f}: %s: %s', url.replace(_BASE_URL, ''), repr(ex))
         next_url = ''
         next_page = 0
 

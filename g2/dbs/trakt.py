@@ -109,7 +109,7 @@ def movies(url):
     try:
         page = int(res.headers['X-Pagination-Page'])
         max_pages = int(res.headers['X-Pagination-Page-Count'])
-        if page >= max_pages:
+        if max_pages and page >= max_pages:
             raise Exception('last page reached')
 
         page += 1
