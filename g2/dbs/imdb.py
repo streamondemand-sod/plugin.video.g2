@@ -72,7 +72,8 @@ def movies(url):
     try:
         try:
             max_pages = client.parseDOM(result, 'div', attrs={'id': 'left'})[0]
-            max_pages = int(re.search(r'of (\d+)', max_pages).group(1)/_IMDB_PAGE_COUNT+.5)
+            max_pages = max_pages.translate({ord(u','):None, ord(u'.'): None})
+            max_pages = int(int(re.search(r'of (\d+)', max_pages).group(1))/_IMDB_PAGE_COUNT+.5)
         except Exception:
             max_pages = 0
         next_url = client.parseDOM(result, 'span', attrs={'class': 'pagination'})[0]
@@ -81,7 +82,7 @@ def movies(url):
         next_url = client.replaceHTMLCodes(next_url)
         next_url = next_url.encode('utf-8')
         next_page = (int(re.search(r'&start=(\d+)', next_url).group(1))-1)/_IMDB_PAGE_COUNT + 1
-        if next_page > max_pages:
+        if max_pages and next_page > max_pages:
             raise Exception('last page reached')
     except Exception:
         next_url = ''
