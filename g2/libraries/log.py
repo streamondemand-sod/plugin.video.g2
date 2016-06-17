@@ -21,7 +21,9 @@
 
 import os
 import re
+import ast
 import sys
+import errno
 import inspect
 import traceback
 import threading
@@ -30,21 +32,40 @@ import xbmc
 import xbmcaddon
 
 
-_debug_attribute = '_log_debug'
-_trace_attribute = '_log_trace_on_error'
-
 _ADDON_ID = xbmcaddon.Addon().getAddonInfo('id')
 try:
     _THREAD_ID = int(sys.argv[1])
 except Exception:
     _THREAD_ID = -1
 
-_LEVEL_NAME = {
-    xbmc.LOGDEBUG: 'debug',
-    xbmc.LOGINFO: 'info',
-    xbmc.LOGNOTICE: 'notice',
-    xbmc.LOGERROR: 'error',
-}
+_SPECIAL_TAGS = [
+    'p',    # package name
+    'm',    # module name
+    'f',    # function name
+    't',    # thread object address
+]
+
+_CONFIG = {}
+
+
+def _config_setup():
+    global _CONFIG
+    try:
+        configpath = os.path.join(xbmcaddon.Addon().getAddonInfo('path'), '.logconfig.py')
+        with open(configpath) as fil:
+            config = fil.read().strip()
+            if config:
+                _CONFIG = ast.literal_eval(config)
+        if type(_CONFIG) != dict:
+            raise Exception('the log configuration file should contain a single python dictionary')
+    except IOError as ex:
+        if ex.errno != errno.ENOENT:
+            error('{m}.{f}: %s: %s', configpath, repr(ex))
+    except Exception as ex:
+        error('{m}.{f}: %s: %s', configpath, repr(ex))
+
+
+_config_setup()
 
 
 def debug(msg, *args, **kwargs):
@@ -63,60 +84,70 @@ def error(msg, *args, **kwargs):
     return _log(msg, xbmc.LOGERROR, *args, **kwargs)
 
 
-_SPECIAL_TAGS = ['p', 'm', 'f', 't']
+def debugactive(ids=None, calling_context=True):
+    if ids is None:
+        ids = {}
+    ids.update(_fetch_ids(1 if calling_context else 3))
+    return _CONFIG.get(ids['p']) or _CONFIG.get(ids['p']+'.'+ids['m']) or _CONFIG.get(ids['m']+'.'+ids['f'])
 
 
 def _log(msg, level, *args, **kwargs):
+    debug = kwargs.get('debug')
+    trace = kwargs.get('trace')
     try:
-        level_info = ''
+        ids = {}
+        orig_level = ''
         if level in [xbmc.LOGDEBUG, xbmc.LOGINFO]:
-            newlevel = xbmc.LOGNOTICE if kwargs.get('debug') else _check_for_debug(level)
-            if newlevel != level:
-                level_info = 'DEBUG: ' if level == xbmc.LOGDEBUG else '[INFO]'
-                level = newlevel
+            if debug or debugactive(ids, calling_context=False):
+                orig_level = 'DEBUG' if level == xbmc.LOGDEBUG else 'INFO'
+                level = xbmc.LOGNOTICE
+
         if any('{%s}'%tag in msg for tag in _SPECIAL_TAGS):
-            ids = _fetch_ids()
-            for i in _SPECIAL_TAGS:
-                msg = msg.replace('{%s}'%i, ids[i])
+            if not ids:
+                ids = _fetch_ids()
+            for tag in _SPECIAL_TAGS:
+                msg = msg.replace('{%s}'%tag, ids[tag])
+
         if len(args):
             msg = msg % args
         if isinstance(msg, unicode):
-            msg = '%s (utf-8)'%msg.encode('utf-8')
-        xbmc.log('%s[%s%s] %s'%(level_info, _ADDON_ID, ('' if _THREAD_ID < 0 else ':%d'%_THREAD_ID), msg), level)
+            msg = msg.encode('utf-8') + ' (utf-8)'
+
+        xbmc.log('%s[%s%s] %s'%(orig_level, _ADDON_ID, ('' if _THREAD_ID < 0 else ':%d'%_THREAD_ID), msg), level)
     except Exception:
         try:
-            xbmc.log('log.%s("%s", %s, %s): %s'%(_LEVEL_NAME.get(level), msg, args, kwargs, traceback.format_exc()),
+            xbmc.log('log.%s("...", %s, %s): %s'%(orig_level.lower(), args, kwargs, traceback.format_exc()),
                      xbmc.LOGNOTICE)
+            trace = True
         except Exception:
             pass
-    try:
-        if kwargs.get('trace') or (level >= xbmc.LOGERROR and _check_for_debug(xbmc.LOGDEBUG, _trace_attribute) != xbmc.LOGDEBUG):
+
+    if trace:
+        try:
             stacktrace = traceback.format_exc()
             if stacktrace and not stacktrace.startswith('None'):
                 xbmc.log('[%s%s] %s'%(_ADDON_ID, ('' if _THREAD_ID < 0 else ':%d'%_THREAD_ID), stacktrace), level)
-    except Exception:
-        pass
+        except Exception:
+            pass
+
     return msg
 
 
-def _check_for_debug(level, attribute=_debug_attribute):
-    stack = inspect.stack()
-    return level if len(stack) <= 3 or not stack[3][0].f_globals.get(attribute) else xbmc.LOGNOTICE
-
-
-def _fetch_ids():
+def _fetch_ids(ids_level=2):
     ids = {}
     stack = None
     try:
+        ids_level += 1
         stack = inspect.stack()
-        if len(stack) <= 3:
+        if len(stack) <= ids_level:
             raise Exception()
-        module = stack[3][1]
+        module = stack[ids_level][1]
+        function = stack[ids_level][3]
         ids.update({
             'p': os.path.basename(os.path.dirname(module)),
             'm': os.path.basename(os.path.dirname(module)) if module.endswith('__init__.py') else
                  os.path.splitext(os.path.basename(module))[0],
-            'f': stack[3][3],
+            'f': function,
         })
     except Exception:
         ids.update({
