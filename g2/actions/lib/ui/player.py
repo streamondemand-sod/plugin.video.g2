@@ -75,19 +75,39 @@ class Player(xbmc.Player):
         item.setInfo(type='Video', infoLabels=meta)
         try:
             item.setArt({'poster': poster, 'tvshow.poster': poster, 'season.poster': poster})
-        except:
+        except Exception:
             pass
 
         self.play_started = False
         self.play_stopped = False
         xbmc.Player.play(self, url, item)
 
-        self.keepPlaybackAlive()
+        watched = dbs.watched('movie{imdb_id}', imdb_id=self.imdb)
+
+        for i in range(0, 120):
+            if self.isPlayingVideo() or self.play_stopped:
+                break
+            xbmc.sleep(1000)
+
+        self.totalTime = 0
+        self.currentTime = 0
+        while self.isPlayingVideo():
+            try:
+                self.totalTime = self.getTotalTime()
+                self.currentTime = self.getTime()
+                if not watched and self.currentTime / self.totalTime >= .9:
+                    watched = True
+                    dbs.watched('movie{imdb_id}', watched, imdb_id=self.imdb)
+            except Exception:
+                pass
+            xbmc.sleep(2000)
 
         platform.property(addon='script.trakt', name='ids', value='')
         platform.property('player', name='mpaa', value='')
 
-        return self.play_started
+        log.debug('ui.Player.run: started=%s, time=%s/%s', self.play_started, self.currentTime, self.totalTime)
+
+        return -1 if not self.play_started else 0 if not self.totalTime else int(100*self.currentTime/self.totalTime)
 
 
     def getMeta(self, meta):
@@ -134,26 +154,6 @@ class Player(xbmc.Player):
             self.seekTime(float(self.offset))
         except:
             pass
-
-
-    def keepPlaybackAlive(self):
-        watched = dbs.watched('movie{imdb_id}', imdb_id=self.imdb)
-
-        for i in range(0, 120):
-            if self.isPlayingVideo() or self.play_stopped:
-                break
-            xbmc.sleep(1000)
-
-        while self.isPlayingVideo():
-            try:
-                self.totalTime = self.getTotalTime()
-                self.currentTime = self.getTime()
-                if not watched and self.currentTime / self.totalTime >= .9:
-                    watched = True
-                    dbs.watched('movie{imdb_id}', watched, imdb_id=self.imdb)
-            except:
-                pass
-            xbmc.sleep(2000)
 
 
     def idleForPlayback(self):

@@ -260,7 +260,6 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             item.setProperty('url', item.getProperty('source_url'))
             return
         with self.resolver_lock:
-            log.notice('sources.dialog: resolving %s...'%item.getLabel())
             provider = item.getProperty('source_provider')
             url = item.getProperty('source_url')
             label = item.getLabel()
@@ -289,17 +288,22 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
                 if hasattr(url, 'meta') and url.meta:
                     if url.meta.get('type'):
                         media_label = url.meta['type']
+                        item.setProperty('type', media_label)
                     if url.meta.get('width') > 0 and url.meta.get('height') > 0:
                         media_label += ' %sx%s'%(url.meta['width'], url.meta['height'])
                         item.setProperty('resolution', str(url.meta['width']*url.meta['height']))
-                item.setProperty('media', media_label)
+
                 if hasattr(url, 'size'):
+                    size_mb = int(url.size / (1024*1024))
+                    media_label += ' %dMB'%size_mb if size_mb < 1000 else ' %.1fGB'%(size_mb/1024)
                     item.setProperty('size', str(url.size))
+
                 if hasattr(url, 'acceptbyteranges') and url.acceptbyteranges:
                     item.setProperty('rest', 'true')
+
                 item.setLabel(label_fmt%(media_label.upper(), label))
 
-            log.notice('sources.dialog: completed %s: %s'%(label, 'OK' if item.getProperty('url') else 'KO'))
+            log.debug('{m}.{f}: %s: %s'%(label, 'OK' if item.getProperty('url') else 'KO'))
 
     def updateDialog(self, title=None, progress=None, elapsed_time=None):
         if title:

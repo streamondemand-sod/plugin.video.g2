@@ -32,7 +32,7 @@ def menu():
     trakt_user = platform.setting('trakt_user')
     imdb_user = platform.setting('imdb_user')
     if not trakt_user or platform.setting('trakt_enabled') != 'true':
-        ui.addDirectoryItem(_('Configure your Trakt account to unlock new functions'), 'tools.settings&category=1&setting=1',
+        ui.addDirectoryItem(_('Configure your Trakt account'), 'tools.settings&category=1&setting=1',
                             'moviesTraktcollection.jpg', 'DefaultMovies.png')
     else:
         url = dbs.resolve('movies_collection{trakt_user_id}', trakt_user_id=trakt_user, quote_plus=True)
@@ -65,5 +65,8 @@ def menu():
 
     if platform.setting('downloads'):
         ui.addDirectoryItem(_('Downloads'), 'download.menu', 'downloads.jpg', 'DefaultFolder.png')
+    else:
+        ui.addDirectoryItem(_('Configure the download directory'), 'tools.settings&category=0&setting=5',
+                            'downloads.jpg', 'DefaultFolder.png')
 
     ui.endDirectory()

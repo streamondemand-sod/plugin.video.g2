@@ -23,6 +23,7 @@
 """
 
 
+import os
 import sys
 import urllib
 
@@ -51,6 +52,7 @@ def menu():
     else:
         ui.addDirectoryItem('[COLOR FF00b8ff]Start Downloads[/COLOR]', 'download.start', 'movies.jpg', None, context=cmd)
 
+    downloads_path = platform.setting('downloads')
     for i in items:
         percentage, completition_time = downloader.statusItem(i)
         status = ''
@@ -59,8 +61,11 @@ def menu():
             if completition_time:
                 status += ' '+completition_time
             status = '[COLOR FF00b8ff][%s][/COLOR] ' % status
-        ui.addDirectoryItem(status+i['name'], i['url'], i['image'], None,
-                            context=(_('Remove from Queue'), 'download.remove&url=%s' % urllib.quote_plus(i['url'])))
+        ui.addDirectoryItem(status+i['name'],
+                            'sources.playurl&title=%s&url=%s'%(i['name'], os.path.join(downloads_path, i['filename'])),
+                            i['image'], None,
+                            context=(_('Remove from Queue'), 'download.remove&url=%s' % urllib.quote_plus(i['url'])),
+                            isFolder=False)
 
     ui.endDirectory()
 

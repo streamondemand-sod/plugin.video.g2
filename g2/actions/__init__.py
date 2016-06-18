@@ -41,9 +41,9 @@ def execute(action, kwargs=None):
     if kwargs is None:
         kwargs = {}
 
-    module, action = action.split('.')
+    log.debug('{m}.{f}: tID:%s, ACTION:%s, ARGS:%.80s...', sys.argv[1], action, repr(kwargs))
 
-    log.debug('{m}.{f}: tID:%s, ACTION:%s.%s, ARGS:%.80s...', sys.argv[1], module, action, repr(kwargs))
+    module, action = action.split('.')
 
     try:
         mod = __import__(module, globals(), locals(), [], -1)

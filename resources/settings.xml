@@ -6,7 +6,7 @@
 		<setting id="infoLang" type="select" label="30803" values="bg|cs|da|de|el|en|es|fi|fr|he|hr|hu|it|ja|ko|nl|no|pl|pt|ru|sl|sv|tr|zh" default="en" />
 		<setting type="lsep" label="30805" />
 		<setting id="movie_widget" type="enum" label="30806" lvalues="30807|30808|30809|30810" default="1" />
-		<setting id="downloads" type="folder" label="30951" default="special://profile/addon_data/plugin.video.g2/Downloads" />
+		<setting id="downloads" type="folder" label="30098" default="" />
 	</category>
 	<category label="30910">
 		<setting type="lsep" label="Trakt" />

@@ -51,21 +51,26 @@ def playurl(title=None, url=None):
         if not url:
             return
 
-        ui.busydialog()
-        def ui_cancel():
-            ui.sleep(1000)
-            return not ui.abortRequested()
-        thd = _resolve(None, url, ui_update=ui_cancel)
-        ui.busydialog(stop=True)
+        # (fixme) need to find a more portable way to identify a file steaming...
+        if url.startswith('/'):
+            pass
+        else:
+            ui.busydialog()
+            def ui_cancel():
+                ui.sleep(1000)
+                return not ui.abortRequested()
+            thd = _resolve(None, url, ui_update=ui_cancel)
+            ui.busydialog(stop=True)
 
-        if not thd or thd.is_alive():
-            return
+            if not thd or thd.is_alive():
+                return
 
-        if not isinstance(thd.result, basestring):
-            ui.infoDialog(_('Not a valid stream'))
-            return
+            if not isinstance(thd.result, basestring):
+                ui.infoDialog(_('Not a valid stream'))
+                return
 
-        url = thd.result
+            url = thd.result
+
         ui.Player().run(title, None, None, None, None, None, None, url)
 
     except Exception as ex:
@@ -103,7 +108,12 @@ def dialog(title=None, year=None, imdb='0', tmdb='0', tvdb='0', meta=None, **kwa
             providers.video_sources(ui_addsources, content,
                                     title=title, year=year, imdb=imdb, tmdb=tmdb, tvdb=tvdb, meta=meta, **kwargs)
 
-        posterdata = name if metadata.get('poster', '0') == '0' else 'poster://'+metadata['poster']
+        poster = metadata.get('poster', '0')
+        if poster != '0':
+            posterdata = 'poster://'+poster
+        else:
+            poster = platform.addonPoster()
+            posterdata = name
 
         win = ui.SourcesDialog('SourcesDialog.xml', platform.addonPath, 'Default', '720p',
                                sourcesGenerator=sources_generator,
@@ -126,32 +136,39 @@ def dialog(title=None, year=None, imdb='0', tmdb='0', tvdb='0', meta=None, **kwa
             url = item.getProperty('url')
 
             if win.action == 'play':
-                if ui.Player().run(title, year, None, None, imdb, tvdb, meta, url,
-                                   credits=_credits_message(item.getProperty('source_provider'),
-                                                            item.getProperty('source_host'),
-                                                            item.getProperty('media'))):
+                player_status = ui.Player().run(title, year, None, None, imdb, tvdb, meta, url,
+                                                credits=_credits_message(item.getProperty('source_provider'),
+                                                                         item.getProperty('source_host'),
+                                                                         item.getProperty('type')))
+                if player_status > 10:
                     break
-
-                log.notice('sources.dialog: player.run("%s", %s) FAILED'%(name, url))
-                source = item.getLabel()
-                ui.infoDialog(_('Not a valid stream'), heading=source)
-                ui.sleep(2000)
+                if player_status < 0:
+                    log.notice('{m}.{f}: %s: %s: invalid source', name, url)
+                    source = item.getLabel()
+                    ui.infoDialog(_('Not a valid stream'), heading=source)
+                    item.setProperty('source_url', '')
+                    item.setProperty('url', '')
 
             elif win.action == 'download':
-                poster = metadata.get('poster', '0')
-                if poster == '0':
-                    poster = platform.addonPoster()
+                media_format = item.getProperty('type')
+                try:
+                    media_size = int(item.getProperty('size'))
+                except Exception:
+                    media_size = 0
+                rest = item.getProperty('rest') == 'true'
 
-                if download('%s (%s)'%(title, year), url,
-                            item.getProperty('rest') == 'true',
-                            item.getProperty('size'),
-                            item.getProperty('media'),
-                            poster):
-                    break
+                media_info1 = '' if not media_size else \
+                              _('Complete file is %dMB%s')%(int(media_size/(1024*1024)), ' (r)' if rest else '')
+                media_info2 = '' if not media_format else \
+                              _('Media format is %s')%media_format
 
-            # Invalidate the erroneous stream item
-            item.setProperty('source_url', '')
-            item.setProperty('url', '')
+                if ui.yesnoDialog(media_info1, media_info2, _('Continue with download?')):
+                    if downloader.addDownload(name, url, media_format, media_size, rest, poster):
+                        ui.infoDialog(_('Item added to download queue'), name)
+                    else:
+                        ui.infoDialog(_('Item already in the download queue'), name)
+
+            ui.sleep(2000)
 
             win.show()
 
@@ -160,26 +177,6 @@ def dialog(title=None, year=None, imdb='0', tmdb='0', tvdb='0', meta=None, **kwa
     except Exception as ex:
         log.error('{m}.{f}: %s', ex)
         ui.infoDialog(_('No stream available'))
-
-
-def download(name, url, rest, media_size, media_format, image):
-    try:
-        media_size = int(media_size)
-    except Exception:
-        media_size = 0
-
-    media_info1 = '' if not media_size else _('Complete file is %dMB%s')%(int(media_size/(1024*1024)), ' (r)' if rest else '')
-    media_info2 = '' if not media_format else _('Media format is %s')%media_format
-
-    if not ui.yesnoDialog(media_info1, media_info2, _('Continue with download?')):
-        return False
-
-    if downloader.addDownload(name, url, media_format, media_size, rest, image):
-        ui.infoDialog(_('Item Added to Queue'), name)
-    else:
-        ui.infoDialog(_('Item Already In Your Queue'), name)
-
-    return True
 
 
 @action
