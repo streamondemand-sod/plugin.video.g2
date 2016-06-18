@@ -43,6 +43,7 @@ _SPECIAL_TAGS = [
     'm',    # module name
     'f',    # function name
     't',    # thread object address
+    'cf',   # calling module.function
 ]
 
 _CONFIG = {}
@@ -88,7 +89,10 @@ def debugactive(ids=None, calling_context=True):
     if ids is None:
         ids = {}
     ids.update(_fetch_ids(1 if calling_context else 3))
-    return _CONFIG.get(ids['p']) or _CONFIG.get(ids['p']+'.'+ids['m']) or _CONFIG.get(ids['m']+'.'+ids['f'])
+    return (_CONFIG.get(ids['p']) or                    # Debug the entire package
+            _CONFIG.get(ids['p']+'.'+ids['m']) or       # Debug a specific package.module
+            _CONFIG.get(ids['m']+'.'+ids['f']) or       # Debug a specific module.function
+            _CONFIG.get(ids['cf']+'.'+ids['f']))        # Debug a specific function when called by a specific module.function
 
 
 def _log(msg, level, *args, **kwargs):
@@ -134,6 +138,10 @@ def _log(msg, level, *args, **kwargs):
 
 
 def _fetch_ids(ids_level=2):
+    def module_name(path):
+        return os.path.basename(os.path.dirname(path)) if path.endswith('__init__.py') else \
+               os.path.splitext(os.path.basename(path))[0]
+
     ids = {}
     stack = None
     try:
@@ -145,15 +153,21 @@ def _fetch_ids(ids_level=2):
         function = stack[ids_level][3]
         ids.update({
             'p': os.path.basename(os.path.dirname(module)),
-            'm': os.path.basename(os.path.dirname(module)) if module.endswith('__init__.py') else
-                 os.path.splitext(os.path.basename(module))[0],
+            'm': module_name(module),
             'f': function,
         })
+        if len(stack) > ids_level+1:
+            calling_module = stack[ids_level+1][1]
+            calling_function = stack[ids_level+1][3]
+            ids.update({
+                'cf': '%s.%s'%(module_name(calling_module), calling_function),
+            })
     except Exception:
         ids.update({
             'p': '',
             'm': '',
             'f': '',
+            'cf': '',
         })
     finally:
         del stack
