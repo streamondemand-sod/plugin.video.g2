@@ -164,7 +164,7 @@ def resolve(url, checkonly=False):
                 collect_resolver_error(resolver, str(ex))
                 continue
 
-            content_lenght = resp.headers.get('Content-Length', 0)
+            content_lenght = int(resp.headers.get('Content-Length', '0'))
             if content_lenght < _MIN_STREAM_SIZE:
                 collect_resolver_error(resolver, 'Stream too short')
                 continue
