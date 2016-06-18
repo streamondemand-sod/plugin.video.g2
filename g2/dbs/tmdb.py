@@ -43,8 +43,8 @@ TMDB_APIKEY = 'f7f51775877e0bb6703520952b3c7840'
 _INFO_LANG = platform.setting('infoLang') or 'en'
 # (fixme) hardcoded TMDB key should be removed on GA releases
 _TMDB_APIKEY = platform.setting('tmdb_apikey') or TMDB_APIKEY
-_TMDB_IMAGE = 'http://image.tmdb.org/t/p/original'
-_TMDB_POSTER = 'http://image.tmdb.org/t/p/w500'
+_TMDB_IMAGE = 'http://image.tmdb.org/t/p/original/'
+_TMDB_POSTER = 'http://image.tmdb.org/t/p/w500/'
 
 _BASE_URL = 'http://api.themoviedb.org/3'
 _COMMON_PARAMS = '&api_key=@APIKEY@&language={info_lang}&include_adult={include_adult}'
