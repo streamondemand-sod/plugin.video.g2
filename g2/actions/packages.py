@@ -93,6 +93,7 @@ def dialog():
     del win
 
     pkg.update_settings_skema()
+    ui.refresh()
 
 
 def _manage_package(kind, name, site):
