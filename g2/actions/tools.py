@@ -24,9 +24,11 @@ from g2.libraries import platform
 from g2.libraries.language import _
 
 from .lib import ui
+from . import action
 
 
-def menu(**kwargs):
+@action
+def menu():
     ui.addDirectoryItem(_('[B]SETTINGS[/B]'), 'tools.settings&category=0&setting=0',
                         'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]SETTINGS[/B] : Providers'), 'tools.settings&category=2&setting=0',
@@ -40,14 +42,16 @@ def menu(**kwargs):
     ui.endDirectory()
 
 
-def settings(action, category='0', setting='0', **kwargs):
+@action
+def settings(category='0', setting='0'):
     ui.idle()
     ui.execute('Addon.OpenSettings(%s)'%platform.addonInfo('id'))
     ui.execute('SetFocus(%i)' % (int(category) + 100))
     ui.execute('SetFocus(%i)' % (int(setting) + 200))
 
 
-def clearcache(action, **kwargs):
+@action
+def clearcache():
     ui.idle()
     yes = ui.yesnoDialog(_('Are you sure?'), '', '')
     if yes and cache.clear():

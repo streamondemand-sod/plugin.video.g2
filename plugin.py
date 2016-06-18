@@ -31,45 +31,26 @@ for addon_dir in os.listdir(ADDONS_PATH):
     importer.add_path(os.path.join(ADDONS_PATH, addon_dir))
 sys.path_hooks.append(importer.ImpImporterSandbox)
 
-from g2.libraries import log
 from g2.libraries import platform
 from g2 import actions
 
 def main():
     params = dict(urlparse.parse_qsl(sys.argv[2].replace('?', '')))
-    # (fixme) remove ARGS_DEFAULT: let each action have its own defaults
-    ARGS_DEFAULT = {
-        'action': None,
-        'name': None,
-        'title': None,
-        'year': None,
-        'imdb': '0',
-        'tmdb': '0',
-        'tvdb': '0',
-        'url': None,
-        'image': None,
-        'meta': None,
-        'query': None,
-        'source': None,
-    }
 
     if 'action' not in params:
         actions.execute('changelog.show')
+        action = None
+    else:
+        action = params['action']
+        del params['action']
 
-    elif params['action'] == 'service.thread':
+    if not action:
+        action = 'main.menu'
+
+    if action == 'service.thread':
         service_monitor_setup()
 
-    # (fixme) remove, see above
-    for arg, defvalue in ARGS_DEFAULT.iteritems():
-        if arg not in params:
-            params[arg] = defvalue
-
-    if not params['action']:
-        params['action'] = 'main.menu'
-
-    log.notice('Thread ID:%s, ACTION:%s, ARGS=%.80s...', sys.argv[1], params['action'], sys.argv[2])
-
-    actions.execute(params['action'], params)
+    actions.execute(action, params)
 
     return 0
 
@@ -94,5 +75,4 @@ def service_monitor_setup():
 
 
 if __name__ == '__main__':
-    # (fixme) re-add sys.exit() to check for leftover classes?!?
     main()

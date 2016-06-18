@@ -29,6 +29,7 @@ from g2.libraries import platform
 from g2 import notifiers
 
 from .lib import ui
+from . import action
 
 
 class Monitor(xbmc.Monitor):
@@ -173,7 +174,8 @@ def _service_thread_cleanup(monitorid):
         platform.property(monitorid, False)
 
 
-def thread(name=None, **dummy_kwargs):
+@action
+def thread(name):
     log.notice('service thread[%s] started ({t})', name)
 
     try:

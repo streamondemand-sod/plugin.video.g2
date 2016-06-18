@@ -31,13 +31,14 @@ from g2.libraries.language import _
 
 from .lib import ui
 from .lib import downloader
+from . import action
 
 
 _THREAD = int(sys.argv[1])
 
 
-def menu(action, **kwargs):
-    # (fixme) [int]
+@action
+def menu():
     items = downloader.listDownloads()
 
     cmd = (_('Refresh'), ':Container.Refresh')
@@ -59,12 +60,13 @@ def menu(action, **kwargs):
                 status += ' '+completition_time
             status = '[COLOR FF00b8ff][%s][/COLOR] ' % status
         ui.addDirectoryItem(status+i['name'], i['url'], i['image'], None,
-            context=(_('Remove from Queue'), 'download.remove&url=%s' % urllib.quote_plus(i['url'])))
+                            context=(_('Remove from Queue'), 'download.remove&url=%s' % urllib.quote_plus(i['url'])))
 
     ui.endDirectory()
 
 
-def start(action, **kwargs):
+@action
+def start():
     ui.execute('Action(Back,10025)')
     if _THREAD > 0:
         ui.resolvedPlugin(_THREAD, True, ui.ListItem(path=''))
@@ -74,7 +76,8 @@ def start(action, **kwargs):
     ui.refresh()
 
 
-def stop(action, **kwargs):
+@action
+def stop():
     ui.execute('Action(Back,10025)')
     if _THREAD > 0:
         ui.resolvedPlugin(_THREAD, True, ui.ListItem(path=''))
@@ -84,7 +87,8 @@ def stop(action, **kwargs):
     ui.refresh()
 
 
-def remove(action, url, **kwargs):
+@action
+def remove(url):
     downloader.removeDownload(url)
     ui.sleep(500)
     ui.idle()

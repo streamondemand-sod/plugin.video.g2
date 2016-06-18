@@ -31,19 +31,20 @@ from g2.libraries.language import _
 from g2 import dbs
 from g2 import notifiers
 
+from . import action
 
-_PLAYER = xbmc.Player()
 
-
-def notify(action, **dummy_kwargs):
-    if not _PLAYER.isPlaying():
+@action
+def notify():
+    player = xbmc.Player()
+    if not player.isPlaying():
         notice_id = platform.property('player.notice.id')
         if notice_id:
             log.debug('{m}.{f}: deleting notice_id=%s...', notice_id)
             notifiers.notices([], targets='remote', identifier=[notice_id])
             platform.property('player.notice.id', '')
 
-    elif not _PLAYER.isPlayingVideo():
+    elif not player.isPlayingVideo():
         return
 
     else:

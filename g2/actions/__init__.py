@@ -19,47 +19,39 @@
 """
 
 
+import sys
+
 from g2 import pkg
 from g2.libraries import log
 
 from .lib import ui
 
 
-def info(force=False):
-    def action_info(dummy_package, dummy_module, mod, paths):
-        if not hasattr(mod, 'info'):
-            return []
-        if callable(mod.info):
-            nfo = mod.info(paths)
-        else:
-            nfo = mod.info
-        return [dict(nfo)]
-
-    return pkg.info(__name__, action_info, force)
+def action(func):
+    func.is_action = True
+    return func
 
 
-def execute(action, args=None):
+def execute(action, kwargs=None):
     """Execute the plugin actions"""
     if '.' not in action:
         log.error('{m}.{f}(%s, ...): malformed action identifier (it should be module.action)', action)
         return
 
-    if not args:
-        args = {}
-    if 'action' not in args:
-        args['action'] = action
+    if kwargs is None:
+        kwargs = {}
 
     module, action = action.split('.')
-    action_ext = [a for a in info().itervalues()
-                  if 'package' in a and a.get('module') == module and action in a.get('methods', [])]
+
+    log.debug('{m}.{f}: tID:%s, ACTION:%s.%s, ARGS:%.80s...', sys.argv[1], module, action, repr(kwargs))
+
     try:
-        if action_ext:
-            # if multiple modules redefine the same actions, use the first one without a particular order
-            action_ext = action_ext[0]
-            with pkg.Context(__name__, action_ext['package'], [action_ext['module']], action_ext['search_paths']) as mod:
-                getattr(mod[0], action)(**args)
-        else:
-            mod = __import__(module, globals(), locals(), [], -1)
-            getattr(mod, action)(**args)
+        mod = __import__(module, globals(), locals(), [], -1)
+        if not hasattr(mod, action):
+            raise Exception('missing action function')
+        function = getattr(mod, action)
+        if not hasattr(function, 'is_action'):
+            raise Exception('action function is not decorated')
+        function(**kwargs)
     except Exception as ex:
-        log.error('{m}.{f}(%s.%s, ...): %s', module, action, ex, trace=True)
+        log.error('{m}.{f}: %s.%s: %s', module, action, ex, trace=True)

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 {
+    'plugin.video.g2.plugin': False,
+    'actions.actions': True,
     'providers.providers': False,
     'actions.service': False,
     'metastream.mp4': True,		# Show the MP4 decoding

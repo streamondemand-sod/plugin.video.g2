@@ -36,6 +36,7 @@ from g2 import dbs
 from g2 import notifiers
 
 from .lib import ui
+from . import action
 
 
 _PLAYER = xbmc.Player()
@@ -44,6 +45,7 @@ _PLAYER = xbmc.Player()
 # (fixme) need to abstract from the actual pushbullet dict.
 # - new(iden, target_all=bool, body, url)
 # - delete(iden, target_all=bool)
+@action
 def new(push):
     """Find a movie in the push and schedule the sources dialog"""
 
@@ -121,6 +123,7 @@ def new(push):
         ui.infoDialog(_('URL not supported'))
 
 
+@action
 def delete(push):
     log.debug('{m}.{f}: %s', push)
     if platform.property('player.notice.id') == push['iden']:

@@ -31,23 +31,25 @@ from g2.libraries.language import _
 from g2 import dbs
 
 from .lib import ui
+from . import action
 
 
 _sysaddon = sys.argv[0]
 _systhread = int(sys.argv[1])
 
 
-
-def menu(**kwargs):
+@action
+def menu():
     if dbs.resolve('movies_recently_added{}'):
         db_provider = dbs.resolve('movies_recently_added{}', return_db_provider=True)
         ui.addDirectoryItem(_('Latest Movies')+' ['+db_provider.upper()+']',
                             'movies.movielist&url='+dbs.resolve('movies_recently_added{}', quote_plus=True),
                             'moviesAdded.jpg', 'DefaultRecentlyAddedMovies.png')
 
-    ui.addDirectoryItem(_('Search by Title'), 'movies.searchbytitle', 'movieSearch.jpg', 'DefaultMovies.png')
-    ui.addDirectoryItem(_('Search by Person'), 'movies.searchbyperson', 'moviePerson.jpg', 'DefaultMovies.png')
-    ui.addDirectoryItem(_('Search by Year'), 'movies.searchbyyear', 'movieYears.jpg', 'DefaultMovies.png')
+    ui.addDirectoryItem(_('Search by Title'), 'movies.searchbytitle', 'movieSearch.jpg', 'DefaultMovies.png', isFolder=False)
+    ui.addDirectoryItem(_('Search by Person'), 'movies.searchbyperson', 'moviePerson.jpg', 'DefaultMovies.png', isFolder=False)
+    ui.addDirectoryItem(_('Search by Year'), 'movies.searchbyyear', 'movieYears.jpg', 'DefaultMovies.png', isFolder=False)
+
     ui.addDirectoryItem(_('Genres'), 'movies.genres', 'movieGenres.jpg', 'DefaultMovies.png')
     ui.addDirectoryItem(_('Certificates'), 'movies.certifications', 'movieCertificates.jpg', 'DefaultMovies.png')
 
@@ -75,38 +77,43 @@ def menu(**kwargs):
     ui.endDirectory()
 
 
-def searchbytitle(action, **kwargs):
-    query = ui.doQuery(_('Title'))
+@action
+def searchbytitle():
+    query = ui.doQuery(_('Search Title'))
     if query:
-        url = dbs.resolve('movies{title}', title=query)
-        movielist(action, url)
+        url = dbs.resolve('movies{title}', title=query, quote_plus=True)
+        ui.execute('Container.Update(%s?action=movies.movielist&url=%s)'%(_sysaddon, url))
 
 
-def searchbyperson(action, **kwargs):
-    query = ui.doQuery(_('Person'))
+@action
+def searchbyperson():
+    query = ui.doQuery(_('Search Person'))
     if query:
-        url = dbs.resolve('persons{name}', name=query)
-        personlist(action, url)
+        url = dbs.resolve('persons{name}', name=query, quote_plus=True)
+        ui.execute('Container.Update(%s?action=movies.personlist&url=%s)'%(_sysaddon, url))
 
 
-def searchbyyear(action, **kwargs):
-    query = ui.doQuery(_('Year'))
+@action
+def searchbyyear():
+    query = ui.doQuery(_('Search Year'))
     if query:
-        url = dbs.resolve('movies{year}', year=query)
-        movielist(action, url)
+        url = dbs.resolve('movies{year}', year=query, quote_plus=True)
+        ui.execute('Container.Update(%s?action=movies.movielist&url=%s)'%(_sysaddon, url))
 
 
-def genres(action, **kwargs):
+@action
+def genres():
     items = dbs.genres()
     for i in items:
         i.update({
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{genre_id}', genre_id=i['id']),
         })
-    _add_directory(action, items)
+    _add_directory(items)
 
 
-def certifications(action, **kwargs):
+@action
+def certifications():
     items = dbs.certifications()
     items = sorted(items, key=lambda c: c['order'])
     for i in items:
@@ -114,21 +121,23 @@ def certifications(action, **kwargs):
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{certification}', certification=i['name']),
         })
-    _add_directory(action, items)
+    _add_directory(items)
 
 
-def movielist(action, url, **kwargs):
+@action
+def movielist(url):
     items = dbs.movies(url)
     if not items:
         ui.infoDialog(_('No results'))
         return
     for i in items:
         i['next_action'] = 'movies.movielist'
-    _fetch_movie_info(items)
-    _add_movie_directory(action, items)
+    dbs.meta(items)
+    _add_movie_directory(items)
 
 
-def personlist(action, url, **kwargs):
+@action
+def personlist(url):
     items = dbs.persons(url)
     if not items:
         ui.infoDialog(_('No results'))
@@ -137,24 +146,25 @@ def personlist(action, url, **kwargs):
         i.update({
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{person_id}', person_id=i['id']),
-            'next_action': 'movies.tmdbpersonlist',
+            'next_action': 'movies.personlist',
         })
-    _add_directory(action, items)
+    _add_directory(items, is_person=True)
 
 
-def widget(action, **kwargs):
+@action
+def widget():
     setting = platform.setting('movie_widget')
-
     if setting == '2':
         url = dbs.resolve('movies_featured{}')
     elif setting == '3':
         url = dbs.resolve('movies_trending{}')
     else:
         url = dbs.resolve('movies_recently_added{}')
-    movielist(action, url)
+    movielist(url)
 
 
-def lists(action, kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', user_id='', **kwargs):
+@action
+def lists(kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', user_id=''):
     args = {kind_user_id: user_id}
     items = dbs.lists('lists{%s}'%kind_user_id, **args)
     if not items:
@@ -169,30 +179,24 @@ def lists(action, kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', us
     if not items:
         ui.infoDialog(_('No results'))
         return
-    # (fixme)[code]: here content='movies' means show genre and poster,
-    # need to change to a much clearer way, eg:
-    #   show_genre_as='imdb_list_meta'
-    _add_directory(action, items, content='movies')
+    _add_directory(items, show_genre_line=True)
 
 
-def watched(action, imdb, **kwargs):
+@action
+def watched(imdb):
     ui.busydialog()
     dbs.watched('movie{imdb_id}', True, imdb_id=imdb)
     ui.refresh()
 
 
-def unwatched(action, imdb, **kwargs):
+@action
+def unwatched(imdb):
     ui.busydialog()
     dbs.watched('movie{imdb_id}', False, imdb_id=imdb)
     ui.refresh()
 
 
-def _fetch_movie_info(items):
-    # (fixme) re-add query-scope infolang
-    dbs.meta(items)
-
-
-def _add_movie_directory(action, items):
+def _add_movie_directory(items):
     if not items:
         return
 
@@ -270,11 +274,6 @@ def _add_movie_directory(action, items):
             item.setProperty('Video', 'true')
             item.addContextMenuItems(cmds, replaceItems=False)
             ui.addItem(handle=_systhread, url=url, listitem=item, isFolder=True)
-            # NOTE: The following del avoids the issue of the message:
-            # CPythonInvoker(114, ...plugin.py): the python script ".../plugin.py" has left several classes in memory
-            # that we couldn't clean up. The classes include: N9XBMCAddon7xbmcgui8ListItemE
-            # However this message appears only if the plugin.py exit with sys.exit()
-            del item
         except Exception:
             import traceback
             log.notice(traceback.format_exc())
@@ -288,7 +287,7 @@ def _add_movie_directory(action, items):
         ui.endDirectory(content='movies')
 
 
-def _add_directory(action, items, content=None):
+def _add_directory(items, show_genre_line=False, is_person=False):
     if not items:
         return
 
@@ -318,9 +317,13 @@ def _add_directory(action, items, content=None):
                 pass
 
             cmds = []
+            if is_person and i.get('id') and platform.condition('System.HasAddon(script.extendedinfo)'):
+                cmds.append((_('Person information')+' (extendedinfo)',
+                             'RunScript(script.extendedinfo,info=extendedactorinfo,id=%s)'%i['id'])) 
+
             item = ui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
 
-            if content == 'movies':
+            if show_genre_line:
                 if 'genre' in i:
                     item.setInfo(type='Video', infoLabels={'genre': i['genre']})
                     item.setProperty('Video', 'true')
@@ -333,14 +336,14 @@ def _add_directory(action, items, content=None):
                         poster = addonPoster
                     item.setArt({'poster': poster, 'banner': poster})
 
-            # (fixme) no context commands here, for example to get person details?!?
-            item.addContextMenuItems(cmds, replaceItems=True)
+            item.addContextMenuItems(cmds, replaceItems=False)
             if addonFanart:
                 item.setProperty('Fanart_Image', addonFanart)
             ui.addItem(handle=_systhread, url=url, listitem=item, isFolder=True)
         except Exception as ex:
             log.error('{m}.{f}: %s: %s', i, repr(ex))
 
+    content = 'movie' if show_genre_line else None
     if len(items) and 'next_action' in items[0]:
         ui.endDirectory(content=content,
                         next_action=items[0]['next_action'],

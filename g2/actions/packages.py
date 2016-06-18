@@ -26,23 +26,23 @@ from g2.libraries import platform
 from g2.libraries.language import _
 
 from .lib import ui
+from . import action
 
 
 # (fixme) move to g2.defs
 _DEFAULT_PACKAGES_URLS = ['http://j0rdyz65.github.io/packages.html']
 
 
-def dialog(**kwargs):
+@action
+def dialog():
     addon_dir = platform.translatePath(platform.addonInfo('path'))
     win = ui.PackagesDialog('PackagesDialog.xml', addon_dir, 'Default', '720p',
                             onPackageSelected=_manage_package,
                             pkgInstalledStatus=pkg.is_installed)
 
-    packages_urls = _DEFAULT_PACKAGES_URLS
-
     listed = {}
     kinds = {}
-    for url in packages_urls:
+    for url in _DEFAULT_PACKAGES_URLS:
         try:
             res = client.get(url)
             pkgentries = client.parseDOM(res.content, 'tbody')[0]

@@ -42,7 +42,7 @@ DEFAULT_PACKAGE_PRIORITY = 10
 
 _PACKAGES_KINDS = {
     'providers': {
-        'order': 1,
+        'dialog_order': 1,
         # User setting are generated for each package / module to enable/disable it
         'settings_category': language.msgcode('Sources'),
         # User settings are generated at the package kind level (e.g. providers:::id)
@@ -52,7 +52,7 @@ _PACKAGES_KINDS = {
         'module_enabled_setting_default': '1',
     },
     'resolvers': {
-        'order': 2,
+        'dialog_order': 2,
         # User setting are generated for each package / module to enable/disable it
         # For resolvers, if there is a single module in the package,
         # the module setting is not displated.
@@ -63,17 +63,12 @@ _PACKAGES_KINDS = {
         'module_enabled_setting_default': 'true',
     },
     'dbs': {
-        'order': 3,
+        'dialog_order': 3,
         # No user settings
         'settings_category': 0,
     },
     'notifiers': {
-        'order': 4,
-        # No user settings
-        'settings_category': 0,
-    },
-    'actions': {
-        'order': 5,
+        'dialog_order': 4,
         # No user settings
         'settings_category': 0,
     },
@@ -176,7 +171,7 @@ def parse_site(site):
 
 
 def kinds():
-    return [k for k, dummy_v in sorted(_PACKAGES_KINDS.items(), key=lambda i: i[1]['order'])]
+    return [k for k, dummy_v in sorted(_PACKAGES_KINDS.items(), key=lambda i: i[1]['dialog_order'])]
 
 
 def packages(kinds_=kinds()):

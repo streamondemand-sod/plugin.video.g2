@@ -27,12 +27,12 @@ from g2.dbs import trakt as trakt_db
 from g2.notifiers import pb as pb_notifier
 
 from .lib import ui
+from . import action
 
 
-def trakt(action, **kwargs):
+@action
+def trakt():
     """Trakt device authorization"""
-    log.debug('%s(%s): trakt_enabled is now %s', action, kwargs, platform.setting('trakt_enabled'))
-
     if platform.setting('trakt_enabled') == 'false':
         ui.infoDialog(_('Trakt functionality disabled'))
         return
@@ -75,10 +75,9 @@ def trakt(action, **kwargs):
         ui.infoDialog(str(ex), time=5000)
 
 
-def pushbullet(action, **kwargs):
+@action
+def pushbullet():
     """Pushbullet apikey validation"""
-    log.debug('%s(%s): pushbullet_apikey is now %s', action, kwargs, platform.setting('pushbullet_apikey'))
-
     if not platform.setting('pushbullet_apikey'):
         ui.infoDialog(_('Pushbullet disabled'))
         return

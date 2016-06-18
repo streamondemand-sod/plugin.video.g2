@@ -20,35 +20,35 @@
 """
 
 
-from g2.libraries import log
 from g2.libraries import cache
 from g2.libraries import platform
-from g2.libraries.language import _
 
-from lib import ui
-
-
-def show(action, **kwargs):
-    cache.get(changelog, -1, platform.addonInfo('version'), table='changelog')
+from .lib import ui
+from . import action
 
 
-def changelog(version):
-    with open(platform.addonInfo('changelog')) as f:
-        text = f.read()
+@action
+def show():
+    cache.get(_changelog, -1, platform.addonInfo('version'), table='changelog')
 
-    label = '%s - %s' % (_(24054), platform.addonInfo('name'))
+
+def _changelog(version):
+    with open(platform.addonInfo('changelog')) as fil:
+        text = fil.read()
+
+    label = '%s - %s'%(platform.addonInfo('name'), version)
 
     ui.execute('ActivateWindow(10147)')
     ui.sleep(300)
     win = ui.Window(10147)
 
-    for retry in range(50):
+    for dummy in range(50):
         try:
             ui.sleep(10)
             win.getControl(1).setLabel(label)
             win.getControl(5).setText(text)
             break
-        except:
+        except Exception:
             pass
 
-    return True
+    return version
