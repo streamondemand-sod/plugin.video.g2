@@ -229,6 +229,7 @@ def install_or_update(site, ui_update=None):
 
         log.debug('{m}.{f}: %s: installing new %s package from %s...', name, kind, url)
         if not _install_or_update(session, url, name, kind, repo=repo, ui_update=ui_update):
+            uninstall(kind, name)
             return None, None
 
     return kind, name
@@ -265,9 +266,12 @@ def _install_or_update(session, url, name, kind, repo=None, ui_update=None):
                     module_path_new = module_path + '.new'
                     with open(module_path_new, 'w') as fil:
                         fil.write(module_source)
-                    if mod.get('sha') == git_sha(module_path_new):
+                    if mod.get('sha') != git_sha(module_path_new):
+                        log.error('pkg.install: %s.%s.%s: sha digest do not match!', kind, name.replace('/', '.'), mod['name'])
+                        return False
+                    else:
                         os.rename(module_path_new, module_path)
-                        log.notice('pkg.install: %s.%s.%s downloaded'%(kind, name.replace('/', '.'), mod['name']))
+                        log.notice('pkg.install: %s.%s.%s successfully downloaded', kind, name.replace('/', '.'), mod['name'])
 
             if ui_update:
                 ui_update(i+1, len(repo))
