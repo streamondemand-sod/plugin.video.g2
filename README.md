@@ -15,23 +15,23 @@ Features at glance
   - Notification of start/stop video playing including the title, mpaa rating and imdb url
   - Forced stop from any connected device
   - Push of video urls that can be resolved in a playable stream
-- Integration with script.extendinfo
-  - Movie information
+- Script.extendedinfo integration
+  - Movie/Person information
   - Trailers
-- Sources manager
-  - Dynamically update the dialog as new sources are found
+- Sources dialog
+  - Show the stream sources as they are found by the providers ordered by user preference
   - Check the sources validity and stream resolution (MP4 and FLV formats only)
-- Player manager
-  - Bookmarking for video resume
-  - Sync the watched status with the trakt account
+- Player helper
+  - Stream bookmarking for playing resume
+  - Watched status sync with the trakt account
 - Download manager
   - Running in background
   - Restartable servers support
-- Easily extensible via packages (plugin)
-  - Sorry, for now, you have to reverse engineer the code to find out the API! :)
+- Easily extensible via addon packages
+  - API published soon... :)
   - Notable packages to install
-    - iSOD channels and resolvers
-    - URLResolvers resolvers
+    - iSOD providers (~51) and resolvers (~139)
+    - URLResolvers resolvers (~111)
 
 Attributions
 ---------------------
