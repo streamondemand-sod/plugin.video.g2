@@ -58,34 +58,43 @@ def doQuery(title):
 def addDirectoryItem(name, query, thumb, icon, context=None, isAction=True, isFolder=True):
     try:
         name = _(name)
-    except:
+    except Exception:
         pass
     url = '%s?action=%s' % (sys.argv[0], query) if isAction == True else query
     thumb = thumb if thumb.startswith('http://') else os.path.join(_artPath, thumb) if _artPath is not None else icon
-    cm = []
+    cmds = []
     if context:
-        cm.append((context[0] if isinstance(context[0], basestring) else _(
-                   context[0]), context[1][1:] if context[1][0] == ':' else 'RunPlugin(%s?action=%s)'%(sys.argv[0], context[1])))
+        cmds.append((context[0] if isinstance(context[0], basestring) else \
+                    _(context[0]), context[1][1:] if context[1][0] == ':' else 'RunPlugin(%s?action=%s)'%(sys.argv[0], context[1])))
     item = xbmcgui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
-    item.addContextMenuItems(cm, replaceItems=False)
-    if _addonFanart: item.setProperty('Fanart_Image', _addonFanart)
+    item.addContextMenuItems(cmds, replaceItems=False)
+    if _addonFanart:
+        item.setProperty('Fanart_Image', _addonFanart)
     xbmcplugin.addDirectoryItem(handle=_thread_id, url=url, listitem=item, isFolder=isFolder)
 
 
-def endDirectory(next_action='', next_url='', next_page=2, content=None, updateListing=False, cacheToDisc=True):
+def endDirectory(next_item=None, content=None, updateListing=False, cacheToDisc=True):
     viewmode = None
-    if next_action and next_url:
-        url = '%s?action=%s&url=%s' % (sys.argv[0], next_action, urllib.quote_plus(next_url))
-        addonNext = platform.addonNext()
-        item = xbmcgui.ListItem(label=_('[I]Next Page[/I]'), iconImage=addonNext, thumbnailImage=addonNext)
+    if type(next_item) == dict and next_item.get('next_action') and next_item.get('next_url'):
+        log.debug('{m}.{f}: next_action:%s, next_url:%s, next_page:%s, max_pages:%s',
+                  next_item.get('next_action'), next_item.get('next_url'), next_item.get('next_page'), next_item.get('max_pages'))
+
+        url = '%s?action=%s&url=%s' % (sys.argv[0], next_item['next_action'], urllib.quote_plus(next_item['next_url']))
+        addon_next = platform.addonNext()
+
+        pages = '' if not next_item.get('max_pages') or not next_item.get('next_page') else \
+                _('[{page_of} of {max_pages}]').format(page_of=next_item['next_page'], max_pages=next_item['max_pages'])
+        item = xbmcgui.ListItem(label=_('[I]Next Page[/I]')+' '+pages, iconImage=addon_next, thumbnailImage=addon_next)
         item.addContextMenuItems([], replaceItems=False)
-        if _addonFanart: item.setProperty('Fanart_Image', _addonFanart)
+        if _addonFanart:
+            item.setProperty('Fanart_Image', _addonFanart)
         xbmcplugin.addDirectoryItem(handle=_thread_id, url=url, listitem=item, isFolder=True)
         # On paged directories, replicate the current viewmode when displaying the pages after the first
-        if next_page > 2:
+        if next_item.get('next_page') > 2:
             viewmode = repr(xbmcgui.Window(xbmcgui.getCurrentWindowId()).getFocusId())
 
-    if content: xbmcplugin.setContent(_thread_id, content)
+    if content:
+        xbmcplugin.setContent(_thread_id, content)
     xbmcplugin.endOfDirectory(_thread_id, updateListing=updateListing, cacheToDisc=cacheToDisc)
 
     if viewmode:

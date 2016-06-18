@@ -279,10 +279,7 @@ def _add_movie_directory(items):
             log.notice(traceback.format_exc())
 
     if len(items) and 'next_action' in items[0]:
-        ui.endDirectory(content='movies',
-                        next_action=items[0]['next_action'],
-                        next_url=items[0]['next_url'],
-                        next_page=items[0]['next_page'])
+        ui.endDirectory(content='movies', next_item=items[0])
     else:
         ui.endDirectory(content='movies')
 
@@ -345,9 +342,6 @@ def _add_directory(items, show_genre_line=False, is_person=False):
 
     content = 'movie' if show_genre_line else None
     if len(items) and 'next_action' in items[0]:
-        ui.endDirectory(content=content,
-                        next_action=items[0]['next_action'],
-                        next_url=items[0]['next_url'],
-                        next_page=items[0]['next_page'])
+        ui.endDirectory(content=content, next_item=items[0])
     else:
         ui.endDirectory(content=content)
