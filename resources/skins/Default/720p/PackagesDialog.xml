@@ -22,7 +22,7 @@
 			<width>960</width>
 			<height>20</height>
 			<align>center</align>
-			<textcolor>white</textcolor>
+			<textcolor>grey2</textcolor>
 			<!-- fixme: translate -->
 			<label>G2 - PACKAGE MANAGER</label>
 			<font>font15_title</font>
