@@ -27,6 +27,17 @@ from g2.libraries import log
 from .lib import ui
 
 
+def busyaction():
+    def wrap(func):
+        def busyaction_func(*args, **kwargs):
+            ui.busydialog()
+            func(*args, **kwargs)
+            ui.busydialog(stop=True)
+        busyaction_func.is_action = True
+        return busyaction_func
+    return wrap
+
+
 def action(func):
     func.is_action = True
     return func
