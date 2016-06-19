@@ -3,6 +3,7 @@
 """
     G2 Add-on
     Copyright (C) 2015 lambda
+    Copyright (C) 2016 J0rdyZ65
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,34 +41,55 @@ __all__ = ['Player']
 
 
 class Player(xbmc.Player):
+    def __init__(self):
+        self.name = None
+        self.imdb = None
+        self.offset = 0
+        self.loading_time = 0
+        self.current_time = 0
+        self.total_time = 0
+        self.credits = None
+        self.play_started = False
+        self.play_stopped = False
+        xbmc.Player.__init__(self)
+
     def run(self, title, year, season, episode, imdb, tvdb, meta, url, credits=None):
-        log.debug('ui.Player.run: meta=%s', meta)
+        self.loading_time = time.time()
+        self.current_time = 0
+        self.total_time = 0
 
-        self.loadingTime = time.time()
-        self.totalTime = 0 ; self.currentTime = 0
+        # self.title = title
+        # self.year = year
 
-        self.content = 'movie' if season == None or episode == None else 'episode'
-
-        self.title = title
-        self.year = year
-        self.name = '%s%s'%(title, '' if not year else ' (%s)'%year) if self.content == 'movie' else\
+        content = 'movie' if not season or not episode else 'episode'
+        self.name = '%s%s'%(title, '' if not year else ' (%s)'%year) if content == 'movie' else\
                     '%s S%02dE%02d'%(title, int(season), int(episode))
-        self.season = '%01d' % int(season) if self.content == 'episode' else None
-        self.episode = '%01d' % int(episode) if self.content == 'episode' else None
+        self.imdb = imdb or '0'
+        # self.season = '%01d' % int(season) if content == 'episode' else None
+        # self.episode = '%01d' % int(episode) if content == 'episode' else None
 
-        self.imdb = imdb if not imdb == None else '0'
-        self.tvdb = tvdb if not tvdb == None else '0'
-        self.ids = {'imdb': self.imdb, 'tvdb': self.tvdb}
-        self.ids = dict((k,v) for k, v in self.ids.iteritems() if not v == '0')
+        tvdb = tvdb or '0'
+        ids = {'imdb': self.imdb, 'tvdb': tvdb}
+        ids = dict((k, v) for k, v in ids.iteritems() if v != '0')
 
         self.credits = credits
 
         poster, thumb, meta = self.getMeta(meta)
 
-        platform.property(addon='script.trakt', name='ids', value=json.dumps(self.ids))
+        platform.property(addon='script.trakt', name='ids', value=json.dumps(ids))
         platform.property('player', name='mpaa', value=meta.get('mpaa', ''))
 
-        self.getBookmark()
+        try:
+            offset = _get_bookmark(self.name, self.imdb)
+            if offset:
+                minutes, seconds = divmod(float(offset), 60)
+                hours, minutes = divmod(minutes, 60)
+                if xbmcgui.Dialog().yesno(_('Resume from %02d:%02d:%02d')%(hours, minutes, seconds), '', '', self.name,
+                                          _('Resume'), _('Start from beginning')):
+                    offset = 0
+            self.offset = offset
+        except Exception as ex:
+            log.debug('{m}.{f}: %s: %s', self.name, repr(ex))
 
         item = xbmcgui.ListItem(path=url, iconImage='DefaultVideo.png', thumbnailImage=thumb)
         item.setProperty('Video', 'true')
@@ -84,18 +106,18 @@ class Player(xbmc.Player):
 
         watched = dbs.watched('movie{imdb_id}', imdb_id=self.imdb)
 
-        for i in range(0, 120):
+        for dummy in range(0, 120):
             if self.isPlayingVideo() or self.play_stopped:
                 break
             xbmc.sleep(1000)
 
-        self.totalTime = 0
-        self.currentTime = 0
+        self.total_time = 0
+        self.current_time = 0
         while self.isPlayingVideo():
             try:
-                self.totalTime = self.getTotalTime()
-                self.currentTime = self.getTime()
-                if not watched and self.currentTime / self.totalTime >= .9:
+                self.total_time = self.getTotalTime()
+                self.current_time = self.getTime()
+                if not watched and self.current_time / self.total_time >= .9:
                     watched = True
                     dbs.watched('movie{imdb_id}', watched, imdb_id=self.imdb)
             except Exception:
@@ -105,10 +127,7 @@ class Player(xbmc.Player):
         platform.property(addon='script.trakt', name='ids', value='')
         platform.property('player', name='mpaa', value='')
 
-        log.debug('ui.Player.run: started=%s, time=%s/%s', self.play_started, self.currentTime, self.totalTime)
-
-        return -1 if not self.play_started else 0 if not self.totalTime else int(100*self.currentTime/self.totalTime)
-
+        return -1 if not self.play_started else 0 if not self.total_time else int(100*self.current_time/self.total_time)
 
     def getMeta(self, meta):
         try:
@@ -121,42 +140,11 @@ class Player(xbmc.Player):
                 poster = platform.addonPoster()
 
             return (poster, thumb, meta)
-        except:
+        except Exception:
             poster, thumb, meta = '', '', {'title': self.name}
             return (poster, thumb, meta)
 
-
-    def getBookmark(self):
-        try:
-            self.offset = _get_bookmark(self.name, self.year)
-            if self.offset == '0': raise Exception()
-
-            minutes, seconds = divmod(float(self.offset), 60) ; hours, minutes = divmod(minutes, 60)
-            if xbmcgui.Dialog().yesno('%s %02d:%02d:%02d' % (_('Resume from'), hours, minutes, seconds),
-                                      '', '', self.name, _('Resume'), _('Start from beginning')):
-                self.offset = '0'
-        except:
-            pass
-
-
-    def resetBookmark(self):
-        try:
-            _del_bookmark(self.name, self.year)
-            if int(self.currentTime) > 180 and (self.currentTime / self.totalTime) <= .92:
-                _add_bookmark(self.currentTime, self.name, self.year)
-        except:
-            pass
-
-
-    def setBookmark(self):
-        try:
-            if self.offset == '0': raise Exception()
-            self.seekTime(float(self.offset))
-        except:
-            pass
-
-
-    def idleForPlayback(self):
+    def onPlayBackStarted(self):
         for i in range(0, 200):
             if xbmc.getCondVisibility('Window.IsActive(busydialog)') == 1:
                 xbmc.executebuiltin('Dialog.Close(busydialog)')
@@ -164,76 +152,71 @@ class Player(xbmc.Player):
                 break
             xbmc.sleep(100)
 
-
-    def showPlaybackInfo(self):
         if self.credits:
             for i in range(len(self.credits)):
-                self.credits[i] = self.credits[i].format(elapsed_time=int(time.time()-self.loadingTime))
+                self.credits[i] = self.credits[i].format(elapsed_time=int(time.time()-self.loading_time))
             xbmcgui.Dialog().ok(self.name, '[CR]'.join(self.credits))
 
+        try:
+            if self.offset:
+                self.seekTime(self.offset)
+        except Exception:
+            pass
 
-    def onPlayBackStarted(self):
-        self.idleForPlayback()
-        self.showPlaybackInfo()
-        self.setBookmark()
         self.play_started = True
-
-    def onPlayBackStopped(self):
-        self.resetBookmark()
-        self.play_stopped = True
-
 
     def onPlayBackEnded(self):
         self.onPlayBackStopped()
 
+    def onPlayBackStopped(self):
+        try:
+            _del_bookmark(self.name, self.imdb)
+            if int(self.current_time) > 180 and (self.current_time / self.total_time) <= .92:
+                _add_bookmark(self.current_time, self.name, self.imdb)
+        except Exception:
+            pass
+        self.play_stopped = True
 
-def _get_bookmark(name, imdb='0'):
+
+def _add_bookmark(bookmarktime, name, imdb):
     try:
-        offset = '0'
-        idFile = hashlib.md5()
-        for i in name: idFile.update(str(i))
-        for i in imdb: idFile.update(str(i))
-        idFile = str(idFile.hexdigest())
+        idfile = _bookmark_id(name, imdb)
+        platform.makeDir(platform.dataPath)
         dbcon = database.connect(platform.databaseFile)
-        dbcur = dbcon.cursor()
-        dbcur.execute("SELECT * FROM bookmark WHERE idFile = '%s'" % idFile)
+        with dbcon:
+            dbcon.execute("CREATE TABLE IF NOT EXISTS bookmark (idfile TEXT, bookmarktime INTEGER, UNIQUE(idfile))")
+            dbcon.execute("DELETE FROM bookmark WHERE idfile = ?", (idfile,))
+            dbcon.execute("INSERT INTO bookmark Values (?, ?)", (idfile, bookmarktime,))
+    except Exception as ex:
+        log.debug('{m}.{f}: %s: %s', name, repr(ex))
+
+
+def _get_bookmark(name, imdb):
+    try:
+        idfile = _bookmark_id(name, imdb)
+        dbcon = database.connect(platform.databaseFile)
+        dbcon.row_factory = database.Row
+        dbcur = dbcon.execute("SELECT * FROM bookmark WHERE idfile = ?", (idfile,))
         match = dbcur.fetchone()
-        offset = str(match[1])
-        dbcon.commit()
-        return offset
-    except:
-        return '0'
+        return match['bookmarktime'] if match else 0
+    except Exception as ex:
+        log.debug('{m}.{f}: %s: %s', name, repr(ex))
+        return 0
 
 
-def _add_bookmark(currentTime, name, imdb='0'):
+def _del_bookmark(name, imdb):
     try:
-        idFile = hashlib.md5()
-        for i in name: idFile.update(str(i))
-        for i in imdb: idFile.update(str(i))
-        idFile = str(idFile.hexdigest())
-        timeInSeconds = str(currentTime)
-        platform.mkdirs(platform.dataPath)
+        idfile = _bookmark_id(name, imdb)
         dbcon = database.connect(platform.databaseFile)
-        dbcur = dbcon.cursor()
-        dbcur.execute("CREATE TABLE IF NOT EXISTS bookmark (""idFile TEXT, ""timeInSeconds TEXT, ""UNIQUE(idFile)"");")
-        dbcur.execute("DELETE FROM bookmark WHERE idFile = '%s'" % idFile)
-        dbcur.execute("INSERT INTO bookmark Values (?, ?)", (idFile, timeInSeconds))
-        dbcon.commit()
-    except:
-        pass
+        dbcon.row_factory = database.Row
+        with dbcon:
+            dbcon.execute("DELETE FROM bookmark WHERE idfile = ?", (idfile,))
+    except Exception as ex:
+        log.debug('{m}.{f}: %s: %s', name, repr(ex))
 
 
-def _del_bookmark(name, imdb='0'):
-    try:
-        idFile = hashlib.md5()
-        for i in name: idFile.update(str(i))
-        for i in imdb: idFile.update(str(i))
-        idFile = str(idFile.hexdigest())
-        platform.mkdirs(platform.dataPath)
-        dbcon = database.connect(platform.databaseFile)
-        dbcur = dbcon.cursor()
-        dbcur.execute("CREATE TABLE IF NOT EXISTS bookmark (""idFile TEXT, ""timeInSeconds TEXT, ""UNIQUE(idFile)"");")
-        dbcur.execute("DELETE FROM bookmark WHERE idFile = '%s'" % idFile)
-        dbcon.commit()
-    except:
-        pass
+def _bookmark_id(name, imdb):
+    idfile = hashlib.md5()
+    idfile.update(name)
+    idfile.update(imdb)
+    return str(idfile.hexdigest())

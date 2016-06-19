@@ -130,11 +130,13 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.left_image.setImage(platform.addonPoster())
             self.left_label.setLabel(self.source_name)
 
-        self.updateDialog()
-
         if not self.thread and self.sources_generator:
             self.thread = workers.Thread(self.sources_worker)
             self.thread.start()
+        if not self.thread:
+            self.check_button_flag = False
+
+        self.updateDialog()
 
     def onClick(self, controlID):
         log.debug('onClick: %s'%controlID)
@@ -218,10 +220,10 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.updateDialog(title=_('NO SOURCES FOUND'), elapsed_time=False)
             return
 
+        self.check_button_flag = True
         self.updateDialog(title=_('CHECKING SOURCES'), elapsed_time=True)
 
         all_sources_resolved = False
-        self.check_button_flag = True
         while not self.userStopped():
             all_sources_resolved = True
             for index in range(len(self.items)):
@@ -239,24 +241,23 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.updateDialog()
             xbmc.sleep(500)
 
-        self.updateDialog(elapsed_time=False)
-
-        if self.dialog_closed:
-            status = 'DIALOG CLOSED'
+        self.check_button_flag = False
+        if all_sources_resolved:
+            title = _('SELECT SOURCE')
+            progress = _('CHECKING COMPLETE')
         else:
-            if all_sources_resolved:
-                status = 'CHECKING COMPLETE'
-            elif not self.check_button_flag:
-                status = 'CHECKING STOPPED'
-            self.check_button_flag = False
-            self.updateDialog(title=_('SELECT SOURCE'), progress=status)
+            title = None
+            progress = _('CHECKING STOPPED')
+
+        self.updateDialog(title=title, progress=progress, elapsed_time=False)
 
         log.debug('sources.dialog: sources_worker stopped (%s): %d url listed, %d processed (OK/KO: %d/%d)',
-                  status,
+                  'DIALOG CLOSED' if self.dialog_closed else progress,
                   len(self.items),
                   len([i for i in self.items if i.getProperty('url') or not i.getProperty('source_url')]),
                   len([i for i in self.items if i.getProperty('url')]),
                   len([i for i in self.items if not i.getProperty('source_url')]))
+
         self.thread = None
 
     def resolver(self, item):
