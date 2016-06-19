@@ -60,7 +60,7 @@ def addDirectoryItem(name, query, thumb, icon, context=None, isAction=True, isFo
         name = _(name)
     except Exception:
         pass
-    url = '%s?action=%s' % (sys.argv[0], query) if isAction == True else query
+    url = '%s?action=%s'%(sys.argv[0], query) if isAction else query
     thumb = thumb if thumb.startswith('http://') else os.path.join(_artPath, thumb) if _artPath is not None else icon
     cmds = []
     if context:

@@ -47,12 +47,12 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
     sources_list_id = 21
     counter_label_id = 22
     info_label_id = 23
-    ok_button_id = 31
-    stop_button_id = 32
+    select_button_id = 31
+    check_button_id = 32
     cancel_button_id = 33
 
     def __init__(self, strXMLname, strFallbackPath, strDefaultName, forceFallback,
-                 sourcesGenerator=None, sourcePriority=None, sourceResolve=None, posterData=None):
+                 sourceName=None, sourcesGenerator=None, sourcePriority=None, sourceResolve=None, posterImage=None):
         self.title_label = None
         self.progress = None
         self.elapsed_label = None
@@ -60,8 +60,8 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         self.sources_list = None
         self.counter_label = None
         self.info_label = None
-        self.ok_button = None
-        self.stop_button = None
+        self.select_button = None
+        self.check_button = None
         self.left_image = None
         self.left_label = None
 
@@ -69,18 +69,19 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
 
         self.resolver_lock = workers.Lock()
 
-        self.ok_button_focused = False
-        self.stop_button_flag = False
+        self.select_button_focused = False
+        self.check_button_flag = True
         self.dialog_closed = False
         self.start_time = None
         self.selected = None
         self.action = None
 
         self.thread = None
+        self.source_name = sourceName
         self.sources_generator = sourcesGenerator
         self.source_priority = sourcePriority
         self.source_resolve = sourceResolve
-        self.posterdata = posterData
+        self.poster_image = posterImage
 
     def close(self):
         self.dialog_closed = True
@@ -101,8 +102,8 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.items.append(item)
 
     def onInit(self):
-        self.ok_button_focused = False
-        self.stop_button_flag = False
+        self.select_button_focused = False
+        self.check_button_flag = True
         self.dialog_closed = False
         self.start_time = None
         self.selected = None
@@ -115,53 +116,55 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         self.elapsed_label = self.getControl(self.elapsed_label_id)
         self.progress_label = self.getControl(self.progress_label_id)
         
-        self.ok_button = self.getControl(self.ok_button_id)
-        self._toggle_ok_action()
+        self.select_button = self.getControl(self.select_button_id)
+        self._toggle_select_action()
 
-        self.stop_button = self.getControl(self.stop_button_id)
+        self.check_button = self.getControl(self.check_button_id)
         self.left_image = self.getControl(self.left_image_id)
         self.left_label = self.getControl(self.left_label_id)
 
-        if not self.posterdata:
-            self.left_image.setImage(platform.addonPoster())
-            self.left_label.setLabel('')
-        elif self.posterdata.startswith('poster://'):
-            self.left_image.setImage(self.posterdata[9:])
+        if self.poster_image:
+            self.left_image.setImage(self.poster_image)
             self.left_label.setLabel('')
         else:
             self.left_image.setImage(platform.addonPoster())
-            self.left_label.setLabel(self.posterdata)
+            self.left_label.setLabel(self.source_name)
 
         self.updateDialog()
 
-        if not self.thread:
+        if not self.thread and self.sources_generator:
             self.thread = workers.Thread(self.sources_worker)
             self.thread.start()
 
     def onClick(self, controlID):
-        log.notice('onClick: %s'%controlID)
-        if controlID == self.sources_list_id:               # Selected source: looks for it...
+        log.debug('onClick: %s'%controlID)
+        if controlID == self.sources_list_id:
             selected = self.sources_list.getSelectedItem()
-        elif controlID == self.ok_button_id:        # OK button: looks for the best source...
+        elif controlID == self.select_button_id:
             selected = self.sources_list.getListItem(0)
-        elif controlID == self.cancel_button_id:    # Cancel button: close without any selection
+        elif controlID == self.cancel_button_id:
             self.close()
             return
-        elif controlID == self.stop_button_id:
-            self.stop_button_flag = True
+        elif controlID == self.check_button_id:
+            if not self.thread:
+                self.thread = workers.Thread(self.sources_worker)
+                self.thread.start()
+            else:
+                self.check_button_flag = False
             return
         else:
             return
         while not selected.getProperty('url'):
             xbmc.executebuiltin('ActivateWindow(busydialog)')
             self.resolver(selected)
-            if selected.getProperty('url'):         # Found a good source: close with the selected item
+            if selected.getProperty('url'):
                 break
-            self.updateDialog()                     # No more sources: close without any selection
-            if controlID == self.ok_button_id:      # Failed source; looks for the next best source...
+            self.updateDialog()
+            if controlID == self.select_button_id:
                 selected = self.sources_list.getListItem(0)
-            else:                                   # Failed source; notify that it was not good
-                xbmcgui.Dialog().notification(platform.addonInfo('name'), 'Source not valid', platform.addonIcon(), 3000, sound=False)
+            else:
+                xbmcgui.Dialog().notification(platform.addonInfo('name'), _('Source not valid'),
+                                              platform.addonIcon(), 3000, sound=False)
                 xbmc.executebuiltin('Dialog.Close(busydialog)')
                 return
         xbmc.executebuiltin('Dialog.Close(busydialog)')
@@ -171,53 +174,55 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
     def onAction(self, action):
         focus_id = self.getFocusId()
         if focus_id == self.sources_list_id:
-            # Show on the bottom label the source info (e.g title quality, etc)
             self.info_label.setLabel(self.sources_list.getSelectedItem().getProperty('source_info'))
-        elif focus_id == self.ok_button_id:
+        elif focus_id == self.select_button_id:
             if action.getId() == 10:
                 return
             elif action.getId() == 101:
-                self._toggle_ok_action()
+                self._toggle_select_action()
                 return
         xbmcgui.WindowXMLDialog.onAction(self, action)
 
-    def _toggle_ok_action(self):
-        log.notice('onAction: action=%s', self.action)
+    def _toggle_select_action(self):
+        log.debug('onAction: action=%s', self.action)
         if self.action != 'play':
-            self.ok_button.setLabel(_('Play'))
+            self.select_button.setLabel(_('Play'))
             self.action = 'play'
         else:
-            self.ok_button.setLabel(_('Download'))
+            self.select_button.setLabel(_('Download'))
             self.action = 'download'
 
     def onFocus(self, controlID):
-        log.notice('onFocus: %s'%controlID)
-        if controlID == self.ok_button_id:
+        log.debug('onFocus: %s'%controlID)
+        if controlID == self.select_button_id:
             self.sources_list.selectItem(0)
+
+    def userStopped(self):
+        return self.dialog_closed or not self.check_button_flag
 
     def sources_worker(self):
         if self.sources_generator:
-            log.notice('sources.dialog: sources_worker: calling the source generator function')
-            self.updateDialog(title='SEARCHING SOURCES', elapsed_time=True)
+            log.debug('sources.dialog: sources_worker: calling the source generator function')
+            self.updateDialog(title=_('SEARCHING SOURCES'), elapsed_time=True)
             self.sources_generator(self)
             self.sources_generator = None
 
-        log.notice('sources.dialog: sources_worker: %d url listed, %d already processed (OK/KO: %d/%d)'%
-                   (len(self.items),
-                    len([i for i in self.items if i.getProperty('url') or not i.getProperty('source_url')]),
-                    len([i for i in self.items if i.getProperty('url')]),
-                    len([i for i in self.items if not i.getProperty('source_url')])))
+        log.debug('sources.dialog: sources_worker: %d url listed, %d already processed (OK/KO: %d/%d)',
+                  len(self.items),
+                  len([i for i in self.items if i.getProperty('url') or not i.getProperty('source_url')]),
+                  len([i for i in self.items if i.getProperty('url')]),
+                  len([i for i in self.items if not i.getProperty('source_url')]))
 
         if not len(self.items):
-            self.stop_button_flag = True
-            self.updateDialog(title='NO SOURCES'+('' if self.sources_generator else ' FOUND'), elapsed_time=False)
+            self.check_button_flag = False
+            self.updateDialog(title=_('NO SOURCES FOUND'), elapsed_time=False)
             return
 
-        self.updateDialog(title='CHECKING SOURCES', elapsed_time=True)
+        self.updateDialog(title=_('CHECKING SOURCES'), elapsed_time=True)
 
-        self.stop_button_flag = False
         all_sources_resolved = False
-        while not self.dialog_closed and not self.stop_button_flag:
+        self.check_button_flag = True
+        while not self.userStopped():
             all_sources_resolved = True
             for index in range(len(self.items)):
                 try:
@@ -241,24 +246,24 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         else:
             if all_sources_resolved:
                 status = 'CHECKING COMPLETE'
-            elif self.stop_button_flag:
+            elif not self.check_button_flag:
                 status = 'CHECKING STOPPED'
-            self.stop_button_flag = True
-            self.updateDialog(title='SELECT SOURCE', progress=status)
+            self.check_button_flag = False
+            self.updateDialog(title=_('SELECT SOURCE'), progress=status)
 
-        log.notice('sources.dialog: sources_worker stopped (%s): %d url listed, %d processed (OK/KO: %d/%d)'%
-                   (status,
-                    len(self.items),
-                    len([i for i in self.items if i.getProperty('url') or not i.getProperty('source_url')]),
-                    len([i for i in self.items if i.getProperty('url')]),
-                    len([i for i in self.items if not i.getProperty('source_url')])))
+        log.debug('sources.dialog: sources_worker stopped (%s): %d url listed, %d processed (OK/KO: %d/%d)',
+                  status,
+                  len(self.items),
+                  len([i for i in self.items if i.getProperty('url') or not i.getProperty('source_url')]),
+                  len([i for i in self.items if i.getProperty('url')]),
+                  len([i for i in self.items if not i.getProperty('source_url')]))
         self.thread = None
 
     def resolver(self, item):
-        # Ensure that only one thread is resolving
         if not self.source_resolve:
             item.setProperty('url', item.getProperty('source_url'))
             return
+        # Ensure that only one thread is resolving
         with self.resolver_lock:
             provider = item.getProperty('source_provider')
             url = item.getProperty('source_url')
@@ -292,6 +297,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
                     if url.meta.get('width') > 0 and url.meta.get('height') > 0:
                         media_label += ' %sx%s'%(url.meta['width'], url.meta['height'])
                         item.setProperty('resolution', str(url.meta['width']*url.meta['height']))
+                    item.setProperty('format', media_label)
 
                 if hasattr(url, 'size'):
                     size_mb = int(url.size / (1024*1024))
@@ -346,9 +352,15 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
 
         self.counter_label.setLabel('' if len(items_active) <= 10 else '%d'%len(items_active))
 
-        self.ok_button.setEnabled(len(items_active) > 0)
-        if len(items_active) > 0 and not self.ok_button_focused:
-            self.setFocus(self.ok_button)
-            self.ok_button_focused = True
+        self.select_button.setEnabled(len(items_active) > 0)
+        if len(items_active) > 0 and not self.select_button_focused:
+            self.setFocus(self.select_button)
+            self.select_button_focused = True
 
-        self.stop_button.setEnabled(not self.stop_button_flag)
+        if self.check_button_flag:
+            self.check_button.setLabel(_('Stop'))
+            self.check_button.setEnabled(True)
+        else:
+            self.check_button.setLabel(_('Check'))
+            items_2resolve = [i for i in self.items if not i.getProperty('url') and i.getProperty('source_url')]
+            self.check_button.setEnabled(len(items_2resolve) > 0)

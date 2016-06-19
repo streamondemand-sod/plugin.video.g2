@@ -32,8 +32,7 @@
 			<top>45</top>
 			<align>center</align>
 			<aligny>center</aligny>
-			<!-- TODO: localize!!! -->
-			<label>SELECT SOURCE</label>
+			<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
 			<width>430</width>
 			<height>40</height>
 			<font>font30</font>
@@ -130,7 +129,7 @@
 					<height>30</height>
 					<font>font30</font>
 					<textcolor>grey2</textcolor>
-					<label>$INFO[ListItem.Label]</label>
+					<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
 				</control>
 			</itemlayout>
 
@@ -143,13 +142,6 @@
 					<texture>$INFO[ListItem.Icon]</texture>
 					<aspectratio aligny="center">keep</aspectratio>
 				</control>
-				<control type="image">
-					<left>0</left>
-					<top>0</top>
-					<width>740</width>
-					<height>46</height>
-					<texture>listselect_fo.png</texture>
-				</control>
 				<control type="label">
 					<left>110</left>
 					<top>8</top>
@@ -158,7 +150,14 @@
 					<height>30</height>
 					<font>font30</font>
 					<textcolor>grey2</textcolor>
-					<label>$INFO[ListItem.Label]</label>
+					<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>740</width>
+					<height>46</height>
+					<texture>listselect_fo.png</texture>
 				</control>
 			</focusedlayout>
 
@@ -208,12 +207,11 @@
                 <width>210</width>
                 <font>font30</font>
 				<align>center</align>
-				<!-- TODO: localize!!! -->
-			    <label>Play</label>
+			    <label>[CAPITALIZE]$INFO[ListItem.Label][/CAPITALIZE]</label>
 			    <enable>false</enable>
 				<onup>21</onup>
-				<ondown>noop</ondown>
-				<onleft>noop</onleft>
+				<ondown>21</ondown>
+				<onleft>33</onleft>
 				<onright>32</onright>
         </control>
         <control type="button" id="32">
@@ -222,10 +220,9 @@
                 <width>210</width>
                 <font>font30</font>
 				<align>center</align>
-				<!-- TODO: localize!!! -->
-			    <label>Stop</label>
+			    <label>[CAPITALIZE]$INFO[ListItem.Label][/CAPITALIZE]</label>
 				<onup>21</onup>
-				<ondown>noop</ondown>
+				<ondown>21</ondown>
 				<onleft>31</onleft>
 				<onright>33</onright>
         </control>
@@ -238,9 +235,9 @@
 				<!-- TODO: localize!!! -->
 			    <label>Cancel</label>
 				<onup>21</onup>
-				<ondown>noop</ondown>
+				<ondown>21</ondown>
 				<onleft>32</onleft>
-				<onright>noop</onright>
+				<onright>31</onright>
         </control>
 
 	</controls>

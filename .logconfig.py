@@ -6,6 +6,7 @@
     'actions.service': False,
     'ui.directory': False,
     'ui.player': True,
+    'ui.sourcesdialog': True,
     'predb.movies': False,
     'predb.movies.parseDOM': False,
     'metastream.mp4': True,		# Show the MP4 decoding

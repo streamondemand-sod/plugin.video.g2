@@ -23,8 +23,6 @@
 """
 
 
-import os
-import sys
 import urllib
 
 from g2.libraries import platform
@@ -32,10 +30,7 @@ from g2.libraries.language import _
 
 from .lib import ui
 from .lib import downloader
-from . import action
-
-
-_THREAD = int(sys.argv[1])
+from . import action, busyaction
 
 
 @action
@@ -45,14 +40,13 @@ def menu():
     cmd = (_('Refresh'), ':Container.Refresh')
     if not items:
         pass
-
     elif downloader.status():
-        ui.addDirectoryItem('[COLOR red]Stop Downloads[/COLOR]', 'download.stop', 'movies.jpg', None, context=cmd)
-
+        ui.addDirectoryItem('[COLOR red]Stop Downloads[/COLOR]', 'download.stop',
+                            'movies.jpg', None, context=cmd, isFolder=False)
     else:
-        ui.addDirectoryItem('[COLOR FF00b8ff]Start Downloads[/COLOR]', 'download.start', 'movies.jpg', None, context=cmd)
+        ui.addDirectoryItem('[COLOR FF00b8ff]Start Downloads[/COLOR]', 'download.start',
+                            'movies.jpg', None, context=cmd, isFolder=False)
 
-    downloads_path = platform.setting('downloads')
     for i in items:
         percentage, completition_time = downloader.statusItem(i)
         status = ''
@@ -61,40 +55,28 @@ def menu():
             if completition_time:
                 status += ' '+completition_time
             status = '[COLOR FF00b8ff][%s][/COLOR] ' % status
-        ui.addDirectoryItem(status+i['name'],
-                            'sources.playurl&title=%s&url=%s'%(i['name'], os.path.join(downloads_path, i['filename'])),
-                            i['image'], None,
-                            context=(_('Remove from Queue'), 'download.remove&url=%s' % urllib.quote_plus(i['url'])),
-                            isFolder=False)
-
+        ui.addDirectoryItem(status+i['name'], i['url'], i['image'], None,
+                            context=(_('Remove from queue'), 'download.remove&url=%s'%urllib.quote_plus(i['url'])),
+                            isAction=False, isFolder=False)
     ui.endDirectory()
 
 
-@action
+@busyaction()
 def start():
-    ui.execute('Action(Back,10025)')
-    if _THREAD > 0:
-        ui.resolvedPlugin(_THREAD, True, ui.ListItem(path=''))
     platform.property('downloader', True)
     ui.sleep(3000)
-    ui.idle()
     ui.refresh()
 
 
-@action
+@busyaction()
 def stop():
-    ui.execute('Action(Back,10025)')
-    if _THREAD > 0:
-        ui.resolvedPlugin(_THREAD, True, ui.ListItem(path=''))
     platform.property('downloader', False)
     ui.sleep(3000)
-    ui.idle()
     ui.refresh()
 
 
-@action
+@busyaction()
 def remove(url):
     downloader.removeDownload(url)
     ui.sleep(500)
-    ui.idle()
     ui.refresh()

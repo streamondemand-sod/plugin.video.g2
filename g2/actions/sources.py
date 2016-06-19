@@ -22,8 +22,6 @@
 
 import sys
 import json
-import time
-import urllib
 import urlparse
 
 from g2 import pkg
@@ -46,15 +44,12 @@ _RESOLVER_TIMEOUT = 30 # seconds
 
 
 @action
-def playurl(title=None, url=None):
+def playurl(title=None, url=None, resolved=None):
     try:
         if not url:
             return
 
-        # (fixme) need to find a more portable way to identify a file steaming...
-        if url.startswith('/'):
-            pass
-        else:
+        if not resolved:
             ui.busydialog()
             def ui_cancel():
                 ui.sleep(1000)
@@ -71,6 +66,7 @@ def playurl(title=None, url=None):
 
             url = thd.result
 
+        # (fixme) for providers' url, the credits dialog should be displayed...
         ui.Player().run(title, None, None, None, None, None, None, url)
 
     except Exception as ex:
@@ -80,46 +76,41 @@ def playurl(title=None, url=None):
 
 @action
 def dialog(title=None, year=None, imdb='0', tmdb='0', tvdb='0', meta=None, **kwargs):
-    metadata = json.loads(meta)
-
     try:
-        ui.idle()
+        metadata = json.loads(meta)
 
         if not ui.infoLabel('Container.FolderPath').startswith('plugin://'):
             ui.PlayList.clear()
 
         ui.execute('Action(Back,10025)')
 
-        if imdb == '0':
-            imdb = '0000000'
-        imdb = 'tt' + imdb.translate(None, 't')
+        imdb = 'tt%07d'%int(imdb.translate(None, 't'))
         content = 'movie'
         name = '%s (%s)'%(title, year)
 
         def sources_generator(self):
             def ui_addsources(progress, total, new_results):
-                self.addItems(_sources_label(new_results, index=len(self.items)))
+                self.addItems(_sources_label(new_results))
                 self.updateDialog(progress=(progress, total))
-                stop_searching = self.dialog_closed or self.stop_button_flag
-                if not stop_searching:
+                if not self.userStopped():
                     ui.sleep(1000)
-                return not stop_searching
+                return not self.userStopped()
 
             providers.video_sources(ui_addsources, content,
                                     title=title, year=year, imdb=imdb, tmdb=tmdb, tvdb=tvdb, meta=meta, **kwargs)
 
         poster = metadata.get('poster', '0')
-        if poster != '0':
-            posterdata = 'poster://'+poster
-        else:
+        if poster == '0':
             poster = platform.addonPoster()
-            posterdata = name
 
         win = ui.SourcesDialog('SourcesDialog.xml', platform.addonPath, 'Default', '720p',
+                               sourceName=name,
                                sourcesGenerator=sources_generator,
                                sourcePriority=_source_priority,
                                sourceResolve=_resolve,
-                               posterData=posterdata)
+                               posterImage=poster)
+
+        ui.idle()
 
         # (fixme)[code]: make a ui that is simply called ui.resolvedPlugin()
         if _thread > 0:
@@ -128,24 +119,34 @@ def dialog(title=None, year=None, imdb='0', tmdb='0', tvdb='0', meta=None, **kwa
         while True:
             win.doModal()
 
-            # User-abort
             item = win.selected
             if not item:
                 break
-
             url = item.getProperty('url')
 
             if win.action == 'play':
-                player_status = ui.Player().run(title, year, None, None, imdb, tvdb, meta, url,
-                                                credits=_credits_message(item.getProperty('source_provider'),
-                                                                         item.getProperty('source_host'),
-                                                                         item.getProperty('type')))
+
+                credits_message = [
+                    m.format(
+                        provider=item.getProperty('source_provider').split('.')[-1],
+                        host=item.getProperty('source_host'),
+                        media_format=item.getProperty('format') or '???',
+                    ) for m in [
+                        _('[B]~*~ Credits ~*~[/B]'),
+                        _('Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]'),
+                        _('Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]'),
+                        _('Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]'),
+                    ]]
+                credits_message += [_('Content loaded in {elapsed_time} seconds')]
+
+                player_status = ui.Player().run(title, year, None, None, imdb, tvdb, meta, url, credits=credits_message)
                 if player_status > 10:
                     break
                 if player_status < 0:
                     log.notice('{m}.{f}: %s: %s: invalid source', name, url)
                     source = item.getLabel()
                     ui.infoDialog(_('Not a valid stream'), heading=source)
+                    ui.sleep(2000)
                     item.setProperty('source_url', '')
                     item.setProperty('url', '')
 
@@ -168,8 +169,6 @@ def dialog(title=None, year=None, imdb='0', tmdb='0', tvdb='0', meta=None, **kwa
                     else:
                         ui.infoDialog(_('Item already in the download queue'), name)
 
-            ui.sleep(2000)
-
             win.show()
 
         del win
@@ -181,40 +180,24 @@ def dialog(title=None, year=None, imdb='0', tmdb='0', tvdb='0', meta=None, **kwa
 
 @action
 def clearsourcescache(name, **kwargs):
-    ui.busydialog()
     if name and providers.clear_sources_cache(**kwargs):
         ui.infoDialog(_('Cache cleared for %s')%name)
-    ui.idle()
 
 
-def _credits_message(provider, host, media_format):
-    return [
-        '[B]~*~ Credits ~*~[/B]',
-        'Source provided by [B]%s[/B]'%provider.split('.')[-1].upper(),
-        'Content hosted by [COLOR orange]%s[/COLOR]'%host.upper(),
-        '%sLoaded in {elapsed_time} seconds'%('' if not media_format else
-                                              'Format is [COLOR FF009933]%s[/COLOR]; '%media_format.upper()),
-    ]
+def _sources_label(sources):
+    provider_index = -1
+    provider_label = ''
+    for i, source in enumerate(sources):
+        provider = source['provider'].split('.')[-1].lower()
+        if provider_index < 0 or provider != provider_label:
+            provider_index = i
+            provider_label = provider
 
+        label = ''
+        label += ('[B][I]%s[/I][/B]' if source['quality'] in ['1080p', 'HD'] else '[I]%s[/I]')%source['quality']
+        label += '  | [B]%s #%s[/B] | %s'%(provider, i-provider_index+1, source['source'])
 
-def _sources_label(sources, index=0):
-    for source in sources:
-        index += 1
-
-        host = source['source'].lower()
-        provider = source['provider'].split('.')[-1]
-        quality = source['quality']
-
-        label = '%02d' % index
-
-        if quality in ['1080p', 'HD']:
-            label += ' | [B][I]%s [/I][/B]' % (quality)
-        else:
-            label += ' | [I]%s [/I]' % (quality)
-
-        label += ' | [B]%s[/B] | %s' % (provider, host)
-
-        source['label'] = label.upper()
+        source['label'] = label
     return sources
 
 
