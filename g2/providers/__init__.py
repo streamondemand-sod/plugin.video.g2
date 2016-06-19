@@ -60,7 +60,7 @@ def info(force=False):
             nfo = [nfo]
         for i in nfo:
             if 'content' not in i:
-                i['content'] = content
+                i['content'] = list(content)
         return nfo
 
     return pkg.info(__name__, source_info, force)
