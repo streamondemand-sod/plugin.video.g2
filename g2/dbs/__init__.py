@@ -35,9 +35,6 @@ from g2.libraries import cache
 from g2.libraries import platform
 
 
-# _log_debug = True
-# _log_trace_on_error = True
-
 # (fixme) move in g2.defs
 DEFAULT_PACKAGE_PRIORITY = 10
 # (fixme) move in g2.defs

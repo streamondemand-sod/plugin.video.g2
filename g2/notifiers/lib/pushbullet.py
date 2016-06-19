@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-    Thanks to Azelphur@GitHub (irc.azelphur.com #azelphur)
+    Thanks to Azelphur@GitHub (irc.azelphur.com #azelphur) for the original code
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,10 +28,7 @@ from g2.libraries import log
 from .ws4py.client.threadedclient import WebSocketClient
 
 
-# _log_debug = True
-
-
-_HOST = "https://api.pushbullet.com/v2/"
+_BASE_URL = "https://api.pushbullet.com/v2/"
 _WSS_REALTIME_EVENTS_STREAM = "wss://stream.pushbullet.com/websocket/"
 
 
@@ -83,7 +80,7 @@ class PushBullet:
             params = post
             post = None
 
-        url = urlparse.urljoin(_HOST, path)
+        url = urlparse.urljoin(_BASE_URL, path)
 
         log.debug('{m}.{f}: %s%s %s post=%s, params=%s', '(session) ' if self.reqsess else '', method, url, post, params)
         reqobj = self.reqsess if self.reqsess else requests
@@ -98,8 +95,8 @@ class PushBullet:
 
 
     def addDevice(self, device_name):
-        """ Push a note
-            https://docs.pushbullet.com/v2/pushes
+        """ Add a device
+            https://docs.pushbullet.com/v2/devices
 
             Arguments:
             device_name -- Human readable name for device
@@ -219,64 +216,6 @@ class PushBullet:
                 iden[0:] = [push['iden']]
         return push
 
-    # def pushFile(self, recipient, file_name, body, file, file_type=None, recipient_type="device_iden"):
-    #     """ Push a file
-    #         https://docs.pushbullet.com/v2/pushes
-    #         https://docs.pushbullet.com/v2/upload-request
-
-    #         Arguments:
-    #         recipient -- a recipient
-    #         file_name -- name of the file
-    #         file -- a file object
-    #         file_type -- file mimetype, if not set, python-magic will be used
-    #         recipient_type -- a type of recipient (device, email, channel or client)
-    #     """
-
-    #     if not file_type:
-    #         try:
-    #             import magic
-    #         except ImportError:
-    #             raise Exception("No file_type given and python-magic isn't installed")
-
-    #         # Unfortunately there's two libraries called magic, both of which do
-    #         # the exact same thing but have different conventions for doing so
-    #         if hasattr(magic, "from_buffer"):
-    #             file_type = magic.from_buffer(file.read(1024))
-    #         else:
-    #             _magic = magic.open(magic.MIME_TYPE)
-    #             _magic.compile(None)
-
-    #             file_type = _magic.file(file_name)
-
-    #             _magic.close()
-
-    #         file.seek(0)
-
-    #     data = {"file_name": file_name,
-    #             "file_type": file_type}
-
-    #     upload_request = self._request("GET",
-    #                                    "upload-request",
-    #                                    None,
-    #                                    data)
-
-    #     upload = requests.post(upload_request["upload_url"],
-    #                            data=upload_request["data"],
-    #                            files={"file": file},
-    #                            headers={"User-Agent": "pyPushBullet"})
-
-    #     upload.raise_for_status()
-
-    #     data = {"type": "file",
-    #             "file_name": file_name,
-    #             "file_type": file_type,
-    #             "file_url": upload_request["file_url"],
-    #             "body": body}
-				
-    #     data[recipient_type] = recipient
-
-    #     return self._request("POST", "pushes", data)
-
     def getPushHistory(self, modified_after=0, cursor=None, active=True):
         """ Get Push History
             https://docs.pushbullet.com/v2/pushes
@@ -315,23 +254,6 @@ class PushBullet:
         """
         return self._request("DELETE", "pushes/" + push_iden)
 
-    def getContacts(self):
-        """ Gets your contacts
-            https://docs.pushbullet.com/v2/contacts
-
-            returns a list of contacts
-        """
-        return self._request("GET", "contacts")["contacts"]
-
-    def deleteContact(self, contact_iden):
-        """ Delete a contact
-            https://docs.pushbullet.com/v2/contacts
-
-            Arguments:
-            contact_iden -- the iden of the contact to delete
-        """
-        return self._request("DELETE", "contacts/" + contact_iden)
-
     def getUser(self):
         """ Get this users information
             https://docs.pushbullet.com/v2/users
@@ -339,9 +261,9 @@ class PushBullet:
         return self._request("GET", "users/me")
 
     def start_events_handling(self, callback, evfilter=None, modified=0):
-        """Start the thread for handling the pb events
-        - Monitor the websocket real time events
-        - Pull the push history and give the new events to the callback
+        """ Start the thread for handling the pb events
+            - Monitor the websocket real time events
+            - Pull the push history and give the new events to the callback
         """
         self.callback = callback
         self.evfilter = set() if not evfilter else set(evfilter)
@@ -395,12 +317,6 @@ class PushBullet:
                 if pushes is None:
                     break
                 log.debug('{m}.{f}: got %d pushes', len(pushes['pushes']))
-                # NOTE: this is not perfectly compliant to the API since other active pushes
-                # might be returned in the following pages, but it optimize the pull in case
-                # no older push is left around. Need to be double checked with pushbullet!!!
-                # BTW, wondering when they purge the db of deleted/dismissed pushes?!?
-                # if not len(pushes['pushes']):
-                #     break
                 self.callback(pushes['pushes'], 'pushes')
                 if 'cursor' in pushes:
                     cursor = pushes['cursor']

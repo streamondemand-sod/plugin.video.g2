@@ -35,8 +35,6 @@ from g2.libraries import platform
 from g2.libraries import language
 
 
-# _log_debug = True
-
 # (fixme) move in defs
 DEFAULT_PACKAGE_PRIORITY = 10
 

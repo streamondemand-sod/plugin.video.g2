@@ -27,16 +27,12 @@ from g2.libraries import platform
 from .lib.pushbullet import PushBullet
 
 
-# _log_debug = True
-
-
 INFO = {
     'methods': ['notices', 'events'],
     'target': 'remote',
 }
 
 _PB = PushBullet(platform.setting('pushbullet_apikey'), user_agent=platform.addonInfo('id'))
-
 
 # (fixme) add an enabled() method that returns True only if the auth key has been validated!
 # The enabled method also determine if the INFO should be defined or not.
