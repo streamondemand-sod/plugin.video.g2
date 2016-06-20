@@ -98,6 +98,7 @@ def resolve(kind=None, **kwargs):
 
 
 def movies(url):
+    url, timeout = url.split('|')[0:2]
     query = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))
     query.update({'extended': 'full,images'})
     query = (urllib.urlencode(query)).replace('%2C', ',')
@@ -116,7 +117,7 @@ def movies(url):
         query = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))
         query.update({'page': page})
         query = (urllib.urlencode(query)).replace('%2C', ',')
-        next_url = url.replace('?' + urlparse.urlparse(url).query, '') + '?' + query
+        next_url = url.replace('?' + urlparse.urlparse(url).query, '') + '?' + query + ('' if not timeout else '|'+timeout)
         next_url = next_url.encode('utf-8')
         next_page = page
     except Exception as ex:
@@ -269,6 +270,7 @@ def movies(url):
 
 
 def lists(url):
+    url = url.split('|')[0]
     res = _traktreq(url)
     res = res.json()
 

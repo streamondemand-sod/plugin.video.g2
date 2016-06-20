@@ -40,10 +40,10 @@ _URLS = {
     'lists{imdb_user_id}': '/user/{imdb_user_id}/lists|168',
     'movies{imdb_user_id}{imdb_list_id}': ('/list/{imdb_list_id}/?view=detail&sort=title:asc&'
                                            'title_type=feature,short,tv_movie,tv_special,video,documentary,game&start=1|168'),
-    'movies_boxoffice{}': ('/search/title?title_type=feature,tv_movie&sort=boxoffice_gross_us,desc&count=%d|168'%
+    'movies_boxoffice{}': ('/search/title?title_type=feature,tv_movie&sort=boxoffice_gross_us,desc&start=1&count=%d|168'%
                            _IMDB_PAGE_COUNT),
     'movies_oscar{}': ('/search/title?title_type=feature,tv_movie&groups=oscar_best_picture_winners&'
-                       'sort=year,desc&count=%d|720'%
+                       'sort=year,desc&start=1&count=%d|720'%
                        _IMDB_PAGE_COUNT),
 }
 
@@ -61,6 +61,7 @@ def resolve(kind=None, **kwargs):
 
 
 def movies(url):
+    url, timeout = url.split('|')[0:2]
     result = client.get(url).content
     result = result.decode('iso-8859-1').encode('utf-8')
     results = client.parseDOM(result, 'tr', attrs={'class': '.+?'})
@@ -70,20 +71,38 @@ def movies(url):
 
     max_pages = 0
     try:
-        try:
-            max_pages = client.parseDOM(result, 'div', attrs={'id': 'left'})[0]
-            max_pages = max_pages.translate({ord(u','):None, ord(u'.'): None})
-            max_pages = int(int(re.search(r'of (\d+)', max_pages).group(1))/_IMDB_PAGE_COUNT+.5)
-        except Exception:
-            max_pages = 0
-        next_url = client.parseDOM(result, 'span', attrs={'class': 'pagination'})[0]
-        next_url = client.parseDOM(next_url, 'a', ret='href')[-1]
+        next_url = client.parseDOM(result, 'span', attrs={'class': 'pagination'})
+        if next_url:
+            try:
+                max_pages = client.parseDOM(result, 'div', attrs={'id': 'left'})[0]
+                max_pages = max_pages.translate({ord(u','):None, ord(u'.'): None})
+                max_pages = int(int(re.search(r'of (\d+)', max_pages).group(1))/_IMDB_PAGE_COUNT+.5)
+            except Exception:
+                max_pages = 0
+            items_per_page = _IMDB_PAGE_COUNT
+        else:
+            next_url = client.parseDOM(result, 'div', attrs={'class': 'pagination'})
+            try:
+                max_pages = int(re.search(r'of (\d+)', next_url[0]).group(1))
+            except Exception:
+                max_pages = 0
+            items_per_page = 100
+
+        next_url = client.parseDOM(next_url[0], 'a', ret='href')[-1]
         next_url = url.replace(urlparse.urlparse(url).query, urlparse.urlparse(next_url).query)
-        next_url = client.replaceHTMLCodes(next_url)
+        next_url = client.replaceHTMLCodes(next_url) + ('' if not timeout else '|'+timeout)
         next_url = next_url.encode('utf-8')
-        next_page = (int(re.search(r'&start=(\d+)', next_url).group(1))-1)/_IMDB_PAGE_COUNT + 1
+
+        curr_items = int(re.search(r'[&?]start=(\d+)', url).group(1))
+        next_items = int(re.search(r'[&?]start=(\d+)', next_url).group(1))
+
+        if next_items <= curr_items:
+            raise Exception('last page reached')
+
+        next_page = (next_items-1) / items_per_page + 1
         if max_pages and next_page > max_pages:
             raise Exception('last page reached')
+
     except Exception as ex:
         log.debug('{m}.{f}: %s: %s', url.replace(_BASE_URL, ''), repr(ex))
         next_url = ''
@@ -95,10 +114,14 @@ def movies(url):
     items = []
     for item in results:
         try:
-            try: title = client.parseDOM(item, 'a')[1]
-            except: pass
-            try: title = client.parseDOM(item, 'a', attrs={'onclick': '.+?'})[-1]
-            except: pass
+            try:
+                title = client.parseDOM(item, 'a')[1]
+            except Exception:
+                pass
+            try:
+                title = client.parseDOM(item, 'a', attrs={'onclick': '.+?'})[-1]
+            except Exception:
+                pass
             title = client.replaceHTMLCodes(title)
             title = title.encode('utf-8')
 
@@ -107,8 +130,10 @@ def movies(url):
             year = year.encode('utf-8')
 
             name = '%s (%s)' % (title, year)
-            try: name = name.encode('utf-8')
-            except: pass
+            try:
+                name = name.encode('utf-8')
+            except Exception:
+                pass
 
             imdb = client.parseDOM(item, 'a', ret='href')[0]
             imdb = 'tt' + re.sub('[^0-9]', '', imdb.rsplit('tt', 1)[-1])
@@ -232,6 +257,7 @@ def movies(url):
 
 
 def lists(url):
+    url = url.split('|')[0]
     result = client.get(url).content
     result = result.decode('iso-8859-1').encode('utf-8')
     results = client.parseDOM(result, 'div', attrs={'class': 'list-preview .*?'})

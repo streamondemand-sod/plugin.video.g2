@@ -92,12 +92,13 @@ def resolve(kind=None, **kwargs):
 
 
 def movies(url):
+    url, timeout = url.split('|')[0:2]
     result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
     results = result['results']
 
     log.debug('{m}.{f}: %s: %d movies', url.replace(_BASE_URL, ''), len(results))
 
-    next_url, next_page, max_pages = _tmdb_next_item(url, result)
+    next_url, next_page, max_pages = _tmdb_next_item(url, timeout, result)
 
     items = []
     for i, item in enumerate(results):
@@ -111,8 +112,10 @@ def movies(url):
             year = year.encode('utf-8')
 
             name = '%s (%s)' % (title, year)
-            try: name = name.encode('utf-8')
-            except: pass
+            try:
+                name = name.encode('utf-8')
+            except Exception:
+                pass
 
             tmdb = item['id']
             tmdb = re.sub('[^0-9]', '', str(tmdb))
@@ -124,33 +127,44 @@ def movies(url):
                 poster = poster.encode('utf-8')
 
             fanart = item['backdrop_path']
-            if fanart == '' or fanart == None: fanart = '0'
-            if not fanart == '0': fanart = '%s%s' % (_TMDB_IMAGE, fanart)
+            if not fanart:
+                fanart = '0'
+            if fanart != '0':
+                fanart = '%s%s' % (_TMDB_IMAGE, fanart)
             fanart = fanart.encode('utf-8')
 
             premiered = item['release_date']
-            try: premiered = re.compile(r'(\d{4}-\d{2}-\d{2})').findall(premiered)[0]
-            except: premiered = '0'
+            try:
+                premiered = re.compile(r'(\d{4}-\d{2}-\d{2})').findall(premiered)[0]
+            except Exception:
+                premiered = '0'
             premiered = premiered.encode('utf-8')
 
             rating = str(item['vote_average'])
-            if rating == '' or rating == None: rating = '0'
+            if not rating:
+                rating = '0'
             rating = rating.encode('utf-8')
 
             votes = str(item['vote_count'])
-            try: votes = str(format(int(votes),',d'))
-            except: pass
-            if votes == '' or votes == None: votes = '0'
+            try:
+                votes = str(format(int(votes), ',d'))
+            except Exception:
+                pass
+            if not votes:
+                votes = '0'
             votes = votes.encode('utf-8')
 
             plot = item['overview']
-            if plot == '' or plot == None: plot = '0'
+            if not plot:
+                plot = '0'
             plot = client.replaceHTMLCodes(plot)
             plot = plot.encode('utf-8')
 
             tagline = re.compile(r'[.!?][\s]{1,2}(?=[A-Z])').split(plot)[0]
-            try: tagline = tagline.encode('utf-8')
-            except: pass
+            try:
+                tagline = tagline.encode('utf-8')
+            except Exception:
+                pass
 
             items.append({
                 'title': title,
@@ -195,155 +209,227 @@ def meta(metas):
 
 
 def _meta_worker(meta):
-    url = meta['url']
+    url = meta['url'].split('|')[0]
     result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1), timeout=10).json()
 
     log.debug('{m}.{f}: %s: %s', url.replace(_BASE_URL, ''), result)
 
     item = {}
 
+    # (fixme) really really repetitive code...
     title = result.get('title', '')
     title = client.replaceHTMLCodes(title)
     title = title.encode('utf-8')
     if title:
         item.update({'title': title})
 
-    year = result['release_date']
+    year = result.get('release_date', '')
     try:
         # Update the release date with the local release date if existing
         for localrel in result['releases']['countries']:
             if localrel['iso_3166_1'].lower() == _INFO_LANG:
-                year = localrel['release_date']
-                break
+                localyear = localrel.get('release_date')
+                if localyear:
+                    year = localyear
+                    break
     except Exception:
         pass
-    year = re.compile(r'(\d{4})').findall(year)[-1]
+    try:
+        year = re.compile(r'(\d{4})').findall(year)[-1]
+    except Exception:
+        year = ''
     year = year.encode('utf-8')
     if year:
         item.update({'year': year})
 
-    name = '%s (%s)' % (title, year)
-    try: name = name.encode('utf-8')
-    except: pass
-    if name: item.update({'name': name})
+    name = title if not year else '%s (%s)'%(title, year)
+    try:
+        name = name.encode('utf-8')
+    except Exception:
+        pass
+    if name:
+        item.update({'name': name})
 
-    tmdb = result['id']
-    if tmdb == '' or tmdb == None: tmdb = '0'
+    tmdb = result.get('id')
+    if not tmdb:
+        tmdb = '0'
     tmdb = re.sub('[^0-9]', '', str(tmdb))
     tmdb = tmdb.encode('utf-8')
-    if not tmdb == '0': item.update({'tmdb': tmdb})
+    if tmdb != '0':
+        item.update({'tmdb': tmdb})
 
-    imdb = result['imdb_id']
-    if imdb == '' or imdb == None: imdb = '0'
-    if not imdb == '0': imdb = 'tt' + re.sub('[^0-9]', '', str(imdb))
+    imdb = result.get('imdb_id')
+    if not imdb:
+        imdb = '0'
+    if imdb != '0':
+        imdb = 'tt%07d'%int(str(imdb).translate(None, 't'))
     imdb = imdb.encode('utf-8')
-    if not imdb == '0': item.update({'imdb': imdb, 'code': imdb})
+    if imdb != '0':
+        item.update({'imdb': imdb, 'code': imdb})
 
-    poster = result['poster_path']
-    if poster == '' or poster == None: poster = '0'
-    if not poster == '0': poster = '%s%s' % (_TMDB_POSTER, poster)
+    poster = result.get('poster_path')
+    if not poster:
+        poster = '0'
+    if poster != '0':
+        poster = '%s%s' % (_TMDB_POSTER, poster)
     poster = poster.encode('utf-8')
-    if not poster == '0': item.update({'poster': poster})
+    if poster != '0':
+        item.update({'poster': poster})
 
-    fanart = result['backdrop_path']
-    if fanart == '' or fanart == None: fanart = '0'
-    if not fanart == '0': fanart = '%s%s' % (_TMDB_IMAGE, fanart)
+    fanart = result.get('backdrop_path')
+    if not fanart:
+        fanart = '0'
+    if fanart != '0':
+        fanart = '%s%s' % (_TMDB_IMAGE, fanart)
     fanart = fanart.encode('utf-8')
-    if not fanart == '0': item.update({'fanart': fanart})
+    if fanart != '0':
+        item.update({'fanart': fanart})
 
-    premiered = result['release_date']
-    try: premiered = re.compile(r'(\d{4}-\d{2}-\d{2})').findall(premiered)[0]
-    except: premiered = '0'
-    if premiered == '' or premiered == None: premiered = '0'
+    premiered = result.get('release_date')
+    try:
+        premiered = re.compile(r'(\d{4}-\d{2}-\d{2})').findall(premiered)[0]
+    except Exception:
+        premiered = '0'
+    if not premiered:
+        premiered = '0'
     premiered = premiered.encode('utf-8')
-    if not premiered == '0': item.update({'premiered': premiered})
+    if premiered != '0':
+        item.update({'premiered': premiered})
 
-    studio = result['production_companies']
-    try: studio = [x['name'] for x in studio][0]
-    except: studio = '0'
-    if studio == '' or studio == None: studio = '0'
+    studio = result.get('production_companies')
+    try:
+        studio = [x['name'] for x in studio][0]
+    except Exception:
+        studio = '0'
+    if not studio:
+        studio = '0'
     studio = studio.encode('utf-8')
-    if not studio == '0': item.update({'studio': studio})
+    if studio != '0':
+        item.update({'studio': studio})
 
-    genre = result['genres']
-    try: genre = [x['name'] for x in genre]
-    except: genre = '0'
-    if genre == '' or genre == None or genre == []: genre = '0'
-    genre = ' / '.join(genre)
+    genre = result.get('genres')
+    try:
+        genre = [x['name'] for x in genre]
+    except Exception:
+        genre = ''
+    genre = '0' if not genre else ' / '.join(genre)
     genre = genre.encode('utf-8')
-    if not genre == '0': item.update({'genre': genre})
+    if genre != '0':
+        item.update({'genre': genre})
 
-    try: duration = str(result['runtime'])
-    except: duration = '0'
-    if duration == '' or duration == None: duration = '0'
+    duration = str(result.get('runtime', 0))
+    if not duration:
+        duration = '0'
     duration = duration.encode('utf-8')
-    if not duration == '0': item.update({'duration': duration})
+    if duration != '0':
+        item.update({'duration': duration})
 
-    rating = str(result['vote_average'])
-    if rating == '' or rating == None: rating = '0'
+    rating = str(result.get('vote_average', 0))
+    if not rating:
+        rating = '0'
     rating = rating.encode('utf-8')
-    if not rating == '0': item.update({'rating': rating})
+    if rating != '0':
+        item.update({'rating': rating})
 
-    votes = str(result['vote_count'])
-    try: votes = str(format(int(votes),',d'))
-    except: pass
-    if votes == '' or votes == None: votes = '0'
+    votes = str(result.get('vote_count', 0))
+    try:
+        votes = str(format(int(votes), ',d'))
+    except Exception:
+        pass
+    if not votes:
+        votes = '0'
     votes = votes.encode('utf-8')
-    if not votes == '0': item.update({'votes': votes})
+    if votes != '0':
+        item.update({'votes': votes})
 
-    mpaa = result['releases']['countries']
-    try: mpaa = [x for x in mpaa if not x['certification'] == '']
-    except: mpaa = '0'
-    try: mpaa = ([x for x in mpaa if x['iso_3166_1'].encode('utf-8') == 'US'] + [x for x in mpaa if not x['iso_3166_1'].encode('utf-8') == 'US'])[0]['certification']
-    except: mpaa = '0'
-    mpaa = mpaa.encode('utf-8')
-    if not mpaa == '0': item.update({'mpaa': mpaa})
+    try:
+        mpaa = result['releases']['countries']
+        try:
+            mpaa = [x for x in mpaa if not x['certification'] == '']
+        except Exception:
+            mpaa = '0'
+        try:
+            mpaa = ([x for x in mpaa if x['iso_3166_1'].encode('utf-8') == 'US'] +
+                    [x for x in mpaa if x['iso_3166_1'].encode('utf-8') != 'US'])[0]['certification']
+        except Exception:
+            mpaa = '0'
+        mpaa = mpaa.encode('utf-8')
+    except Exception:
+        mpaa = '0'
+    if mpaa != '0':
+        item.update({'mpaa': mpaa})
 
-    director = result['credits']['crew']
-    try: director = [x['name'] for x in director if x['job'].encode('utf-8') == 'Director']
-    except: director = '0'
-    if director == '' or director == None or director == []: director = '0'
-    director = ' / '.join(director)
-    director = director.encode('utf-8')
-    if not director == '0': item.update({'director': director})
+    try:
+        director = result['credits']['crew']
+        try:
+            director = [x['name'] for x in director if x['job'].encode('utf-8') == 'Director']
+        except Exception:
+            director = ''
+        director = '0' if not director else ' / '.join(director)
+        director = director.encode('utf-8')
+    except Exception:
+        director = '0'
+    if director != '0':
+        item.update({'director': director})
 
-    writer = result['credits']['crew']
-    try: writer = [x['name'] for x in writer if x['job'].encode('utf-8') in ['Writer', 'Screenplay']]
-    except: writer = '0'
-    try: writer = [x for n,x in enumerate(writer) if x not in writer[:n]]
-    except: writer = '0'
-    if writer == '' or writer == None or writer == []: writer = '0'
-    writer = ' / '.join(writer)
-    writer = writer.encode('utf-8')
-    if not writer == '0': item.update({'writer': writer})
+    try:
+        writer = result['credits']['crew']
+        try:
+            writer = [x['name'] for x in writer if x['job'].encode('utf-8') in ['Writer', 'Screenplay']]
+        except Exception:
+            writer = ''
+        try:
+            writer = [x for n, x in enumerate(writer) if x not in writer[:n]]
+        except Exception:
+            writer = ''
+        writer = '0' if not writer else ' / '.join(writer)
+        writer = writer.encode('utf-8')
+    except Exception:
+        writer = '0'
+    if writer != '0':
+        item.update({'writer': writer})
 
-    cast = result['credits']['cast']
-    try: cast = [(x['name'].encode('utf-8'), x['character'].encode('utf-8')) for x in cast]
-    except: cast = []
-    if len(cast) > 0: item.update({'cast': cast})
+    try:
+        cast = result['credits']['cast']
+        try:
+            cast = [(x['name'].encode('utf-8'), x['character'].encode('utf-8')) for x in cast]
+        except Exception:
+            cast = []
+        if len(cast):
+            item.update({'cast': cast})
+    except Exception:
+        pass
 
-    plot = result['overview']
-    if plot == '' or plot == None: plot = '0'
+    plot = result.get('overview')
+    if not plot:
+        plot = '0'
     plot = plot.encode('utf-8')
-    if not plot == '0': item.update({'plot': plot})
+    if plot != '0':
+        item.update({'plot': plot})
 
-    tagline = result['tagline']
-    if (tagline == '' or tagline == None) and not plot == '0': tagline = re.compile(r'[.!?][\s]{1,2}(?=[A-Z])').split(plot)[0]
-    elif tagline == '' or tagline == None: tagline = '0'
-    try: tagline = tagline.encode('utf-8')
-    except: pass
-    if not tagline == '0': item.update({'tagline': tagline})
+    tagline = result.get('tagline')
+    if not tagline and plot != '0':
+        tagline = re.compile(r'[.!?][\s]{1,2}(?=[A-Z])').split(plot)[0]
+    elif not tagline:
+        tagline = '0'
+    try:
+        tagline = tagline.encode('utf-8')
+    except Exception:
+        pass
+    if tagline != '0':
+        item.update({'tagline': tagline})
 
     meta['item'] = item
 
 
 def persons(url):
+    url, timeout = url.split('|')[0:2]
     result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
     results = result['results']
 
     log.debug('{m}.{f}: %s: %d persons', url.replace(_BASE_URL, ''), len(results))
 
-    next_url, next_page, max_pages = _tmdb_next_item(url, result)
+    next_url, next_page, max_pages = _tmdb_next_item(url, timeout, result)
 
     items = []
     for item in results:
@@ -371,18 +457,19 @@ def persons(url):
     return items
 
 
-def _tmdb_next_item(url, result):
+def _tmdb_next_item(url, timeout, result):
     page = str(result['page'])
     total = str(result['total_pages'])
     if page == total:
         return ('', 0, 0)
     else:
         page = int(page) + 1
-        next_url = '%s&page=%s' % (url.split('&page=', 1)[0], page)
+        next_url = '%s&page=%s%s' % (url.split('&page=', 1)[0], page, '' if not timeout else '|'+timeout)
         return (next_url.encode('utf-8'), page, total)
 
 
 def genres(url):
+    url = url.split('|')[0]
     # For some reason, Finnish, Croatians and Norvegians doesn't like the traslated genre names
     url = re.sub('language=(fi|hr|no)', '', url)
     result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
@@ -412,6 +499,7 @@ def genres(url):
 
 
 def certifications(url, country):
+    url = url.split('|')[0]
     result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
     results = result['certifications'][country]
 

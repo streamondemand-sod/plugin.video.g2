@@ -136,7 +136,7 @@ def _alldbs_method(method, url, urlarg, *args, **kwargs):
             result = _db_method(dbp, method, urlarg, *args, **kwargs)
             log.debug('{m}.%s.%s: %s %s %s: %s'%(dbp['name'], method, urlarg, args, kwargs, result))
         else:
-            urlarg, timeout = urlarg.split('|')[0:2]
+            timeout = urlarg.split('|')[1]
             response_info = {}
             result = cache.get(_db_method, int(timeout)*60, dbp, method, urlarg, *args, response_info=response_info)
             log.debug('{m}.%s.%s: %s %s (timeout=%s): %s%s',
