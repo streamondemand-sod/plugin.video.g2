@@ -31,7 +31,7 @@ from g2.libraries.language import _
 from g2 import dbs
 
 from .lib import ui
-from . import action
+from . import action, busyaction
 
 
 _sysaddon = sys.argv[0]
@@ -181,16 +181,14 @@ def lists(kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', user_id=''
     _add_directory(items, show_genre_line=True)
 
 
-@action
+@busyaction()
 def watched(imdb):
-    ui.busydialog()
     dbs.watched('movie{imdb_id}', True, imdb_id=imdb)
     ui.refresh()
 
 
-@action
+@busyaction()
 def unwatched(imdb):
-    ui.busydialog()
     dbs.watched('movie{imdb_id}', False, imdb_id=imdb)
     ui.refresh()
 
