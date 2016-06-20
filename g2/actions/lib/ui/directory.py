@@ -45,6 +45,7 @@ try:
     _thread_id = int(sys.argv[1])
 except:
     _thread_id = -1
+
 _artPath = platform.artPath()
 _addonFanart = platform.addonFanart()
 
@@ -95,6 +96,7 @@ def endDirectory(next_item=None, content=None, updateListing=False, cacheToDisc=
 
     if content:
         xbmcplugin.setContent(_thread_id, content)
+
     xbmcplugin.endOfDirectory(_thread_id, updateListing=updateListing, cacheToDisc=cacheToDisc)
 
     if viewmode:

@@ -169,7 +169,6 @@ def lists(kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', user_id=''
     items = dbs.lists('lists{%s}'%kind_user_id, **args)
     if not items:
         items = []
-
     for i in items:
         args[kind_list_id] = i[kind_list_id]
         i.update({
@@ -286,7 +285,7 @@ def _add_movie_directory(items):
 
 def _add_directory(items, show_genre_line=False, is_person=False):
     if not items:
-        return
+        items = []
 
     addonPoster = platform.addonPoster()
     addonFanart = platform.addonFanart()
@@ -307,11 +306,7 @@ def _add_directory(items, show_genre_line=False, is_person=False):
             else:
                 thumb = addonThumb
 
-            url = '%s?action=%s' % (_sysaddon, i['action'])
-            try:
-                url += '&url=%s' % urllib.quote_plus(i['url'])
-            except Exception:
-                pass
+            url = '%s?action=%s&url=%s'%(_sysaddon, i['action'], urllib.quote_plus(i['url']))
 
             cmds = []
             if is_person and i.get('id') and platform.condition('System.HasAddon(script.extendedinfo)'):
@@ -340,7 +335,7 @@ def _add_directory(items, show_genre_line=False, is_person=False):
         except Exception as ex:
             log.error('{m}.{f}: %s: %s', i, repr(ex))
 
-    content = 'movie' if show_genre_line else None
+    content = 'movies' if show_genre_line else None
     if len(items) and 'next_action' in items[0]:
         ui.endDirectory(content=content, next_item=items[0])
     else:
