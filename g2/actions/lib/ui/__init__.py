@@ -32,6 +32,8 @@ except Exception:
 from g2.libraries import platform
 
 if _UI == 'xbmc':
+    import sys
+
     _homeWindow = xbmcgui.Window(10000)
     _addon = xbmcaddon.Addon()
 
@@ -52,7 +54,14 @@ if _UI == 'xbmc':
     addItem = xbmcplugin.addDirectoryItem
     setContent = xbmcplugin.setContent
     finishDirectory = xbmcplugin.endOfDirectory
-    resolvedPlugin = xbmcplugin.setResolvedUrl
+
+    def resolvedPlugin():
+        try:
+            thread = int(sys.argv[1])
+            if thread > 0:
+                xbmcplugin.setResolvedUrl(thread, True, xbmcgui.ListItem(path=''))
+        except Exception:
+            pass
 
     def abortRequested():
         return xbmc.abortRequested
@@ -64,7 +73,7 @@ if _UI == 'xbmc':
             xbmc.executebuiltin("Notification(%s,%s, %s, %s)"%(heading, message, time, icon))
 
     def yesnoDialog(line1, line2='', line3='', heading=_addon.getAddonInfo('name'), nolabel='', yeslabel=''):
-        return xbmcgui.Dialog().yesno(heading, line1, line2, line3, nolabel, yeslabel)
+        return xbmcgui.Dialog().yesno(heading, line1, line2, line3, nolabel=nolabel, yeslabel=yeslabel)
 
     def busydialog(stop=False):
         return xbmc.executebuiltin('Dialog.Close(busydialog)' if stop else 'ActivateWindow(busydialog)')
@@ -82,6 +91,5 @@ if _UI == 'xbmc':
         from .player import *
     except Exception as ex:
         xbmc.log(str(ex))
-        pass
 else:
     raise Exception('Unknown host platform')
