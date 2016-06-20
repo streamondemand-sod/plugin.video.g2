@@ -64,8 +64,8 @@ class PushBulletEvents(object):
         elif event_type == 'pushes':
             for push in event_value:
                 log.debug('{m}.{f}: %s: %s', self.recipient, push)
-                if self.recipient and 'target_device_iden' in push and self.recipient != push['target_device_iden']:
-                    pass # ignore the addressed pushes not directed to us or to everybody
+                if self.recipient and push.get('target_device_iden') != self.recipient:
+                    pass # ignore all the pushes but the one addressed to us!
                 elif not push['active']:
                     self.on_push_delete(push)
                 elif push['dismissed']:
