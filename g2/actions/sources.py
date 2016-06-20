@@ -93,7 +93,7 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
         ui.resolvedPlugin()
         ui.execute('Action(Back,10025)')
 
-        imdb = 'tt%07d'%int(imdb.translate(None, 't'))
+        imdb = 'tt%07d'%int(str(imdb).translate(None, 't'))
         name = '%s (%s)'%(title, year)
         content = 'movie'
 
@@ -197,6 +197,7 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
         if not watched:
             watched = True
             dbs.watched('movie{imdb_id}', watched, imdb_id=imdb)
+            ui.refresh()
         return True
 
     elif player_status > 2:
