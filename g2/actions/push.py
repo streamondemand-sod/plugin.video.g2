@@ -88,7 +88,7 @@ def new(push):
                 title = push.get('body', '')
             if not title:
                 title = ''
-            platform.execute('RunPlugin(%s?action=sources.playurl&title=%s&url=%s)'%
+            platform.execute('RunPlugin(%s?action=sources.playurl&name=%s&url=%s)'%
                              (sys.argv[0], urllib.quote_plus(title.encode('utf-8')), urllib.quote_plus(url)))
 
         elif sites[netloc]['type'] == 'addon':

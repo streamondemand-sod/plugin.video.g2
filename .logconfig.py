@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 {
     'actions.actions': True,
+    'actions.sources': True,
     'ui.player': True,
     'ui.sourcesdialog': True,
     'metastream.mp4': True,		# Show the MP4 decoding
 
-    'plugin.video.g2.plugin': False,
     'providers.providers': False,
     'actions.service': False,
     'ui.directory': False,

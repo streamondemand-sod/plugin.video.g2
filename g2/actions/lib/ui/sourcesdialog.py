@@ -136,7 +136,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         if not self.thread:
             self.check_button_flag = False
 
-        self.updateDialog()
+        self.updateDialog(progress='')
 
     def onClick(self, controlID):
         log.debug('onClick: %s'%controlID)
@@ -145,6 +145,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         elif controlID == self.select_button_id:
             selected = self.sources_list.getListItem(0)
         elif controlID == self.cancel_button_id:
+            self.selected = None
             self.close()
             return
         elif controlID == self.check_button_id:

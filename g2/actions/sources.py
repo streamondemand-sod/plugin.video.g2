@@ -19,54 +19,57 @@
 """
 
 
-import sys
 import json
+import hashlib
 import urlparse
+try:
+    from sqlite3 import dbapi2 as database
+except:
+    from pysqlite2 import dbapi2 as database
 
-from g2 import pkg
-from g2 import providers
-from g2 import resolvers
 from g2.libraries import log
 from g2.libraries import workers
 from g2.libraries import platform
 from g2.libraries.language import _
+
+from g2 import pkg
+from g2 import providers
+from g2 import resolvers
+from g2 import dbs
 
 from .lib import ui
 from .lib import downloader
 from . import action
 
 
-_addon = sys.argv[0]
-_thread = int(sys.argv[1])
-
-_RESOLVER_TIMEOUT = 30 # seconds
+# (fixme) move to defs
+RESOLVER_TIMEOUT = 30 # seconds
+# (fixme) move to defs
+WATCHED_THRESHOLD = 90 # %
 
 
 @action
-def playurl(title=None, url=None, resolved=None):
+def playurl(name=None, url=None):
     try:
         if not url:
             return
 
-        if not resolved:
-            ui.busydialog()
-            def ui_cancel():
-                ui.sleep(1000)
-                return not ui.abortRequested()
-            thd = _resolve(None, url, ui_update=ui_cancel)
-            ui.busydialog(stop=True)
+        ui.busydialog()
+        def ui_cancel():
+            ui.sleep(1000)
+            return not ui.abortRequested()
+        thd = _resolve(None, url, ui_update=ui_cancel)
+        ui.busydialog(stop=True)
 
-            if not thd or thd.is_alive():
-                return
+        if not thd or thd.is_alive():
+            return
 
-            if not isinstance(thd.result, basestring):
-                ui.infoDialog(_('Not a valid stream'))
-                return
+        if not isinstance(thd.result, basestring):
+            ui.infoDialog(_('Not a valid stream'))
+            return
 
-            url = thd.result
-
-        # (fixme) for providers' url, the credits dialog should be displayed...
-        ui.Player().run(title, None, None, None, None, None, None, url)
+        url = thd.result
+        ui.Player().run(name, None, None, None, url)
 
     except Exception as ex:
         log.error('{m}.{f}: %s', ex)
@@ -74,18 +77,31 @@ def playurl(title=None, url=None, resolved=None):
 
 
 @action
-def dialog(title=None, year=None, imdb='0', tmdb='0', tvdb='0', meta=None, **kwargs):
+def clearsourcescache(name, **kwargs):
+    if name and providers.clear_sources_cache(**kwargs):
+        ui.infoDialog(_('Cache cleared for %s')%name)
+
+
+@action
+def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
     try:
-        metadata = json.loads(meta)
+        meta = {} if not meta else json.loads(meta)
 
         if not ui.infoLabel('Container.FolderPath').startswith('plugin://'):
             ui.PlayList.clear()
 
+        ui.resolvedPlugin()
         ui.execute('Action(Back,10025)')
 
         imdb = 'tt%07d'%int(imdb.translate(None, 't'))
-        content = 'movie'
         name = '%s (%s)'%(title, year)
+        content = 'movie'
+
+        poster = meta.get('poster', '0')
+        if poster == '0':
+            poster = platform.addonPoster()
+
+        log.debug('{m}.{f}: %s %s: meta:%s', name, imdb, meta)
 
         def sources_generator(self):
             def ui_addsources(progress, total, new_results):
@@ -96,11 +112,7 @@ def dialog(title=None, year=None, imdb='0', tmdb='0', tvdb='0', meta=None, **kwa
                 return not self.userStopped()
 
             providers.video_sources(ui_addsources, content,
-                                    title=title, year=year, imdb=imdb, tmdb=tmdb, tvdb=tvdb, meta=meta, **kwargs)
-
-        poster = metadata.get('poster', '0')
-        if poster == '0':
-            poster = platform.addonPoster()
+                                    title=title, year=year, imdb=imdb, tvdb=tvdb, **kwargs)
 
         win = ui.SourcesDialog('SourcesDialog.xml', platform.addonPath, 'Default', '720p',
                                sourceName=name,
@@ -111,62 +123,19 @@ def dialog(title=None, year=None, imdb='0', tmdb='0', tvdb='0', meta=None, **kwa
 
         ui.idle()
 
-        # (fixme)[code]: make a ui that is simply called ui.resolvedPlugin()
-        if _thread > 0:
-            ui.resolvedPlugin(_thread, True, ui.ListItem(path=''))
-
         while True:
             win.doModal()
 
             item = win.selected
             if not item:
                 break
-            url = item.getProperty('url')
 
             if win.action == 'play':
-
-                credits_message = [
-                    m.format(
-                        provider=item.getProperty('source_provider').split('.')[-1],
-                        host=item.getProperty('source_host'),
-                        media_format=item.getProperty('format') or '???',
-                    ) for m in [
-                        _('[B]~*~ Credits ~*~[/B]'),
-                        _('Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]'),
-                        _('Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]'),
-                        _('Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]'),
-                    ]]
-                credits_message += [_('Content loaded in {elapsed_time} seconds')]
-
-                player_status = ui.Player().run(title, year, None, None, imdb, tvdb, meta, url, credits=credits_message)
-                if player_status > 10:
+                if _play_source(name, imdb, tvdb, meta, item):
                     break
-                if player_status < 0:
-                    log.notice('{m}.{f}: %s: %s: invalid source', name, url)
-                    source = item.getLabel()
-                    ui.infoDialog(_('Not a valid stream'), heading=source)
-                    ui.sleep(2000)
-                    item.setProperty('source_url', '')
-                    item.setProperty('url', '')
 
             elif win.action == 'download':
-                media_format = item.getProperty('type')
-                try:
-                    media_size = int(item.getProperty('size'))
-                except Exception:
-                    media_size = 0
-                rest = item.getProperty('rest') == 'true'
-
-                media_info1 = '' if not media_size else \
-                              _('Complete file is %dMB%s')%(int(media_size/(1024*1024)), ' (r)' if rest else '')
-                media_info2 = '' if not media_format else \
-                              _('Media format is %s')%media_format
-
-                if ui.yesnoDialog(media_info1, media_info2, _('Continue with download?')):
-                    if downloader.addDownload(name, url, media_format, media_size, rest, poster):
-                        ui.infoDialog(_('Item added to download queue'), name)
-                    else:
-                        ui.infoDialog(_('Item already in the download queue'), name)
+                _download_source(name, poster, item)
 
             win.show()
 
@@ -177,10 +146,85 @@ def dialog(title=None, year=None, imdb='0', tmdb='0', tvdb='0', meta=None, **kwa
         ui.infoDialog(_('No stream available'))
 
 
-@action
-def clearsourcescache(name, **kwargs):
-    if name and providers.clear_sources_cache(**kwargs):
-        ui.infoDialog(_('Cache cleared for %s')%name)
+def _play_source(name, imdb, dummy_tvdb, meta, item):
+    url = item.getProperty('url')
+
+    try:
+        offset = _get_bookmark(name, imdb)
+        if offset:
+            minutes, seconds = divmod(float(offset), 60)
+            hours, minutes = divmod(minutes, 60)
+            if not ui.yesnoDialog(heading=_('Resume from %02d:%02d:%02d')%(hours, minutes, seconds),
+                                  line1=name,
+                                  yeslabel=_('Resume'),
+                                  nolabel=_('Start from beginning')):
+                offset = 0
+        log.debug('{m}.{f}: %s %s: bookmark=%d', name, imdb, offset)
+    except Exception as ex:
+        offset = 0
+        log.debug('{m}.{f}: %s %s: %s', name, imdb, repr(ex))
+
+    credits_message = [
+        m.format(
+            provider=item.getProperty('source_provider').split('.')[-1],
+            host=item.getProperty('source_host'),
+            media_format=item.getProperty('format') or '???',
+            elapsed_time='{elapsed_time}',
+        ) for m in [
+            _('~*~ CREDITS ~*~'),
+            name,
+            _('Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]'),
+            _('Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]'),
+            _('Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]'),
+            _('Content loaded in {elapsed_time} seconds'),
+        ]]
+
+    player = ui.Player()
+    player_status = player.run(name, meta, url, offset=offset, info=credits_message)
+
+    _del_bookmark(name, imdb)
+    if player_status < 0:
+        log.notice('{m}.{f}: %s: %s: invalid source', name, url)
+        source = item.getLabel()
+        ui.infoDialog(_('Not a valid stream'), heading=source)
+        ui.sleep(2000)
+        item.setProperty('source_url', '')
+        item.setProperty('url', '')
+
+    elif player_status > WATCHED_THRESHOLD:
+        # (fixme) user setting to sync the watched status w/ each backend
+        watched = dbs.watched('movie{imdb_id}', imdb_id=imdb)
+        if not watched:
+            watched = True
+            dbs.watched('movie{imdb_id}', watched, imdb_id=imdb)
+        return True
+
+    elif player_status > 2:
+        _add_bookmark(player.elapsed(), name, imdb)
+
+    return False
+
+
+def _download_source(name, poster, item):
+    url = item.getProperty('url')
+
+    media_format = item.getProperty('type')
+    try:
+        media_size = int(item.getProperty('size'))
+    except Exception:
+        media_size = 0
+    rest = item.getProperty('rest') == 'true'
+
+    media_info1 = '' if not media_size else _('Complete file is %dMB%s')\
+        %(int(media_size/(1024*1024)), ' (r)' if rest else '')
+    media_info2 = '' if not media_format else _('Media format is %s')\
+        %media_format
+
+    if ui.yesnoDialog(media_info1, media_info2, _('Continue with download?')):
+        if downloader.addDownload(name, url, media_format, media_size, rest, poster):
+            ui.infoDialog(_('Item added to download queue'), name)
+        else:
+            ui.infoDialog(_('Item already in the download queue'), name)
 
 
 def _sources_label(sources):
@@ -193,8 +237,8 @@ def _sources_label(sources):
             provider_label = provider
 
         label = ''
-        label += ('[B][I]%s[/I][/B]' if source['quality'] in ['1080p', 'HD'] else '[I]%s[/I]')%source['quality']
-        label += '  | [B]%s #%s[/B] | %s'%(provider, i-provider_index+1, source['source'])
+        label += ('[B][I]%s [/I][/B]' if source['quality'] in ['1080p', 'HD'] else '[I]%s[/I]')%source['quality']
+        label += ' | [B]%s #%s[/B] | %s'%(provider, i-provider_index+1, source['source'])
 
         source['label'] = label
     return sources
@@ -263,14 +307,14 @@ def _resolve(provider, url, ui_update=None):
         key_open = ui.condition('Window.IsActive(virtualkeyboard)')
         if key_open:
             keyboard_opened = True
-        if (i > _RESOLVER_TIMEOUT and not key_open) or not thd.is_alive():
+        if (i > RESOLVER_TIMEOUT and not key_open) or not thd.is_alive():
             break
         if ui_update and not ui_update():
             ui_cancelled = True
             break
         ui.sleep(500)
 
-    for i in range(_RESOLVER_TIMEOUT):
+    for i in range(RESOLVER_TIMEOUT):
         if keyboard_opened or ui_cancelled or not thd.is_alive():
             break
         if ui_update and not ui_update():
@@ -313,3 +357,47 @@ def _resolve(provider, url, ui_update=None):
     # - keep a statistics of the failed host/domains: total call/success
 
     return None if ui_cancelled else thd
+
+
+def _add_bookmark(bookmarktime, name, imdb):
+    try:
+        idfile = _bookmark_id(name, imdb)
+        platform.makeDir(platform.dataPath)
+        dbcon = database.connect(platform.databaseFile)
+        with dbcon:
+            dbcon.execute("CREATE TABLE IF NOT EXISTS bookmark (idfile TEXT, bookmarktime INTEGER, UNIQUE(idfile))")
+            dbcon.execute("DELETE FROM bookmark WHERE idfile = ?", (idfile,))
+            dbcon.execute("INSERT INTO bookmark Values (?, ?)", (idfile, bookmarktime,))
+    except Exception as ex:
+        log.debug('{m}.{f}: %s: %s', name, repr(ex))
+
+
+def _get_bookmark(name, imdb):
+    try:
+        idfile = _bookmark_id(name, imdb)
+        dbcon = database.connect(platform.databaseFile)
+        dbcon.row_factory = database.Row
+        dbcur = dbcon.execute("SELECT * FROM bookmark WHERE idfile = ?", (idfile,))
+        match = dbcur.fetchone()
+        return match['bookmarktime'] if match else 0
+    except Exception as ex:
+        log.debug('{m}.{f}: %s: %s', name, repr(ex))
+        return 0
+
+
+def _del_bookmark(name, imdb):
+    try:
+        idfile = _bookmark_id(name, imdb)
+        dbcon = database.connect(platform.databaseFile)
+        dbcon.row_factory = database.Row
+        with dbcon:
+            dbcon.execute("DELETE FROM bookmark WHERE idfile = ?", (idfile,))
+    except Exception as ex:
+        log.debug('{m}.{f}: %s: %s', name, repr(ex))
+
+
+def _bookmark_id(name, imdb):
+    idfile = hashlib.md5()
+    idfile.update(name)
+    idfile.update(imdb)
+    return str(idfile.hexdigest())
