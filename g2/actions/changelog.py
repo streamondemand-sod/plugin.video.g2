@@ -21,7 +21,7 @@
 
 
 from g2.libraries import cache
-from g2.libraries import platform
+from g2.libraries import addon
 
 from .lib import ui
 from . import action
@@ -29,14 +29,14 @@ from . import action
 
 @action
 def show():
-    cache.get(_changelog, -1, platform.addonInfo('version'), table='changelog')
+    cache.get(_changelog, -1, addon.addonInfo('version'), table='changelog')
 
 
 def _changelog(version):
-    with open(platform.addonInfo('changelog')) as fil:
+    with open(addon.addonInfo('changelog')) as fil:
         text = fil.read()
 
-    label = '%s - %s'%(platform.addonInfo('name'), version)
+    label = '%s - %s'%(addon.addonInfo('name'), version)
 
     ui.execute('ActivateWindow(10147)')
     ui.sleep(300)

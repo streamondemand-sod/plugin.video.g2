@@ -24,7 +24,7 @@ import os
 import xbmc
 import xbmcvfs
 
-from . import platform
+from . import addon
 
 
 translatePath = xbmc.translatePath
@@ -34,7 +34,7 @@ listDir = xbmcvfs.listdir
 removeDir = xbmcvfs.rmdir
 removeFile = xbmcvfs.delete
 
-PROFILE_PATH = xbmc.translatePath(platform.addonInfo('profile')).decode('utf-8')
+PROFILE_PATH = xbmc.translatePath(addon.addonInfo('profile')).decode('utf-8')
 META_DB_FILENAME = os.path.join(PROFILE_PATH, 'meta.db')
 CACHE_DB_FILENAME = os.path.join(PROFILE_PATH, 'cache.db')
 SETTINGS_DB_FILENAME = os.path.join(PROFILE_PATH, 'settings.db')

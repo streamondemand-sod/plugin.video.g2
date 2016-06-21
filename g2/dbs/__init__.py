@@ -32,13 +32,13 @@ except:
 from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import cache
-from g2.libraries import platform
+from g2.libraries import addon
 
 from g2 import pkg
 from g2 import defs
 
 
-_INFO_LANG = platform.setting('infoLang') or 'en'
+_INFO_LANG = addon.setting('infoLang') or 'en'
 
 
 def info(force=False):

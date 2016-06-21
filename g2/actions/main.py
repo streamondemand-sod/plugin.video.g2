@@ -19,7 +19,7 @@
 """
 
 
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 
 from g2 import providers
@@ -33,7 +33,7 @@ from . import action
 def menu():
     ui.addDirectoryItem(_('Movies'), 'movies.menu', 'movies.jpg', 'DefaultMovies.png')
     ui.addDirectoryItem(_('My Movies'), 'my.menu', 'mygenesis.jpg', 'DefaultVideoPlaylists.png')
-    if platform.setting('movie_widget') != '0':
+    if addon.setting('movie_widget') != '0':
         ui.addDirectoryItem(_('Latest Movies'), 'movies.widget', 'moviesAdded.jpg', 'DefaultRecentlyAddedMovies.png')
     ui.addDirectoryItem(_('Tools'), 'tools.menu', 'tools.jpg', 'DefaultAddonProgram.png')
     if not len(providers.info()) or not len(resolvers.info()):

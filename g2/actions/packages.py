@@ -21,8 +21,8 @@
 
 from g2.libraries import fs
 from g2.libraries import log
+from g2.libraries import addon
 from g2.libraries import client
-from g2.libraries import platform
 from g2.libraries.language import _
 
 from g2 import pkg
@@ -34,7 +34,7 @@ from . import action
 
 @action
 def dialog():
-    addon_dir = fs.translatePath(platform.addonInfo('path'))
+    addon_dir = fs.translatePath(addon.addonInfo('path'))
     win = ui.PackagesDialog('PackagesDialog.xml', addon_dir, 'Default', '720p',
                             onPackageSelected=_manage_package,
                             pkgInstalledStatus=pkg.is_installed)
@@ -118,9 +118,9 @@ def _install_package(site):
 
         missing_addons = []
         mod = getattr(__import__(pkg.PACKAGES_RELATIVE_PATH+kind, globals(), locals(), [name], -1), name)
-        for addon in mod.addons if hasattr(mod, 'addons') and mod.addons else []:
-            if not platform.condition('System.HasAddon(%s)'%addon):
-                missing_addons.append(addon)
+        for addon_id in mod.addons if hasattr(mod, 'addons') and mod.addons else []:
+            if not addon.condition('System.HasAddon(%s)'%addon_id):
+                missing_addons.append(addon_id)
 
         if not missing_addons:
             pkg.kindinfo(kind, refresh=True)

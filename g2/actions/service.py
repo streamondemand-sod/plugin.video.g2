@@ -25,7 +25,7 @@ import xbmc
 
 from g2.libraries import log
 from g2.libraries import workers
-from g2.libraries import platform
+from g2.libraries import addon
 from g2 import notifiers
 
 from .lib import ui
@@ -76,17 +76,17 @@ def monitor(monitorid, kind, callback, *args, **kwargs):
 
 def _get_objectvalue(monitorid, kind):
     if kind == 'setting':
-        return platform.freshsetting(monitorid)
+        return addon.freshsetting(monitorid)
     elif kind == 'property':
-        return platform.property(monitorid)
+        return addon.property(monitorid)
     elif kind == 'player':
         return _player_state(monitorid)
     elif kind == 'service':
         try:
-            value = platform.property(monitorid) + 1
+            value = addon.property(monitorid) + 1
         except Exception:
             value = 1
-        platform.property(monitorid, value)
+        addon.property(monitorid, value)
         return value
 
 
@@ -169,9 +169,9 @@ def _service_thread_cleanup(monitorid):
     _MONITOR_OBJECTS[monitorid]['thread'] = None
     del _THREADS[monitorid]
     if _MONITOR_OBJECTS[monitorid]['kind'] == 'setting':
-        platform.setSetting(monitorid, 'false')
+        addon.setSetting(monitorid, 'false')
     elif _MONITOR_OBJECTS[monitorid]['kind'] == 'property':
-        platform.property(monitorid, False)
+        addon.property(monitorid, False)
 
 
 @action
@@ -183,7 +183,7 @@ def thread(name):
             log.notice('service[%s]: monitored %s %s', name, mobj['id'], mobj['kind'])
 
         _check_changes('service')
-        while not ui.abortRequested() and platform.property('service', name=name):
+        while not ui.abortRequested() and addon.property('service', name=name):
             _check_changes('property')
             _check_changes('player')
 
@@ -214,4 +214,4 @@ def thread(name):
 
     log.notice('service thread[%s] stopped ({t})', name)
 
-    platform.property('service', '', name=name)
+    addon.property('service', '', name=name)

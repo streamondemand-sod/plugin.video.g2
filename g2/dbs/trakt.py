@@ -28,7 +28,7 @@ import urlparse
 from g2.libraries import log
 from g2.libraries import cache
 from g2.libraries import client
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 
 from g2 import defs
@@ -40,7 +40,7 @@ info = {
 }
 
 
-_TRAKT_USER = platform.setting('trakt_user')
+_TRAKT_USER = addon.setting('trakt_user')
 
 _COMMON_POST_VARS = {
     'client_id': defs.TRAKT_CLIENT_ID,
@@ -77,8 +77,8 @@ def resolve(kind=None, **kwargs):
         return None
 
     for key, val in {
-            'trakt_enabled': False if platform.setting('trakt_enabled') == 'false' else True,
-            'trakt_token': platform.setting('trakt.token'),
+            'trakt_enabled': False if addon.setting('trakt_enabled') == 'false' else True,
+            'trakt_token': addon.setting('trakt.token'),
         }.iteritems():
         if key not in kwargs and val:
             kwargs[key] = val
@@ -328,8 +328,8 @@ def _sync_movies(timeout=0):
 def authDevice(ui_update):
     try:
         phase = _('code generation failed')
-        platform.setSetting('trakt.token', '')
-        platform.setSetting('trakt.refresh', '')
+        addon.setSetting('trakt.token', '')
+        addon.setSetting('trakt.refresh', '')
 
         with client.Session(headers=_COMMON_HEADERS) as session:
             res = session.post(urlparse.urljoin(_BASE_URL, '/oauth/device/code'), json=_COMMON_POST_VARS).json()
@@ -365,8 +365,8 @@ def authDevice(ui_update):
 
                 else:
                     tokens = res.json()
-                    platform.setSetting('trakt.token', str(tokens['access_token']))
-                    platform.setSetting('trakt.refresh', str(tokens['refresh_token']))
+                    addon.setSetting('trakt.token', str(tokens['access_token']))
+                    addon.setSetting('trakt.refresh', str(tokens['refresh_token']))
 
                     authorization = {'Authorization': 'Bearer %s'%str(tokens['access_token'])}
 
@@ -387,8 +387,8 @@ def authDevice(ui_update):
 
 def _traktreq(url, post=None, **kwargs):
     with client.Session(headers=_COMMON_HEADERS, **kwargs) as session:
-        token = platform.setting('trakt.token')
-        refresh_token = platform.setting('trakt.refresh')
+        token = addon.setting('trakt.token')
+        refresh_token = addon.setting('trakt.refresh')
 
         if not _TRAKT_USER or not token:
             return session.request(url, json=post, raise_error=True)
@@ -416,8 +416,8 @@ def _traktreq(url, post=None, **kwargs):
         token = str(res['access_token'])
         refresh = str(res['refresh_token'])
 
-        platform.setSetting('trakt.token', token)
-        platform.setSetting('trakt.refresh', refresh)
+        addon.setSetting('trakt.token', token)
+        addon.setSetting('trakt.refresh', refresh)
 
         authorization = {'Authorization': 'Bearer %s'%token}
 

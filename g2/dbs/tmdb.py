@@ -25,7 +25,7 @@ import datetime
 from g2.libraries import log
 from g2.libraries import client
 from g2.libraries import workers
-from g2.libraries import platform
+from g2.libraries import addon
 
 from g2 import defs
 
@@ -35,8 +35,8 @@ info = {
     'methods': ['resolve', 'movies', 'meta', 'persons', 'genres', 'certifications'],
 }
 
-_INFO_LANG = platform.setting('infoLang') or 'en'
-_TMDB_APIKEY = platform.setting('tmdb_apikey') or defs.TMDB_APIKEY
+_INFO_LANG = addon.setting('infoLang') or 'en'
+_TMDB_APIKEY = addon.setting('tmdb_apikey') or defs.TMDB_APIKEY
 _TMDB_IMAGE = 'http://image.tmdb.org/t/p/original/'
 _TMDB_POSTER = 'http://image.tmdb.org/t/p/w500/'
 

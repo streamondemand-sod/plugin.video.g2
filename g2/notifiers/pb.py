@@ -23,7 +23,7 @@ import xbmc
 
 from g2.libraries import log
 from g2.libraries import cache
-from g2.libraries import platform
+from g2.libraries import addon
 from .lib.pushbullet import PushBullet
 
 
@@ -32,7 +32,7 @@ INFO = {
     'target': 'remote',
 }
 
-_PB = PushBullet(platform.setting('pushbullet_apikey'), user_agent=platform.addonInfo('id'))
+_PB = PushBullet(addon.setting('pushbullet_apikey'), user_agent=addon.addonInfo('id'))
 
 
 def notices(notes, playing=None, origin=xbmc.getInfoLabel('System.FriendlyName'), identifier=None, url=None, **kwargs):

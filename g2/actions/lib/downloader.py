@@ -33,7 +33,7 @@ from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import cache
 from g2.libraries import workers
-from g2.libraries import platform
+from g2.libraries import addon
 
 
 _MIN_PERCENTAGE_FOR_COMPLETITION = 99 # %
@@ -70,7 +70,7 @@ def addDownload(name, url, ext, size, resumable, image):
                         }], hash_args=0, table='rel_dl', debug=log.debugactive())
 
     try:
-        filepath = _file_path(fs.translatePath(platform.freshsetting('downloads')), filename)
+        filepath = _file_path(fs.translatePath(addon.freshsetting('downloads')), filename)
         if os.path.exists(filepath):
             fs.removeFile(filepath)
     except Exception as ex:
@@ -96,11 +96,11 @@ def removeDownload(url):
 
 
 def status():
-    return platform.property('downloader', name='filepath')
+    return addon.property('downloader', name='filepath')
 
 
 def statusItem(item):
-    downloads_path = fs.translatePath(platform.freshsetting('downloads'))
+    downloads_path = fs.translatePath(addon.freshsetting('downloads'))
     filepath = _file_path(downloads_path, item['filename'])
     try:
         percentage = 0 if not item['size'] else int(100*os.path.getsize(filepath)/item['size'])
@@ -108,8 +108,8 @@ def statusItem(item):
         percentage = None
 
     completition_time = None \
-        if platform.property('downloader', name='filepath') != _file_path(downloads_path, item['filename']) else \
-                        platform.property('downloader', name='completition_time')
+        if addon.property('downloader', name='filepath') != _file_path(downloads_path, item['filename']) else \
+                        addon.property('downloader', name='completition_time')
 
     return percentage, completition_time
 
@@ -124,7 +124,7 @@ _WORKER_LOCK = workers.Lock()
 def worker():
     this = workers.current_thread()
 
-    downloads_path = fs.translatePath(platform.freshsetting('downloads'))
+    downloads_path = fs.translatePath(addon.freshsetting('downloads'))
     if not downloads_path:
         return log.error('%s aborted: downloads path setting not specified', this.name)
 
@@ -139,7 +139,7 @@ def worker():
 
         for item in items:
             try:
-                platform.property('downloader', '-', name='filepath')
+                addon.property('downloader', '-', name='filepath')
 
                 url = item['url']
                 dest = _file_path(downloads_path, item['filename'])
@@ -187,8 +187,8 @@ def worker():
                         completition_time = str(datetime.timedelta(seconds=completition_time))
                     except Exception:
                         completition_time = '...'
-                    platform.property('downloader', completition_time, name='completition_time')
-                    platform.property('downloader', dest, name='filepath')
+                    addon.property('downloader', completition_time, name='completition_time')
+                    addon.property('downloader', dest, name='filepath')
 
                     # json.loads(json.dumps(unicode(a, 'ISO-8859-1'))).encode('ISO-8859-1')
                     progress = '[%s%%, %s] %s'%(percent, completition_time, unicode(os.path.basename(dest), 'ISO-8859-1'))
@@ -271,7 +271,7 @@ def worker():
             except Exception as ex:
                 log.error('{m}.{f}: %s: %s', os.path.basename(dest), ex)
 
-            platform.property('downloader', '', name='filepath')
+            addon.property('downloader', '', name='filepath')
 
             if this.die:
                 break

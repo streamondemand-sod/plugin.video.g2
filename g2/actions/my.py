@@ -19,7 +19,7 @@
 """
 
 
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 from g2 import dbs
 
@@ -29,9 +29,9 @@ from . import action
 
 @action
 def menu():
-    trakt_user = platform.setting('trakt_user')
-    imdb_user = platform.setting('imdb_user')
-    if not trakt_user or platform.setting('trakt_enabled') != 'true':
+    trakt_user = addon.setting('trakt_user')
+    imdb_user = addon.setting('imdb_user')
+    if not trakt_user or addon.setting('trakt_enabled') != 'true':
         ui.addDirectoryItem(_('Configure your Trakt account'), 'tools.settings&category=1&setting=1',
                             'moviesTraktcollection.jpg', 'DefaultMovies.png')
     else:
@@ -65,7 +65,7 @@ def menu():
                             'movies.lists&kind_user_id=imdb_user_id&kind_list_id=imdb_list_id&user_id=%s'%imdb_user,
                             'movieUserlists.jpg', 'DefaultMovies.png')
 
-    if platform.setting('downloads'):
+    if addon.setting('downloads'):
         ui.addDirectoryItem(_('Downloads'), 'download.menu', 'downloads.jpg', 'DefaultFolder.png')
     else:
         ui.addDirectoryItem(_('Configure the download directory'), 'tools.settings&category=0&setting=5',

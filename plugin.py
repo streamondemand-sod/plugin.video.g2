@@ -31,7 +31,8 @@ for addon_dir in os.listdir(ADDONS_PATH):
     importer.add_path(os.path.join(ADDONS_PATH, addon_dir))
 sys.path_hooks.append(importer.ImpImporterSandbox)
 
-from g2.libraries import platform
+from g2.libraries import addon
+
 from g2 import actions
 
 def main():
@@ -57,15 +58,15 @@ def main():
 
 def service_monitor_setup():
     from g2.actions import service
-    service.monitor('trakt_enabled', 'setting', platform.execute, 'RunPlugin(%s?action=auth.trakt)'%sys.argv[0])
+    service.monitor('trakt_enabled', 'setting', addon.execute, 'RunPlugin(%s?action=auth.trakt)'%sys.argv[0])
 
-    service.monitor('pushbullet_apikey', 'setting', platform.execute, 'RunPlugin(%s?action=auth.pushbullet)'%sys.argv[0])
+    service.monitor('pushbullet_apikey', 'setting', addon.execute, 'RunPlugin(%s?action=auth.pushbullet)'%sys.argv[0])
 
     from g2.libraries import workers
     from g2.actions.lib import downloader
     service.monitor('downloader', 'property', workers.Thread, downloader.worker)
 
-    service.monitor('playing', 'player', platform.execute, 'RunPlugin(%s?action=player.notify)'%sys.argv[0])
+    service.monitor('playing', 'player', addon.execute, 'RunPlugin(%s?action=player.notify)'%sys.argv[0])
 
     from g2 import notifiers
     from g2.actions import push

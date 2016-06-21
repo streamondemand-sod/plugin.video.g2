@@ -30,7 +30,7 @@ except:
 from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import workers
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 
 from g2 import pkg
@@ -95,7 +95,7 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
 
         poster = meta.get('poster', '0')
         if poster == '0':
-            poster = platform.addonPoster()
+            poster = addon.addonPoster()
 
         log.debug('{m}.{f}: %s %s: meta:%s', name, imdb, meta)
 
@@ -110,7 +110,7 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
             providers.video_sources(ui_addsources, content,
                                     title=title, year=year, imdb=imdb, tvdb=tvdb, **kwargs)
 
-        win = ui.SourcesDialog('SourcesDialog.xml', platform.addonPath, 'Default', '720p',
+        win = ui.SourcesDialog('SourcesDialog.xml', addon.addonPath, 'Default', '720p',
                                sourceName=name,
                                sourcesGenerator=sources_generator,
                                sourcePriority=_source_priority,

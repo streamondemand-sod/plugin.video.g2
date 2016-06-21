@@ -20,7 +20,7 @@
 
 
 from g2.libraries import cache
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 
 from .lib import ui
@@ -45,7 +45,7 @@ def menu():
 @action
 def settings(category='0', setting='0'):
     ui.idle()
-    ui.execute('Addon.OpenSettings(%s)'%platform.addonInfo('id'))
+    ui.execute('Addon.OpenSettings(%s)'%addon.addonInfo('id'))
     ui.execute('SetFocus(%i)' % (int(category) + 100))
     ui.execute('SetFocus(%i)' % (int(setting) + 200))
 

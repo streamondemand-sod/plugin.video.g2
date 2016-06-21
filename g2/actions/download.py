@@ -21,7 +21,7 @@
 
 import urllib
 
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 
 from .lib import ui
@@ -59,14 +59,14 @@ def menu():
 
 @busyaction()
 def start():
-    platform.property('downloader', True)
+    addon.property('downloader', True)
     ui.sleep(3000)
     ui.refresh()
 
 
 @busyaction()
 def stop():
-    platform.property('downloader', False)
+    addon.property('downloader', False)
     ui.sleep(3000)
     ui.refresh()
 

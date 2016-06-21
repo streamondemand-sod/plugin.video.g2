@@ -32,7 +32,6 @@ except:
 from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import workers
-from g2.libraries import platform
 
 from g2 import pkg
 from g2 import resolvers

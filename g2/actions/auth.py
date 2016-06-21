@@ -19,7 +19,7 @@
 """
 
 
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 
 from g2.dbs import trakt as trakt_db
@@ -32,12 +32,12 @@ from . import action
 @action
 def trakt():
     """Trakt device authorization"""
-    if platform.setting('trakt_enabled') == 'false':
+    if addon.setting('trakt_enabled') == 'false':
         ui.infoDialog(_('Trakt functionality disabled'))
         return
 
     try:
-        trakt_user = platform.setting('trakt_user')
+        trakt_user = addon.setting('trakt_user')
         if trakt_user:
             if ui.yesnoDialog(_('There is already an authorized account: ')+trakt_user,
                               _('Do you wanto to keep it?'),
@@ -64,7 +64,7 @@ def trakt():
 
         ui.Dialog().ok('Trakt', _('Authorized username')+' [COLOR orange]%s[/COLOR]'%user)
 
-        platform.setSetting('trakt_user', user)
+        addon.setSetting('trakt_user', user)
 
         ui.refresh()
 
@@ -76,11 +76,11 @@ def trakt():
 @action
 def pushbullet():
     """Pushbullet apikey validation"""
-    if not platform.setting('pushbullet_apikey'):
+    if not addon.setting('pushbullet_apikey'):
         ui.infoDialog(_('Pushbullet disabled'))
         return
 
-    pbo = pb_notifier.PushBullet(platform.setting('pushbullet_apikey'))
+    pbo = pb_notifier.PushBullet(addon.setting('pushbullet_apikey'))
     try:
         user = pbo.getUser()
         if not user:

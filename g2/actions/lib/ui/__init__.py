@@ -29,7 +29,7 @@ try:
 except Exception:
     pass
 
-from g2.libraries import platform
+from g2.libraries import addon
 
 if _UI == 'xbmc':
     import sys
@@ -66,7 +66,7 @@ if _UI == 'xbmc':
     def abortRequested():
         return xbmc.abortRequested
 
-    def infoDialog(message, heading=_addon.getAddonInfo('name'), icon=platform.addonIcon(), time=3000):
+    def infoDialog(message, heading=_addon.getAddonInfo('name'), icon=addon.addonIcon(), time=3000):
         try:
             xbmcgui.Dialog().notification(heading, message, icon, time, sound=False)
         except Exception:

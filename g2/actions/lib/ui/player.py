@@ -26,7 +26,7 @@ import time
 import xbmc
 import xbmcgui
 
-from g2.libraries import platform
+from g2.libraries import addon
 
 
 __all__ = ['Player']
@@ -59,11 +59,11 @@ class Player(xbmc.Player):
 
         poster = meta.get('poster', '0')
         if poster == '0':
-            poster = platform.addonPoster()
+            poster = addon.addonPoster()
         thumb = meta.get('thumb', poster)
 
-        platform.property(addon='script.trakt', name='ids', value=json.dumps(ids))
-        platform.property('player', name='mpaa', value=meta.get('mpaa', ''))
+        addon.property(addon='script.trakt', name='ids', value=json.dumps(ids))
+        addon.property('player', name='mpaa', value=meta.get('mpaa', ''))
 
         item = xbmcgui.ListItem(path=url, iconImage='DefaultVideo.png', thumbnailImage=thumb)
         item.setProperty('Video', 'true')
@@ -95,8 +95,8 @@ class Player(xbmc.Player):
                 pass
             xbmc.sleep(1000)
 
-        platform.property(addon='script.trakt', name='ids', value='')
-        platform.property('player', name='mpaa', value='')
+        addon.property(addon='script.trakt', name='ids', value='')
+        addon.property('player', name='mpaa', value='')
 
         return -1 if not self.play_started else 0 if not total_time else int(100*self.current_time/total_time)
 

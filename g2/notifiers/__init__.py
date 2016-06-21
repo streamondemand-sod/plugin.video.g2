@@ -21,9 +21,10 @@
 
 import importer
 
-from g2 import pkg
 from g2.libraries import log
-from g2.libraries import platform
+from g2.libraries import addon
+
+from g2 import pkg
 
 
 def info(force=False):

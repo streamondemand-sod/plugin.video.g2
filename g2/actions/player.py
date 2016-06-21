@@ -25,7 +25,7 @@ import json
 import xbmc
 
 from g2.libraries import log
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 
 from g2 import dbs
@@ -38,11 +38,11 @@ from . import action
 def notify():
     player = xbmc.Player()
     if not player.isPlaying():
-        notice_id = platform.property('player.notice.id')
+        notice_id = addon.property('player.notice.id')
         if notice_id:
             log.debug('{m}.{f}: deleting notice_id=%s...', notice_id)
             notifiers.notices([], targets='remote', identifier=[notice_id])
-            platform.property('player.notice.id', '')
+            addon.property('player.notice.id', '')
 
     elif not player.isPlayingVideo():
         return
@@ -54,13 +54,13 @@ def notify():
         # Look for the MPAA rating if set by the player or the addons
         mpaa = xbmc.getInfoLabel('VideoPlayer.mpaa')
         if not mpaa:
-            mpaa = platform.property('player', name='mpaa')
+            mpaa = addon.property('player', name='mpaa')
 
         # Look for the IMDB id, if set by the player or the addons
         imdb = xbmc.getInfoLabel('VideoPlayer.IMDBNumber')
         if not imdb:
             try:
-                ids = json.loads(platform.property(addon='script.trakt', name='ids'))
+                ids = json.loads(addon.property(addon='script.trakt', name='ids'))
             except Exception:
                 ids = {}
             imdb = ids.get('imdb')
@@ -87,7 +87,7 @@ def notify():
 
         if len(notice_id):
             log.debug('{m}.{f}: created notice_id=%s', notice_id[0])
-            platform.property('player.notice.id', notice_id[0])
+            addon.property('player.notice.id', notice_id[0])
 
 
 def _fetch_db_meta(imdb, title, year):

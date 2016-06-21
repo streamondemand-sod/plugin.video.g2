@@ -30,9 +30,9 @@ import importer
 
 from g2.libraries import fs
 from g2.libraries import log
+from g2.libraries import addon
 from g2.libraries import cache
 from g2.libraries import client
-from g2.libraries import platform
 from g2.libraries import language
 
 from g2 import defs
@@ -91,7 +91,7 @@ def _settings_category():
 # python2.6 doesn't support {} comprehensions
 _settings_category()
 
-_RESOURCES_PATH = os.path.join(platform.addonInfo('path'), 'resources') 
+_RESOURCES_PATH = os.path.join(addon.addonInfo('path'), 'resources') 
 
 # NOTE: This is the path relative to the one present in sys.path.
 # Remember to update it if you move the hierarchy around relative to sys.path
@@ -256,7 +256,8 @@ def _install_or_update(session, url, name, kind, repo=None, ui_update=None):
     for i, mod in enumerate(repo):
         try:
             if mod['type'] == 'dir':
-                _install_or_update(session, '%s/%s'%(url, mod['name']), os.path.join(name, mod['name']), kind)
+                if not _install_or_update(session, '%s/%s'%(url, mod['name']), os.path.join(name, mod['name']), kind):
+                    return False
             else:
                 module_path = os.path.join(package_path, mod['name'])
                 if mod['sha'] != git_sha(module_path):
@@ -326,7 +327,7 @@ def info(kind, infofunc, force=False):
 
 def _info_get(kind, infofunc):
     def addonSettingsFile(addon_id=''):
-        return os.path.join(platform.addonInfo2(addon_id, 'profile').decode('utf-8'), 'settings.xml')
+        return os.path.join(addon.addonInfo2(addon_id, 'profile').decode('utf-8'), 'settings.xml')
 
     def ignore(dummy_name):
         pass
@@ -365,7 +366,7 @@ def _info_get(kind, infofunc):
                 required_addons_installed = True
                 addon_ids = [pac.addons] if isinstance(pac.addons, basestring) else pac.addons
                 for addon_id in addon_ids:
-                    if not platform.condition('System.HasAddon(%s)'%addon_id):
+                    if not addon.condition('System.HasAddon(%s)'%addon_id):
                         required_addons_installed = False
                     else:
                         addonpaths = _get_addon_paths(addon_id)
@@ -434,10 +435,10 @@ def update_settings_skema():
     defaults = {}
     def add_setting(name, default, kind, package='', module='', template=None):
         setid = _setting_id(kind, package, module, name)
-        settings[setid] = platform.setting(setid)
+        settings[setid] = addon.setting(setid)
         if settings[setid] == '':
             settings[setid] = default
-            platform.setSetting(setid, default)
+            addon.setSetting(setid, default)
         defaults[setid] = default
         if template:
             templates[setid] = template
@@ -571,7 +572,7 @@ def setting(kind, package='', module='', name='enabled'):
     if not _PACKAGES_KINDS[kind]['settings_category']:
         # Implicit setting values for kind packages missing user settings
         return 'true' if name == 'enabled' else str(defs.DEFAULT_PACKAGE_PRIORITY) if name == 'priority' else 'false'
-    return platform.setting(_setting_id(kind, package, module, name))
+    return addon.setting(_setting_id(kind, package, module, name))
 
 
 def _setting_id(kind, package, module='', name='enabled'):
@@ -589,7 +590,7 @@ def _get_addon_paths(addon_id):
 
 
 def _get_addon_details(addon_id):
-    path = platform.addonInfo2(addon_id, 'path')
+    path = addon.addonInfo2(addon_id, 'path')
     try:
         with open(os.path.join(path, 'addon.xml')) as fil:
             addon_xml = fil.read()

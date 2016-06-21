@@ -26,7 +26,7 @@ import json
 import urllib
 
 from g2.libraries import log
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 from g2 import dbs
 
@@ -153,7 +153,7 @@ def personlist(url):
 
 @action
 def widget():
-    setting = platform.setting('movie_widget')
+    setting = addon.setting('movie_widget')
     if setting == '2':
         url = dbs.resolve('movies_featured{}')
     elif setting == '3':
@@ -197,10 +197,10 @@ def _add_movie_directory(items):
     if not items:
         return
 
-    addonPoster = platform.addonPoster()
-    addonBanner = platform.addonBanner()
-    addonFanart = platform.addonFanart()
-    settingFanart = platform.setting('fanart')
+    addonPoster = addon.addonPoster()
+    addonBanner = addon.addonBanner()
+    addonFanart = addon.addonFanart()
+    settingFanart = addon.setting('fanart')
 
     for i in items:
         try:
@@ -241,7 +241,7 @@ def _add_movie_directory(items):
 
             cmds = []
             cmds.append((_('Movie information'), 'Action(Info)'))
-            if platform.condition('System.HasAddon(script.extendedinfo)'):
+            if addon.condition('System.HasAddon(script.extendedinfo)'):
                 cmds.append((_('Movie information')+' (extendedinfo)',
                              "RunScript(script.extendedinfo,info=extendedinfo,id=%s)"%tmdb))
                 cmds.append((_('Trailer')+' (extendedinfo)',
@@ -285,10 +285,10 @@ def _add_directory(items, show_genre_line=False, is_person=False):
     if not items:
         items = []
 
-    addonPoster = platform.addonPoster()
-    addonFanart = platform.addonFanart()
-    addonThumb = platform.addonThumb()
-    artPath = platform.artPath()
+    addonPoster = addon.addonPoster()
+    addonFanart = addon.addonFanart()
+    addonThumb = addon.addonThumb()
+    artPath = addon.artPath()
 
     for i in items:
         try:
@@ -307,7 +307,7 @@ def _add_directory(items, show_genre_line=False, is_person=False):
             url = '%s?action=%s&url=%s'%(_sysaddon, i['action'], urllib.quote_plus(i['url']))
 
             cmds = []
-            if is_person and i.get('id') and platform.condition('System.HasAddon(script.extendedinfo)'):
+            if is_person and i.get('id') and addon.condition('System.HasAddon(script.extendedinfo)'):
                 cmds.append((_('Person information')+' (extendedinfo)',
                              'RunScript(script.extendedinfo,info=extendedactorinfo,id=%s)'%i['id'])) 
 

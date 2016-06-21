@@ -19,7 +19,7 @@
 """
 
 
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.actions.lib import ui
 
 
@@ -29,7 +29,7 @@ INFO = {
 }
 
 
-def notices(notes, playing=None, origin=platform.addonInfo('id'), **dummy_kwargs):
+def notices(notes, playing=None, origin=addon.addonInfo('id'), **dummy_kwargs):
     """Show a Kodi infodialog for each note"""
     if playing != 'video':
         for note in notes:

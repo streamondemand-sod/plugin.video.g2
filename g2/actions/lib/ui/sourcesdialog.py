@@ -26,7 +26,7 @@ import xbmcgui
 
 from g2.libraries import log
 from g2.libraries import workers
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 
 from g2 import defs
@@ -125,7 +125,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.left_image.setImage(self.poster_image)
             self.left_label.setLabel('')
         else:
-            self.left_image.setImage(platform.addonPoster())
+            self.left_image.setImage(addon.addonPoster())
             self.left_label.setLabel(self.source_name)
 
         if not self.thread and self.sources_generator:
@@ -164,8 +164,8 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             if controlID == self.select_button_id:
                 selected = self.sources_list.getListItem(0)
             else:
-                xbmcgui.Dialog().notification(platform.addonInfo('name'), _('Source not valid'),
-                                              platform.addonIcon(), 3000, sound=False)
+                xbmcgui.Dialog().notification(addon.addonInfo('name'), _('Source not valid'),
+                                              addon.addonIcon(), 3000, sound=False)
                 xbmc.executebuiltin('Dialog.Close(busydialog)')
                 return
         xbmc.executebuiltin('Dialog.Close(busydialog)')

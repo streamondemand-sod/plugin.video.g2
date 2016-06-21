@@ -29,7 +29,7 @@ import urlparse
 import xbmc
 
 from g2.libraries import log
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 
 from g2 import dbs
@@ -88,19 +88,19 @@ def new(push):
                 title = push.get('body', '')
             if not title:
                 title = ''
-            platform.execute('RunPlugin(%s?action=sources.playurl&name=%s&url=%s)'%
-                             (sys.argv[0], urllib.quote_plus(title.encode('utf-8')), urllib.quote_plus(url)))
+            addon.execute('RunPlugin(%s?action=sources.playurl&name=%s&url=%s)'%
+                          (sys.argv[0], urllib.quote_plus(title.encode('utf-8')), urllib.quote_plus(url)))
 
         elif sites[netloc]['type'] == 'addon':
             adn = sites[netloc]
-            if not platform.condition('System.HasAddon(%s)'%adn['addon']):
+            if not addon.condition('System.HasAddon(%s)'%adn['addon']):
                 raise Exception(_('Addon {addon} is missing').format(addon=adn['addon']))
             query = adn['query'].format(
                 url=urllib.quote_plus(url.encode('utf-8')),
             )
             plugin = 'RunScript(plugin://%s/?%s)'%(adn['addon'], query)
             log.debug('{m}.{f}: executing %s...', plugin)
-            platform.execute(plugin)
+            addon.execute(plugin)
 
         elif sites[netloc]['type'] == 'db':
             site = sites[netloc]
@@ -111,9 +111,9 @@ def new(push):
 
             log.debug('{m}.{f}: meta=%s', meta)
 
-            platform.execute('RunPlugin(%s?action=sources.dialog&title=%s&year=%s&imdb=%s&tmdb=%s&meta=%s)'%
-                             (sys.argv[0], urllib.quote_plus(meta['title']), urllib.quote_plus(meta['year']),
-                              urllib.quote_plus(meta['imdb']), '', urllib.quote_plus(json.dumps(meta))))
+            addon.execute('RunPlugin(%s?action=sources.dialog&title=%s&year=%s&imdb=%s&tmdb=%s&meta=%s)'%
+                          (sys.argv[0], urllib.quote_plus(meta['title']), urllib.quote_plus(meta['year']),
+                           urllib.quote_plus(meta['imdb']), '', urllib.quote_plus(json.dumps(meta))))
 
         else:
             raise Exception('unknown site type: %s'%sites[netloc])
@@ -126,6 +126,6 @@ def new(push):
 @action
 def delete(push):
     log.debug('{m}.{f}: %s', push)
-    if platform.property('player.notice.id') == push['iden']:
+    if addon.property('player.notice.id') == push['iden']:
         _PLAYER.stop()
         notifiers.notices(_('Forced player stop'))

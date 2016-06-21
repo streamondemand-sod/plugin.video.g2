@@ -20,7 +20,6 @@
 
 
 import os
-import re
 import sys
 import urllib
 
@@ -29,7 +28,7 @@ import xbmcgui
 import xbmcplugin
 
 from g2.libraries import log
-from g2.libraries import platform
+from g2.libraries import addon
 from g2.libraries.language import _
 
 
@@ -46,8 +45,8 @@ try:
 except:
     _thread_id = -1
 
-_artPath = platform.artPath()
-_addonFanart = platform.addonFanart()
+_artPath = addon.artPath()
+_addonFanart = addon.addonFanart()
 
 
 def doQuery(title):
@@ -65,8 +64,9 @@ def addDirectoryItem(name, query, thumb, icon, context=None, isAction=True, isFo
     thumb = thumb if thumb.startswith('http://') else os.path.join(_artPath, thumb) if _artPath is not None else icon
     cmds = []
     if context:
-        cmds.append((context[0] if isinstance(context[0], basestring) else \
-                    _(context[0]), context[1][1:] if context[1][0] == ':' else 'RunPlugin(%s?action=%s)'%(sys.argv[0], context[1])))
+        cmds.append((context[0] if isinstance(context[0], basestring) else
+                     _(context[0]), context[1][1:] if context[1][0] == ':' else
+                     'RunPlugin(%s?action=%s)'%(sys.argv[0], context[1])))
     item = xbmcgui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
     item.addContextMenuItems(cmds, replaceItems=False)
     if _addonFanart:
@@ -81,7 +81,7 @@ def endDirectory(next_item=None, content=None, updateListing=False, cacheToDisc=
                   next_item.get('next_action'), next_item.get('next_url'), next_item.get('next_page'), next_item.get('max_pages'))
 
         url = '%s?action=%s&url=%s' % (sys.argv[0], next_item['next_action'], urllib.quote_plus(next_item['next_url']))
-        addon_next = platform.addonNext()
+        addon_next = addon.addonNext()
 
         pages = '' if not next_item.get('max_pages') or not next_item.get('next_page') else \
                 _('[{page_of} of {max_pages}]').format(page_of=next_item['next_page'], max_pages=next_item['max_pages'])
