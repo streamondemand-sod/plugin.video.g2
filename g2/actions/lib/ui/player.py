@@ -48,6 +48,8 @@ class Player(xbmc.Player):
 
         self.name = name
 
+        if meta is None:
+            meta = {}
         ids = {}
         for dbid in ['imdb', 'tvdb']:
             dbidvalue = meta.get(dbid)
