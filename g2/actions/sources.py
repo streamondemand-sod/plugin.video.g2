@@ -34,19 +34,14 @@ from g2.libraries import platform
 from g2.libraries.language import _
 
 from g2 import pkg
+from g2 import dbs
+from g2 import defs
 from g2 import providers
 from g2 import resolvers
-from g2 import dbs
 
 from .lib import ui
 from .lib import downloader
 from . import action
-
-
-# (fixme) move to defs
-RESOLVER_TIMEOUT = 30 # seconds
-# (fixme) move to defs
-WATCHED_THRESHOLD = 90 # %
 
 
 @action
@@ -192,7 +187,7 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
         item.setProperty('source_url', '')
         item.setProperty('url', '')
 
-    elif player_status > WATCHED_THRESHOLD:
+    elif player_status > defs.WATCHED_THRESHOLD:
         # (fixme) user setting to sync the watched status w/ each backend
         watched = dbs.watched('movie{imdb_id}', imdb_id=imdb)
         if not watched:
@@ -309,14 +304,14 @@ def _resolve(provider, url, ui_update=None):
         key_open = ui.condition('Window.IsActive(virtualkeyboard)')
         if key_open:
             keyboard_opened = True
-        if (i > RESOLVER_TIMEOUT and not key_open) or not thd.is_alive():
+        if (i > defs.RESOLVER_TIMEOUT and not key_open) or not thd.is_alive():
             break
         if ui_update and not ui_update():
             ui_cancelled = True
             break
         ui.sleep(500)
 
-    for i in range(RESOLVER_TIMEOUT):
+    for i in range(defs.RESOLVER_TIMEOUT):
         if keyboard_opened or ui_cancelled or not thd.is_alive():
             break
         if ui_update and not ui_update():

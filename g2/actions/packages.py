@@ -26,13 +26,10 @@ from g2.libraries import platform
 from g2.libraries.language import _
 
 from g2 import pkg
+from g2 import defs
 
 from .lib import ui
 from . import action
-
-
-# (fixme) move to g2.defs
-_DEFAULT_PACKAGES_URLS = ['http://j0rdyz65.github.io/packages.html']
 
 
 @action
@@ -44,7 +41,7 @@ def dialog():
 
     listed = {}
     kinds = {}
-    for url in _DEFAULT_PACKAGES_URLS:
+    for url in defs.PACKAGES_DIRECTORY_URLS:
         try:
             res = client.get(url)
             pkgentries = client.parseDOM(res.content, 'tbody')[0]

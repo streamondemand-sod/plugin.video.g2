@@ -29,12 +29,10 @@ from g2.libraries import workers
 from g2.libraries import platform
 from g2.libraries.language import _
 
+from g2 import defs
+
 
 __all__ = ['SourcesDialog']
-
-
-# (fixme) ask boogiepop the permit to use this
-_HOST_IMAGES = "https://offshoregit.com/boogiepop/dataserver/ump/images/"
 
 
 class SourcesDialog(xbmcgui.WindowXMLDialog):
@@ -91,7 +89,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         for source in items:
             item = xbmcgui.ListItem()
             item.setLabel(source['label'])
-            item.setIconImage(_HOST_IMAGES+source['source'].lower()+'.png')
+            item.setIconImage(defs.HOST_IMAGES+source['source'].lower()+'.png')
             item.setProperty('source_provider', source['provider'])
             item.setProperty('source_quality', source['quality'])
             item.setProperty('source_host', source['source'])

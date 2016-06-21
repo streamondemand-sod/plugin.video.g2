@@ -27,22 +27,16 @@ from g2.libraries import client
 from g2.libraries import workers
 from g2.libraries import platform
 
+from g2 import defs
+
 
 info = {
     'domains': ['api.themoviedb.org'],
     'methods': ['resolve', 'movies', 'meta', 'persons', 'genres', 'certifications'],
 }
 
-# (fixme) move in g2.defs
-_TMDB_INCLUDE_ADULT = 'false'
-# (fixme) move in g2.defs
-_MAX_CONCURRENT_THREADS = 10
-# (fixme) move in g2.defs
-TMDB_APIKEY = 'f7f51775877e0bb6703520952b3c7840'
-
 _INFO_LANG = platform.setting('infoLang') or 'en'
-# (fixme) hardcoded TMDB key should be removed on GA releases
-_TMDB_APIKEY = platform.setting('tmdb_apikey') or TMDB_APIKEY
+_TMDB_APIKEY = platform.setting('tmdb_apikey') or defs.TMDB_APIKEY
 _TMDB_IMAGE = 'http://image.tmdb.org/t/p/original/'
 _TMDB_POSTER = 'http://image.tmdb.org/t/p/w500/'
 
@@ -77,7 +71,7 @@ def resolve(kind=None, **kwargs):
 
     for key, val in {
             'info_lang': _INFO_LANG,
-            'include_adult': _TMDB_INCLUDE_ADULT,
+            'include_adult': defs.TMDB_INCLUDE_ADULT,
             'one_year_ago': (datetime.datetime.now() - datetime.timedelta(days=365)).strftime('%Y-%m-%d'),
             'two_months_ago': (datetime.datetime.now() - datetime.timedelta(days=60)).strftime('%Y-%m-%d'),
         }.iteritems():
@@ -202,8 +196,8 @@ def movies(url):
 
 
 def meta(metas):
-    for i in range(0, len(metas), _MAX_CONCURRENT_THREADS):
-        threads = [workers.Thread(_meta_worker, metas[j]) for j in range(i, min(len(metas), i+_MAX_CONCURRENT_THREADS))]
+    for i in range(0, len(metas), defs.MAX_CONCURRENT_THREADS):
+        threads = [workers.Thread(_meta_worker, metas[j]) for j in range(i, min(len(metas), i+defs.MAX_CONCURRENT_THREADS))]
         dummy = [t.start() for t in threads]
         dummy = [t.join() for t in threads]
 

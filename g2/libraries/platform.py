@@ -120,6 +120,11 @@ if _platform == 'xbmc':
         except Exception:
             return None
 
+    # (fixme) addon.runplugin(action, **kwargs)
+    # build the RunPlugin command using sys.argv[0] as plugin id, action=action and
+    # kwargs as key=value
+    # replace all the 'RunPlugin...' strings
+
     # def executeJSONRPC(method, params):
     #     result = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "%s", "params": %s, "id": 1}'%(method, params))
     #     result = unicode(result, 'utf-8', errors='ignore')

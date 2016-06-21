@@ -35,12 +35,8 @@ from g2.libraries import cache
 from g2.libraries import platform
 
 from g2 import pkg
+from g2 import defs
 
-
-# (fixme) move in g2.defs
-DEFAULT_PACKAGE_PRIORITY = 10
-# (fixme) move in g2.defs
-_METADATA_CACHE_LIFETIME = (30*24) # hours
 
 _INFO_LANG = platform.setting('infoLang') or 'en'
 
@@ -56,7 +52,7 @@ def info(force=False):
         nfo = dict(nfo)
         nfo.update({
             # Fixed priority defined at the module level
-            'priority': nfo.get('priority', DEFAULT_PACKAGE_PRIORITY),
+            'priority': nfo.get('priority', defs.DEFAULT_PACKAGE_PRIORITY),
         })
         return [nfo]
 
@@ -191,7 +187,7 @@ def _fetch_meta(items, lang):
                                   "   (tvdb = ? and tvdb <> '0'))",
                                   (metas[-1]['lang'], metas[-1]['imdb'], metas[-1]['tmdb'], metas[-1]['tvdb'],))
             sqlrow = dbcur.fetchone()
-            if not sqlrow or (time.time()-int(sqlrow['timestamp']))/3600 > _METADATA_CACHE_LIFETIME:
+            if not sqlrow or (time.time()-int(sqlrow['timestamp']))/3600 > defs.METADATA_CACHE_LIFETIME:
                 continue
 
             item = ast.literal_eval(sqlrow['item'].encode('utf-8'))

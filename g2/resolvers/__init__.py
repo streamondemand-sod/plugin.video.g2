@@ -26,19 +26,13 @@ import urlparse
 
 from contextlib import closing
 
-from g2 import pkg
-
 from g2.libraries import log
 from g2.libraries import client
 
+from g2 import pkg
+from g2 import defs
+
 from .lib import metastream
-
-
-# (fixme) move into defs
-DEFAULT_PACKAGE_PRIORITY = 10
-
-# Streams shorter than this are not considered valid
-_MIN_STREAM_SIZE = 1024 * 1024
 
 
 class ResolverError(Exception):
@@ -65,7 +59,7 @@ def info(force=False):
         try:
             priority = int(pkg.setting('resolvers', package, name='priority'))
         except Exception:
-            priority = DEFAULT_PACKAGE_PRIORITY
+            priority = defs.DEFAULT_PACKAGE_PRIORITY
         for i in nfo:
             i.update({
                 # User configurable priority at the package level 
@@ -165,7 +159,7 @@ def resolve(url, checkonly=False):
                 continue
 
             content_lenght = int(resp.headers.get('Content-Length', '0'))
-            if content_lenght < _MIN_STREAM_SIZE:
+            if content_lenght < defs.MIN_STREAM_SIZE:
                 collect_resolver_error(resolver, 'Stream too short')
                 continue
 

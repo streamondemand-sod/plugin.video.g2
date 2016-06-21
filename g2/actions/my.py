@@ -61,7 +61,6 @@ def menu():
         ui.addDirectoryItem(_('Configure your IMDB account'), 'tools.settings&category=1&setting=3',
                             'movieUserlists.jpg', 'DefaultMovies.png')
     else:
-        # (fixme) should be the nickname
         ui.addDirectoryItem(_('[B]IMDB[/B] : Lists by %s')%imdb_user,
                             'movies.lists&kind_user_id=imdb_user_id&kind_list_id=imdb_list_id&user_id=%s'%imdb_user,
                             'movieUserlists.jpg', 'DefaultMovies.png')

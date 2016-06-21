@@ -31,6 +31,8 @@ from g2.libraries import client
 from g2.libraries import platform
 from g2.libraries.language import _
 
+from g2 import defs
+
 
 info = {
     'domains': ['api-v2launch.trakt.tv'],
@@ -40,20 +42,15 @@ info = {
 
 _TRAKT_USER = platform.setting('trakt_user')
 
-# (fixme) move in defs
-TRAKT_CLIENT_ID = 'c67fa3018aa2867c183261f4b2bb12ebb606c2b3fbb1449e24f2fbdbc3a8ffdb'
-# (fixme) move in defs
-TRAKT_MAX_RECOMMENDATIONS = 60
-
 _COMMON_POST_VARS = {
-    'client_id': TRAKT_CLIENT_ID,
+    'client_id': defs.TRAKT_CLIENT_ID,
     'client_secret': '9899db3e81158f6ebbb7b5afbce043b99caa13fba98c527c00c44ca44eca72c5',
     'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob',
 }
 
 _COMMON_HEADERS = {
     'Content-Type': 'application/json',
-    'trakt-api-key': TRAKT_CLIENT_ID,
+    'trakt-api-key': defs.TRAKT_CLIENT_ID,
     'trakt-api-version': '2',
 }
 
@@ -68,7 +65,7 @@ _URLS = {
     'movies_ratings{trakt_user_id}': '/users/{trakt_user_id}/ratings/movies -- {trakt_enabled}',
     # For the below urls trakt must be enabled and with a valid token
     'movies_recommendations{}': ('/recommendations/movies?limit=%d -- {trakt_enabled}{trakt_token}'%
-                                 TRAKT_MAX_RECOMMENDATIONS),
+                                 defs.TRAKT_MAX_RECOMMENDATIONS),
     'watched.movie{imdb_id}': 'movie.imdb.{imdb_id} -- {trakt_enabled}{trakt_token}',
 }
 
@@ -156,6 +153,7 @@ def movies(url):
             year = re.sub('[^0-9]', '', str(year))
             year = year.encode('utf-8')
 
+            # (fixme) so ugly and repetitive code...
             name = '%s (%s)' % (title, year)
             try: name = name.encode('utf-8')
             except: pass

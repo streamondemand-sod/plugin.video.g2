@@ -62,7 +62,6 @@ def trakt():
 
         dialog_progress.close()
 
-        # (fixme) add congratulations and other comments about new functionality unlocked
         ui.Dialog().ok('Trakt', _('Authorized username')+' [COLOR orange]%s[/COLOR]'%user)
 
         platform.setSetting('trakt_user', user)
@@ -81,7 +80,6 @@ def pushbullet():
         ui.infoDialog(_('Pushbullet disabled'))
         return
 
-    # (fixme) if auth fail, clear the pushbullet_email, otherwise set it to the email address
     pbo = pb_notifier.PushBullet(platform.setting('pushbullet_apikey'))
     try:
         user = pbo.getUser()

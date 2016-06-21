@@ -35,9 +35,8 @@ from g2.libraries import client
 from g2.libraries import platform
 from g2.libraries import language
 
+from g2 import defs
 
-# (fixme) move in defs
-DEFAULT_PACKAGE_PRIORITY = 10
 
 _PACKAGES_KINDS = {
     'providers': {
@@ -468,7 +467,7 @@ def update_settings_skema():
                 continue
 
             add_setting('enabled', 'true', kind, name)
-            add_setting('priority', str(DEFAULT_PACKAGE_PRIORITY), kind, name)
+            add_setting('priority', str(defs.DEFAULT_PACKAGE_PRIORITY), kind, name)
             for dummy_imp, sname, is_pkg in importer.walk_packages([os.path.join(_PACKAGES_ABSOLUTE_PATH, kind, name)]):
                 log.debug('update_settings_skema: name=%s.%s, is_pkg=%s'%(name, sname, is_pkg))
                 if is_pkg or '.' in sname:
@@ -516,7 +515,6 @@ def update_settings_skema():
 
             elif setid.endswith('::priority'):
                 current_module += 1
-                # (fixme)[int]: localize the label
                 new_settings_skema += ('\t\t<setting id="%s" type="number" label="Priority" default="%s"'
                                        ' enable="eq(-%d,true)" subsetting="true" />\n')%(setid, default_value, current_module)
 
@@ -572,7 +570,7 @@ def _remove(path, raise_notfound=True):
 def setting(kind, package='', module='', name='enabled'):
     if not _PACKAGES_KINDS[kind]['settings_category']:
         # Implicit setting values for kind packages missing user settings
-        return 'true' if name == 'enabled' else str(DEFAULT_PACKAGE_PRIORITY) if name == 'priority' else 'false'
+        return 'true' if name == 'enabled' else str(defs.DEFAULT_PACKAGE_PRIORITY) if name == 'priority' else 'false'
     return platform.setting(_setting_id(kind, package, module, name))
 
 
