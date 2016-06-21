@@ -69,7 +69,8 @@ class Session(requests.Session):
 
         if _debug(debug, 'adapter'):
             conn = self.get_adapter(url).poolmanager.connection_from_url(url)
-            log.debug('{m}.{f}: session.adapter: connections:%d, requests:%d', conn.num_connections, conn.num_requests, debug=True)
+            log.debug('{m}.{f}: session.adapter: connections:%d, requests:%d',
+                      conn.num_connections, conn.num_requests, debug=True)
 
         return res
 

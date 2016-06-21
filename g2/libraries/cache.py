@@ -28,8 +28,8 @@ try:
 except:
     from pysqlite2 import dbapi2 as database
 
+from g2.libraries import fs
 from g2.libraries import log
-from g2.libraries import platform
 
 
 def get(function, timeout, *args, **kwargs):
@@ -62,8 +62,8 @@ def get(function, timeout, *args, **kwargs):
     match = None
     if hashargs is not None:
         try:
-            platform.makeDir(platform.dataPath)
-            dbcon = database.connect(platform.cacheFile)
+            fs.makeDir(fs.PROFILE_PATH)
+            dbcon = database.connect(fs.CACHE_DB_FILENAME)
             dbcon.row_factory = database.Row
             dbcur = dbcon.execute("SELECT * FROM %s WHERE func = ? AND args = ?"%table, (fname, hashargs,))
             match = dbcur.fetchone()
@@ -120,7 +120,7 @@ def clear(tables=None):
         elif type(tables) not in [list, tuple]:
             tables = [tables]
 
-        dbcon = database.connect(platform.cacheFile)
+        dbcon = database.connect(fs.CACHE_DB_FILENAME)
         with dbcon:
             for table in tables:
                 try:

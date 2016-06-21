@@ -21,7 +21,6 @@
 
 import os
 import ast
-import json
 
 try:
     """
@@ -32,15 +31,11 @@ try:
     import xbmcvfs
 
     _platform = 'xbmc'
-except:
+except Exception:
     pass
 
 if _platform == 'xbmc':
-
-    # Local data
     _addon = xbmcaddon.Addon()
-
-    # Function aliases
 
     # (fixme)[code]: put all addons related methods in g2.libraries.addon
     addonInfo = _addon.getAddonInfo
@@ -49,20 +44,12 @@ if _platform == 'xbmc':
         return xbmcaddon.Addon().getSetting(setid)
     setSetting = _addon.setSetting
 
-    # (fixme)[code]: put all fs related methods in g2.libraries.fs
-    translatePath = xbmc.translatePath
-    Stat = xbmcvfs.Stat
-    makeDir = xbmcvfs.mkdirs
-    listDir = xbmcvfs.listdir
-    removeDir = xbmcvfs.rmdir
-    removeFile = xbmcvfs.delete
-
     condition = xbmc.getCondVisibility
     execute = xbmc.executebuiltin
 
-    def addonSetting(addon, setting):
+    def addonSetting(addon, setid):
         addon = xbmcaddon.Addon(addon)
-        return addon.getSetting(setting)
+        return addon.getSetting(setid)
 
     def addonInfo2(addon, info):
         addon = xbmcaddon.Addon(addon)
@@ -100,21 +87,23 @@ if _platform == 'xbmc':
 
     def property(module='', value=None, name='status', addon=addonInfo('id')):
         property_name = addon
-        if module: property_name += '.' + module
-        if name: property_name += '.' + name
+        if module:
+            property_name += '.' + module
+        if name:
+            property_name += '.' + name
         try:
             import xbmcgui
-            _homeWin = xbmcgui.Window(10000)
+            home_win = xbmcgui.Window(10000)
 
             if value is None:
-                value = _homeWin.getProperty(property_name)
+                value = home_win.getProperty(property_name)
             elif value == '':
-                _homeWin.clearProperty(property_name)
+                home_win.clearProperty(property_name)
                 return
             else:
-                _homeWin.setProperty(property_name, repr(value))
+                home_win.setProperty(property_name, repr(value))
                 return
-        except:
+        except Exception:
             if not hasattr(property, 'properties'):
                 property.properties = {}
 
@@ -136,14 +125,7 @@ if _platform == 'xbmc':
     #     result = unicode(result, 'utf-8', errors='ignore')
     #     return json.loads(result)
 
-    # Data
     addonPath = xbmc.translatePath(addonInfo('path')).decode('utf-8')
-    dataPath = xbmc.translatePath(addonInfo('profile')).decode('utf-8')
 
 else:
     raise Exception('Unknown host platform')
-
-metacacheFile = os.path.join(dataPath, 'meta.db')
-sourcescacheFile = os.path.join(dataPath, 'sources.db')
-cacheFile = os.path.join(dataPath, 'cache.db')
-databaseFile = os.path.join(dataPath, 'settings.db')

@@ -29,11 +29,13 @@ try:
 except:
     from pysqlite2 import dbapi2 as database
 
-from g2 import pkg
-from g2 import resolvers
+from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import workers
 from g2.libraries import platform
+
+from g2 import pkg
+from g2 import resolvers
 
 from .lib.fuzzywuzzy import fuzz
 
@@ -131,11 +133,13 @@ def _sources_worker(channel, m, provider, content, **kwargs):
         dbcon = None
     else:
         try:
-            platform.makeDir(platform.dataPath)
-            dbcon = database.connect(platform.sourcescacheFile, timeout=10)
+            fs.makeDir(fs.PROFILE_PATH)
+            dbcon = database.connect(fs.CACHE_DB_FILENAME, timeout=10)
             dbcon.row_factory = database.Row
-            dbcon.execute("CREATE TABLE IF NOT EXISTS rel_url (provider TEXT, key_video TEXT, video_ref TEXT, UNIQUE(provider, key_video));")
-            dbcon.execute("CREATE TABLE IF NOT EXISTS rel_src (provider TEXT, key_video TEXT, sources TEXT, timestamp TEXT, UNIQUE(provider, key_video));")
+            dbcon.execute('CREATE TABLE IF NOT EXISTS rel_url'
+                          ' (provider TEXT, key_video TEXT, video_ref TEXT, UNIQUE(provider, key_video))')
+            dbcon.execute('CREATE TABLE IF NOT EXISTS rel_src'
+                          ' (provider TEXT, key_video TEXT, sources TEXT, timestamp TEXT, UNIQUE(provider, key_video));')
             dbcon.commit()
         except Exception:
             pass
@@ -244,8 +248,8 @@ def clear_sources_cache(**kwargs):
     try:
         key_video = '/'.join([kwargs.get(k) or '-' for k in ['imdb', 'season', 'episode']])
         log.debug('{m}.{f}(...): key_video=%s', key_video)
-        platform.makeDir(platform.dataPath)
-        dbcon = database.connect(platform.sourcescacheFile, timeout=10)
+        fs.makeDir(fs.PROFILE_PATH)
+        dbcon = database.connect(fs.CACHE_DB_FILENAME, timeout=10)
         with dbcon:
             dbcon.execute("DELETE FROM rel_src WHERE key_video = ?", (key_video,))
             dbcon.execute("DELETE FROM rel_url WHERE key_video = ?", (key_video,))
@@ -261,7 +265,8 @@ def get_movie(provider, **kwargs):
     except:
         raise Exception('Provider %s not available'%provider)
 
-    with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
+    with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'],
+                     ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
         return mod[0].get_movie(provider['name'].split('.'), **kwargs)
 
 
@@ -273,7 +278,8 @@ def get_sources(provider, url):
     except:
         raise Exception('Provider %s not available'%provider)
 
-    with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
+    with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'],
+                     ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
         sources = mod[0].get_sources(provider['name'].split('.'), url)
         for src in sources:
             src.update({
@@ -303,7 +309,8 @@ def resolve(provider, url):
 
     # Otherwise, try with the source resolver and then give the url back to the resolvers again
     try:
-        with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
+        with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'],
+                         ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
             url = mod[0].resolve(provider['name'].split('.'), url)
     except Exception:
         # On any failure of the source resolver, return the error of the first resolvers invocation

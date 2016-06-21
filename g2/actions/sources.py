@@ -27,6 +27,7 @@ try:
 except:
     from pysqlite2 import dbapi2 as database
 
+from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import workers
 from g2.libraries import platform
@@ -363,8 +364,8 @@ def _resolve(provider, url, ui_update=None):
 def _add_bookmark(bookmarktime, name, imdb):
     try:
         idfile = _bookmark_id(name, imdb)
-        platform.makeDir(platform.dataPath)
-        dbcon = database.connect(platform.databaseFile)
+        fs.makeDir(fs.PROFILE_PATH)
+        dbcon = database.connect(fs.SETTINGS_DB_FILENAME)
         with dbcon:
             dbcon.execute("CREATE TABLE IF NOT EXISTS bookmark (idfile TEXT, bookmarktime INTEGER, UNIQUE(idfile))")
             dbcon.execute("DELETE FROM bookmark WHERE idfile = ?", (idfile,))
@@ -376,7 +377,7 @@ def _add_bookmark(bookmarktime, name, imdb):
 def _get_bookmark(name, imdb):
     try:
         idfile = _bookmark_id(name, imdb)
-        dbcon = database.connect(platform.databaseFile)
+        dbcon = database.connect(fs.SETTINGS_DB_FILENAME)
         dbcon.row_factory = database.Row
         dbcur = dbcon.execute("SELECT * FROM bookmark WHERE idfile = ?", (idfile,))
         match = dbcur.fetchone()
@@ -389,7 +390,7 @@ def _get_bookmark(name, imdb):
 def _del_bookmark(name, imdb):
     try:
         idfile = _bookmark_id(name, imdb)
-        dbcon = database.connect(platform.databaseFile)
+        dbcon = database.connect(fs.SETTINGS_DB_FILENAME)
         dbcon.row_factory = database.Row
         with dbcon:
             dbcon.execute("DELETE FROM bookmark WHERE idfile = ?", (idfile,))

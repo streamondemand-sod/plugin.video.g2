@@ -6,9 +6,10 @@
     'ui.player': True,
     'ui.sourcesdialog': True,
     'metastream.mp4': True,		# Show the MP4 decoding
+    'filmsenzalimiti.get_sources.parseDOM': True,
+
     'dbs.dbs': False,
     'dbs.imdb': False,
-
     'ui.directory': False,
     'providers.providers': False,
     'actions.service': False,

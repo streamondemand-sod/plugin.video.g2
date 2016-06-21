@@ -56,7 +56,6 @@ def main():
 
 
 def service_monitor_setup():
-    # (fixme) [code] plugin.run(action, **kwargs) -> plugin.run('auth.trakt')
     from g2.actions import service
     service.monitor('trakt_enabled', 'setting', platform.execute, 'RunPlugin(%s?action=auth.trakt)'%sys.argv[0])
 

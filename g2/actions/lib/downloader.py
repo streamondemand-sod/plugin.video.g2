@@ -29,6 +29,7 @@ import urllib2
 import urlparse
 import datetime
 
+from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import cache
 from g2.libraries import workers
@@ -69,9 +70,9 @@ def addDownload(name, url, ext, size, resumable, image):
                         }], hash_args=0, table='rel_dl', debug=log.debugactive())
 
     try:
-        filepath = _file_path(platform.translatePath(platform.freshsetting('downloads')), filename)
+        filepath = _file_path(fs.translatePath(platform.freshsetting('downloads')), filename)
         if os.path.exists(filepath):
-            platform.removeFile(filepath)
+            fs.removeFile(filepath)
     except Exception as ex:
         log.notice('{m}.{f}: removing existing %s: %s', filename, ex)
 
@@ -99,7 +100,7 @@ def status():
 
 
 def statusItem(item):
-    downloads_path = platform.translatePath(platform.freshsetting('downloads'))
+    downloads_path = fs.translatePath(platform.freshsetting('downloads'))
     filepath = _file_path(downloads_path, item['filename'])
     try:
         percentage = 0 if not item['size'] else int(100*os.path.getsize(filepath)/item['size'])
@@ -123,7 +124,7 @@ _WORKER_LOCK = workers.Lock()
 def worker():
     this = workers.current_thread()
 
-    downloads_path = platform.translatePath(platform.freshsetting('downloads'))
+    downloads_path = fs.translatePath(platform.freshsetting('downloads'))
     if not downloads_path:
         return log.error('%s aborted: downloads path setting not specified', this.name)
 
@@ -153,7 +154,7 @@ def worker():
 
                 resumable = True
                 if downloaded is None:
-                    platform.makeDir(os.path.dirname(dest))    
+                    fs.makeDir(os.path.dirname(dest))    
                     destf = open(dest, 'wb')
                     downloaded = 0
                     resumable = False
@@ -166,8 +167,8 @@ def worker():
 
                 start_time = _meter(downloaded, start=True)
 
-                log.notice('downloader: %s: %s (%sresumable)',
-                           os.path.basename(dest),
+                log.notice('%s: %s: %s (%sresumable)',
+                           this.name, os.path.basename(dest),
                            'started download of %d bytes'%contentlength if not downloaded else
                            'restarted download at %d of %d bytes'%(downloaded, contentlength),
                            '' if resumable else 'not ')
@@ -268,7 +269,7 @@ def worker():
                            int(time.time()-start_time), resumes)
 
             except Exception as ex:
-                log.error('%s: %s: %s', this.name, os.path.basename(dest), ex)
+                log.error('{m}.{f}: %s: %s', os.path.basename(dest), ex)
 
             platform.property('downloader', '', name='filepath')
 
@@ -300,7 +301,7 @@ def _make_http_request(url, downloaded):
 
     try:
         contentlength = int(response.headers['Content-Length'])
-        log.debug('downloader._make_http_request: response.headers=\n%s'%response.headers)
+        log.debug('{m}.{f}: response.headers=\n%s'%response.headers)
         if contentlength <= 0:
             raise Exception('empty stream')
     except:
@@ -322,8 +323,8 @@ def _make_http_request(url, downloaded):
     except Exception:
         downloaded = None
 
-    log.debug('downloader._make_http_request: %s; contentlength=%s'%(
-               'not resumable' if downloaded is None else 'downloaded=%s'%downloaded, contentlength))
+    log.debug('{m}.{f}: %s; contentlength=%s',
+              'not resumable' if downloaded is None else 'downloaded=%s'%downloaded, contentlength)
 
     return response, downloaded, contentlength
 
@@ -343,7 +344,7 @@ def _meter(downloaded, start=False):
         if deltatime > _MAX_SAMPLE_TIME_FOR_DOWNLOAD_SPEED and len(_meter.samples) > 2:
             _meter.samples.pop(0)
 
-    log.debug('meter: #samples=%d, deltatime=%.3f, deltabytes=%d: %.3f Mb/s'%(
-               len(_meter.samples), deltatime, deltabytes, mbps))
+    log.debug('{m}.{f}: #samples=%d, deltatime=%.3f, deltabytes=%d: %.3f Mb/s',
+              len(_meter.samples), deltatime, deltabytes, mbps)
 
     return mbps

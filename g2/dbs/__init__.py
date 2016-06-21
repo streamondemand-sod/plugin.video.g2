@@ -29,10 +29,12 @@ try:
 except:
     from pysqlite2 import dbapi2 as database
 
-from g2 import pkg
+from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import cache
 from g2.libraries import platform
+
+from g2 import pkg
 
 
 # (fixme) move in g2.defs
@@ -165,10 +167,10 @@ def _db_method(dbp, method, *args, **kwargs):
 
 def _fetch_meta(items, lang):
     try:
-        dbcon = database.connect(platform.metacacheFile)
+        dbcon = database.connect(fs.META_DB_FILENAME)
         dbcon.row_factory = database.Row
     except Exception as ex:
-        log.error('{m}.{f}: %s: %s', platform.metacacheFile, repr(ex))
+        log.error('{m}.{f}: %s: %s', fs.META_DB_FILENAME, repr(ex))
         return []
 
     metas = []
@@ -205,8 +207,8 @@ def _fetch_meta(items, lang):
 
 def _save_meta(metas):
     try:
-        platform.makeDir(platform.dataPath)
-        dbcon = database.connect(platform.metacacheFile)
+        fs.makeDir(fs.PROFILE_PATH)
+        dbcon = database.connect(fs.META_DB_FILENAME)
         dbcon.row_factory = database.Row
         dbcon.execute("CREATE TABLE IF NOT EXISTS meta ("
                       " lang TEXT,"
@@ -217,7 +219,7 @@ def _save_meta(metas):
                       " timestamp TEXT,"
                       " UNIQUE(lang, imdb, tmdb, tvdb))")
     except Exception as ex:
-        log.error('{m}.{f}: %s: %s', platform.metacacheFile, repr(ex))
+        log.error('{m}.{f}: %s: %s', fs.META_DB_FILENAME, repr(ex))
         return
 
     now = int(time.time())

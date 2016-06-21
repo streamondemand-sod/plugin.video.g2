@@ -19,11 +19,13 @@
 """
 
 
-from g2 import pkg
+from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import client
 from g2.libraries import platform
 from g2.libraries.language import _
+
+from g2 import pkg
 
 from .lib import ui
 from . import action
@@ -35,7 +37,7 @@ _DEFAULT_PACKAGES_URLS = ['http://j0rdyz65.github.io/packages.html']
 
 @action
 def dialog():
-    addon_dir = platform.translatePath(platform.addonInfo('path'))
+    addon_dir = fs.translatePath(platform.addonInfo('path'))
     win = ui.PackagesDialog('PackagesDialog.xml', addon_dir, 'Default', '720p',
                             onPackageSelected=_manage_package,
                             pkgInstalledStatus=pkg.is_installed)

@@ -28,6 +28,7 @@ import urllib2
 
 import importer
 
+from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import cache
 from g2.libraries import client
@@ -73,7 +74,7 @@ _PACKAGES_KINDS = {
 }
 
 # (fixme) change to explicit sentences to ease the translation
-def _fill_packages_settings_category():
+def _settings_category():
     def _ordinal(num):
         return "%d%s" % (num, "tsnrhtdd"[(num/10%10 != 1)*(num%10 < 4)*num%10::4])
 
@@ -89,7 +90,7 @@ def _fill_packages_settings_category():
             }
 
 # python2.6 doesn't support {} comprehensions
-_fill_packages_settings_category()
+_settings_category()
 
 _RESOURCES_PATH = os.path.join(platform.addonInfo('path'), 'resources') 
 
@@ -151,7 +152,6 @@ class Context:
         sys.stdout.close()
         sys.stdout = self.stdout
         sys.stderr = self.stderr
-        # (fixme) [logic]: remove excactly the path il self.search_paths starting from the topmost!
         for dummy_path in self.search_paths:
             sys.path.pop(0)
         if not self.ignore_exc and exc_value:
@@ -206,6 +206,7 @@ def install_or_update(site, ui_update=None):
         init_source = session.get(init_module[0]['download_url']).content
         log.debug('{m}.{f}: %s:\n%s', site, init_source)
         init_attributes = {}
+        # (fixme) should replace the exec pkg.__init__ with a safer alternative?
         exec init_source in init_attributes
         return init_attributes
 
@@ -238,7 +239,7 @@ def _install_or_update(session, url, name, kind, repo=None, ui_update=None):
         if not repo:
             repo = session.get(url).json()
         package_path = os.path.join(_PACKAGES_ABSOLUTE_PATH, kind, name)
-        platform.makeDir(package_path)
+        fs.makeDir(package_path)
     except Exception as ex:
         log.error('{m}.{f}: %s: %s', name, repr(ex))
         return False
@@ -307,10 +308,10 @@ def info(kind, infofunc, force=False):
                 log.debug('{m}.{f}: %s packages: cached=%s, paths=%s', kind, response_infos['cached'], infos_paths)
                 for path in infos_paths:
                     try:
-                        path = platform.translatePath(path)
+                        path = fs.translatePath(path)
                         if not os.path.exists(path):
                             raise Exception('path not existant')
-                        if platform.Stat(path).st_mtime() > response_infos['cached']:
+                        if fs.Stat(path).st_mtime() > response_infos['cached']:
                             raise Exception('path newer than cached info')
                     except Exception as ex:
                         log.debug('{m}.{f}: %s: %s', path, repr(ex))
@@ -398,7 +399,9 @@ def _info_get(kind, infofunc):
     return (list(infos_paths), infos_modules)
 
 
-def _info_get_module(infofunc, infos, kind, module, package='', paths=[]):
+def _info_get_module(infofunc, infos, kind, module, package='', paths=None):
+    if not paths:
+        paths = []
     with Context(kind, package, [module], paths) as mods:
         if not mods:
             return
@@ -514,24 +517,27 @@ def update_settings_skema():
             elif setid.endswith('::priority'):
                 current_module += 1
                 # (fixme)[int]: localize the label
-                new_settings_skema += '\t\t<setting id="%s" type="number" label="Priority" default="%s" enable="eq(-%d,true)" subsetting="true" />\n'%(
-                    setid, default_value, current_module)
+                new_settings_skema += ('\t\t<setting id="%s" type="number" label="Priority" default="%s"'
+                                       ' enable="eq(-%d,true)" subsetting="true" />\n')%(setid, default_value, current_module)
 
             else:
                 current_module += 1
                 if category in ['resolvers']:
                     settype = 'bool'
                     setlvalues = ''
-                    visible = 'true' if current_module > 2 or (index < len(settings_ids)-1 and
-                                                               settings_ids[index+1].split(':')[0:2] == current_package) else 'false'
+                    visible = 'true' if current_module > 2 or (
+                        index < len(settings_ids)-1 and
+                        settings_ids[index+1].split(':')[0:2] == current_package) else 'false'
 
                 elif category in ['providers']:
                     settype = 'enum'
                     setlvalues = 'lvalues="%s" '%('|'.join(['None', 'Movies']))
                     visible = 'true'
 
-                new_settings_skema += '\t\t<setting id="%s" type="%s" label="%s" %sdefault="%s" enable="eq(-%d,true)" visible="%s" subsetting="true" />\n'%(
-                                        setid, settype, setid.split(':')[2].title(), setlvalues, default_value, current_module, visible)
+                new_settings_skema += ('\t\t<setting id="%s" type="%s" label="%s" %sdefault="%s"'
+                                       ' enable="eq(-%d,true)" visible="%s" subsetting="true" />\n')%(
+                                       setid, settype, setid.split(':')[2].title(), setlvalues,
+                                       default_value, current_module, visible)
 
         if current_category:
             new_settings_skema += '\t</category>\n'
@@ -550,17 +556,17 @@ def _remove(path, raise_notfound=True):
     log.debug('{m}.{f}: %s', path)
     if not os.path.isdir(path):
         try:
-            platform.removeFile(path)
+            fs.removeFile(path)
         except OSError as ex:
             if ex.errno != errno.ENOENT or raise_notfound:
                 raise
         return True
-    directories, filenames = platform.listDir(path)
+    directories, filenames = fs.listDir(path)
     for directory in directories:
         _remove(os.path.join(path, directory))
     for filename in filenames:
-        platform.removeFile(os.path.join(path, filename))
-    return platform.removeDir(path)
+        fs.removeFile(os.path.join(path, filename))
+    return fs.removeDir(path)
 
 
 def setting(kind, package='', module='', name='enabled'):
