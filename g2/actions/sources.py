@@ -65,10 +65,10 @@ def playurl(name=None, url=None):
             return
 
         url = thd.result
-        ui.Player().run(name, None, None, None, url)
+        ui.Player().run(name, None, url)
 
     except Exception as ex:
-        log.error('{m}.{f}: %s', ex)
+        log.error('{m}.{f}: %s: %s', url, repr(ex))
         ui.infoDialog(_('Not a valid stream'))
 
 
