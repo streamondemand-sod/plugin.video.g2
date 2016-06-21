@@ -98,7 +98,10 @@ def resolve(kind=None, **kwargs):
 
 
 def movies(url):
-    url, timeout = url.split('|')[0:2]
+    if '|' not in url:
+        timeout = 0
+    else:
+        url, timeout = url.split('|')[0:2]
     query = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))
     query.update({'extended': 'full,images'})
     query = (urllib.urlencode(query)).replace('%2C', ',')
@@ -260,7 +263,6 @@ def movies(url):
                 'fanart': fanart,
                 'next_url': next_url,
                 'next_page': next_page,
-                # (fixme) support the max_pages also in the other dbs and use it in the visualization
                 'max_pages': max_pages,
             })
         except Exception:
