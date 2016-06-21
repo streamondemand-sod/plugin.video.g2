@@ -55,6 +55,13 @@ if _UI == 'xbmc':
     setContent = xbmcplugin.setContent
     finishDirectory = xbmcplugin.endOfDirectory
 
+    def isfolderaction():
+        try:
+            thread = int(sys.argv[1])
+            return thread > 0
+        except Exception:
+            return False
+
     def resolvedPlugin():
         try:
             thread = int(sys.argv[1])

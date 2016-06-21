@@ -86,8 +86,9 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
         if not ui.infoLabel('Container.FolderPath').startswith('plugin://'):
             ui.PlayList.clear()
 
-        ui.resolvedPlugin()
-        ui.execute('Action(Back,10025)')
+        if ui.isfolderaction():
+            ui.resolvedPlugin()
+            ui.execute('Action(Back,10025)')
 
         imdb = 'tt%07d'%int(str(imdb).translate(None, 't'))
         name = '%s (%s)'%(title, year)
