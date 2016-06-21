@@ -21,6 +21,7 @@
 
 import os
 import ast
+import sys
 
 try:
     """
@@ -120,10 +121,18 @@ if _platform == 'xbmc':
         except Exception:
             return None
 
-    # (fixme) addon.runplugin(action, **kwargs)
-    # build the RunPlugin command using sys.argv[0] as plugin id, action=action and
-    # kwargs as key=value
-    # replace all the 'RunPlugin...' strings
+    def pluginaction(action_name, **kwargs):
+        return 'RunPlugin(%s)'%itemaction(action_name, **kwargs)
+
+    def itemaction(action_name, **kwargs):
+        return _action('%s?action=%s'%(sys.argv[0] or 'plugin://%s/'%addonInfo('id'), action_name), **kwargs)
+
+    def scriptaction(action_name, **kwargs):
+        return 'RunScript(%s)'%_action(action_name, args_sep=',', **kwargs)
+
+    def _action(action_name, args_sep='&', **kwargs):
+        return action_name + ('' if not len(kwargs) else
+                              args_sep.join(['']+['%s=%s'%(k, v) for k, v in kwargs.iteritems()]))
 
     # def executeJSONRPC(method, params):
     #     result = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "%s", "params": %s, "id": 1}'%(method, params))

@@ -185,7 +185,6 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         xbmcgui.WindowXMLDialog.onAction(self, action)
 
     def _toggle_select_action(self):
-        log.debug('onAction: action=%s', self.action)
         if self.action != 'play':
             self.select_button.setLabel(_('Play'))
             self.action = 'play'

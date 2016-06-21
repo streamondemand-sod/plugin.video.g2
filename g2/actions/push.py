@@ -19,8 +19,6 @@
 """
 
 
-import sys
-
 import re
 import json
 import urllib
@@ -88,8 +86,9 @@ def new(push):
                 title = push.get('body', '')
             if not title:
                 title = ''
-            addon.execute('RunPlugin(%s?action=sources.playurl&name=%s&url=%s)'%
-                          (sys.argv[0], urllib.quote_plus(title.encode('utf-8')), urllib.quote_plus(url)))
+            addon.execute(addon.pluginaction('sources.playurl',
+                                             name=urllib.quote_plus(title.encode('utf-8')),
+                                             url=urllib.quote_plus(url)))
 
         elif sites[netloc]['type'] == 'addon':
             adn = sites[netloc]
@@ -98,7 +97,7 @@ def new(push):
             query = adn['query'].format(
                 url=urllib.quote_plus(url.encode('utf-8')),
             )
-            plugin = 'RunScript(plugin://%s/?%s)'%(adn['addon'], query)
+            plugin = 'RunPlugin(plugin://%s/?%s)'%(adn['addon'], query)
             log.debug('{m}.{f}: executing %s...', plugin)
             addon.execute(plugin)
 
@@ -111,10 +110,11 @@ def new(push):
 
             log.debug('{m}.{f}: meta=%s', meta)
 
-            addon.execute('RunPlugin(%s?action=sources.dialog&title=%s&year=%s&imdb=%s&tmdb=%s&meta=%s)'%
-                          (sys.argv[0], urllib.quote_plus(meta['title']), urllib.quote_plus(meta['year']),
-                           urllib.quote_plus(meta['imdb']), '', urllib.quote_plus(json.dumps(meta))))
-
+            addon.execute(addon.pluginaction('sources.dialog',
+                                             title=urllib.quote_plus(meta['title']),
+                                             year=urllib.quote_plus(meta['year']),
+                                             imdb=urllib.quote_plus(meta['imdb']),
+                                             meta=urllib.quote_plus(json.dumps(meta))))
         else:
             raise Exception('unknown site type: %s'%sites[netloc])
 

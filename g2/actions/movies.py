@@ -34,10 +34,6 @@ from .lib import ui
 from . import action, busyaction
 
 
-_sysaddon = sys.argv[0]
-_systhread = int(sys.argv[1])
-
-
 @action
 def menu():
     if dbs.resolve('movies_recently_added{}'):
@@ -82,7 +78,7 @@ def searchbytitle():
     query = ui.doQuery(_('Search Title'))
     if query:
         url = dbs.resolve('movies{title}', title=query, quote_plus=True)
-        ui.execute('Container.Update(%s?action=movies.movielist&url=%s)'%(_sysaddon, url))
+        ui.execute('Container.Update(%s)'%addon.itemaction('movies.movielist', url=url))
 
 
 @action
@@ -90,7 +86,7 @@ def searchbyperson():
     query = ui.doQuery(_('Search Person'))
     if query:
         url = dbs.resolve('persons{name}', name=query, quote_plus=True)
-        ui.execute('Container.Update(%s?action=movies.personlist&url=%s)'%(_sysaddon, url))
+        ui.execute('Container.Update(%s)'%addon.itemaction('movies.personlist', url=url))
 
 
 @action
@@ -98,7 +94,7 @@ def searchbyyear():
     query = ui.doQuery(_('Search Year'))
     if query:
         url = dbs.resolve('movies{year}', year=query, quote_plus=True)
-        ui.execute('Container.Update(%s?action=movies.movielist&url=%s)'%(_sysaddon, url))
+        ui.execute('Container.Update(%s)'%addon.itemaction('movies.movielist', url=url))
 
 
 @action
@@ -229,8 +225,7 @@ def _add_movie_directory(items):
                 pass
             sysmeta = urllib.quote_plus(json.dumps(meta))
 
-            url = '%s?action=sources.dialog&title=%s&year=%s&imdb=%s&tmdb=%s&meta=%s'%\
-                  (_sysaddon, systitle, year, imdb, tmdb, sysmeta)
+            url = addon.itemaction('sources.dialog', title=systitle, year=year, imdb=imdb, tmdb=tmdb, meta=sysmeta)
 
             is_watched = dbs.watched('movie{imdb_id}', imdb_id=imdb)
             if is_watched:
@@ -243,17 +238,17 @@ def _add_movie_directory(items):
             cmds.append((_('Movie information'), 'Action(Info)'))
             if addon.condition('System.HasAddon(script.extendedinfo)'):
                 cmds.append((_('Movie information')+' (extendedinfo)',
-                             "RunScript(script.extendedinfo,info=extendedinfo,id=%s)"%tmdb))
+                             addon.scriptaction('script.extendedinfo', info='extendedinfo', id=tmdb)))
                 cmds.append((_('Trailer')+' (extendedinfo)',
-                             'RunScript(script.extendedinfo,info=playtrailer,id=%s)'%tmdb))
+                             addon.scriptaction('script.extendedinfo', info='playtrailer', id=tmdb)))
 
             if is_watched:
-                cmds.append((_('Mark as unwatched'), 'RunPlugin(%s?action=movies.unwatched&imdb=%s)' % (_sysaddon, imdb)))
+                cmds.append((_('Mark as unwatched'), addon.pluginaction('movies.unwatched', imdb=imdb)))
             else:
-                cmds.append((_('Mark as watched'), 'RunPlugin(%s?action=movies.watched&imdb=%s)' % (_sysaddon, imdb)))
+                cmds.append((_('Mark as watched'), addon.pluginaction('movies.watched', imdb=imdb)))
 
-            cmds.append((_('Clear sources cache'), 'RunPlugin(%s?action=sources.clearsourcescache&name=%s&imdb=%s)'%
-                         (_sysaddon, urllib.quote_plus(label), imdb)))
+            cmds.append((_('Clear sources cache'),
+                         addon.pluginaction('sources.clearsourcescache', name=urllib.quote_plus(label), imdb=imdb)))
 
             item = ui.ListItem(label=label, iconImage=poster, thumbnailImage=poster)
 
@@ -270,7 +265,7 @@ def _add_movie_directory(items):
             item.setInfo(type='Video', infoLabels=meta)
             item.setProperty('Video', 'true')
             item.addContextMenuItems(cmds, replaceItems=False)
-            ui.addItem(handle=_systhread, url=url, listitem=item, isFolder=True)
+            ui.addItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=True)
         except Exception:
             import traceback
             log.notice(traceback.format_exc())
@@ -304,12 +299,12 @@ def _add_directory(items, show_genre_line=False, is_person=False):
             else:
                 thumb = addonThumb
 
-            url = '%s?action=%s&url=%s'%(_sysaddon, i['action'], urllib.quote_plus(i['url']))
+            url = addon.itemaction(i['action'], url=urllib.quote_plus(i['url']))
 
             cmds = []
             if is_person and i.get('id') and addon.condition('System.HasAddon(script.extendedinfo)'):
                 cmds.append((_('Person information')+' (extendedinfo)',
-                             'RunScript(script.extendedinfo,info=extendedactorinfo,id=%s)'%i['id'])) 
+                             addon.scriptaction('script.extendedinfo', info='extendedactorinfo', id=i['id'])))
 
             item = ui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
 
@@ -329,7 +324,7 @@ def _add_directory(items, show_genre_line=False, is_person=False):
             item.addContextMenuItems(cmds, replaceItems=False)
             if addonFanart:
                 item.setProperty('Fanart_Image', addonFanart)
-            ui.addItem(handle=_systhread, url=url, listitem=item, isFolder=True)
+            ui.addItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=True)
         except Exception as ex:
             log.error('{m}.{f}: %s: %s', i, repr(ex))
 

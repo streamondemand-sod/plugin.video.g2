@@ -58,15 +58,15 @@ def main():
 
 def service_monitor_setup():
     from g2.actions import service
-    service.monitor('trakt_enabled', 'setting', addon.execute, 'RunPlugin(%s?action=auth.trakt)'%sys.argv[0])
+    service.monitor('trakt_enabled', 'setting', addon.execute, addon.pluginaction('auth.trakt'))
 
-    service.monitor('pushbullet_apikey', 'setting', addon.execute, 'RunPlugin(%s?action=auth.pushbullet)'%sys.argv[0])
+    service.monitor('pushbullet_apikey', 'setting', addon.execute, addon.pluginaction('auth.pushbullet'))
 
     from g2.libraries import workers
     from g2.actions.lib import downloader
     service.monitor('downloader', 'property', workers.Thread, downloader.worker)
 
-    service.monitor('playing', 'player', addon.execute, 'RunPlugin(%s?action=player.notify)'%sys.argv[0])
+    service.monitor('playing', 'player', addon.execute, addon.pluginaction('player.notify'))
 
     from g2 import notifiers
     from g2.actions import push
