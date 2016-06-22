@@ -58,15 +58,17 @@ def main():
 
 def service_monitor_setup():
     from g2.actions import service
-    service.monitor('trakt_enabled', 'setting', addon.execute, addon.pluginaction('auth.trakt'))
+    service.monitor('trakt_enabled', 'setting', addon.runplugin, 'auth.trakt')
 
-    service.monitor('pushbullet_apikey', 'setting', addon.execute, addon.pluginaction('auth.pushbullet'))
+    service.monitor('pushbullet_apikey', 'setting', addon.runplugin, 'auth.pushbullet')
+
+    service.monitor('imdb_user', 'setting', addon.runplugin, 'auth.imdb')
 
     from g2.libraries import workers
     from g2.actions.lib import downloader
     service.monitor('downloader', 'property', workers.Thread, downloader.worker)
 
-    service.monitor('playing', 'player', addon.execute, addon.pluginaction('player.notify'))
+    service.monitor('playing', 'player', addon.runplugin, 'player.notify')
 
     from g2 import notifiers
     from g2.actions import push

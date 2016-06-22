@@ -22,9 +22,6 @@
 from g2.libraries import addon
 from g2.libraries.language import _
 
-from g2.dbs import trakt as trakt_db
-from g2.notifiers import pb as pb_notifier
-
 from .lib import ui
 from . import action
 
@@ -32,6 +29,8 @@ from . import action
 @action
 def trakt():
     """Trakt device authorization"""
+    from g2.dbs import trakt as trakt_db
+
     if addon.setting('trakt_enabled') == 'false':
         ui.infoDialog(_('Trakt functionality disabled'))
         return
@@ -76,17 +75,49 @@ def trakt():
 @action
 def pushbullet():
     """Pushbullet apikey validation"""
+    from g2.notifiers import pb as pb_notifier
+
     if not addon.setting('pushbullet_apikey'):
         ui.infoDialog(_('Pushbullet disabled'))
+        addon.setSetting('pushbullet_email', '')
         return
 
     pbo = pb_notifier.PushBullet(addon.setting('pushbullet_apikey'))
     try:
+        ui.busydialog()
         user = pbo.getUser()
-        if not user:
+        ui.idle()
+        if not user or not user.get('email'):
             raise Exception('Pushbullet authorization failed')
         else:
             ui.Dialog().ok('Pushbullet', _('Authorized account')+' [COLOR orange]%s[/COLOR]'%user['email'])
+            addon.setSetting('pushbullet_email', user['email'])
+
+    except Exception as ex:
+        ui.infoDialog(str(ex), time=5000)
+
+
+@action
+def imdb():
+    """IMdb username validation"""
+    from g2.dbs import imdb as imdb_db
+
+    imdb_user = addon.setting('imdb_user')
+    if not imdb_user:
+        ui.infoDialog(_('IMDb user disabled'))
+        addon.setSetting('imdb_nickname', '')
+        return
+
+    try:
+        ui.busydialog()
+        imdb_nickname = imdb_db.nickname(imdb_user)
+        ui.idle()
+        if not imdb_nickname:
+            raise Exception('Invalid IMDb username ')
+        else:
+            ui.Dialog().ok('IMDbt', _('IMDb user nickname')+' [COLOR orange]%s[/COLOR]'%imdb_nickname)
+            addon.setSetting('imdb_nickname', imdb_nickname)
+            ui.refresh()
 
     except Exception as ex:
         ui.infoDialog(str(ex), time=5000)

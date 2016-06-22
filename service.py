@@ -52,7 +52,7 @@ def main():
             service_thread_id += 1
             log.notice('service manager: scheduling the service thread with id %d...', service_thread_id)
             addon.prop('service', True, name=str(service_thread_id))
-            addon.execute(addon.pluginaction('service.thread', name=service_thread_id))
+            addon.runplugin('service.thread', name=service_thread_id)
             next_restart_after = time.time() + 15
             start_service_thread = False
 

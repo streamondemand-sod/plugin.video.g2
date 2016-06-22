@@ -65,7 +65,7 @@ def playurl(name=None, url=None):
             return
 
         url = thd.result
-        ui.Player().run(name, None, url)
+        ui.PlayerDialog().run(name, None, url)
 
     except Exception as ex:
         log.error('{m}.{f}: %s: %s', url, repr(ex))
@@ -176,7 +176,7 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
             _('Content loaded in {elapsed_time} seconds'),
         ]]
 
-    player = ui.Player()
+    player = ui.PlayerDialog()
     player_status = player.run(name, meta, url, offset=offset, info=credits_message)
 
     _del_bookmark(name, imdb)

@@ -5,6 +5,8 @@
     'actions.movies': True,
     'ui.player': True,
     'ui.sourcesdialog': True,
+    'push.delete': True,
+    'player.notify': True,
     'metastream.mp4': True,		# Show the MP4 decoding
     'cineblog01._get_movie.parseDOM': True,
     'filmsenzalimiti.get_movie.parseDOM': True,

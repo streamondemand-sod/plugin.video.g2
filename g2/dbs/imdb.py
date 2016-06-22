@@ -298,3 +298,8 @@ def lists(url):
             log.error('{m}.{f}: %s: %s', item, repr(ex))
 
     return items
+
+
+def nickname(imdb_user_id):
+    result = client.get(_BASE_URL+'/user/'+imdb_user_id).content
+    return client.parseDOM(result, 'h1')[0]

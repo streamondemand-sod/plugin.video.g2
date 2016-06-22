@@ -275,6 +275,9 @@ class PushBullet:
             self.reqsess = requests.Session()
         return self.wss._th
 
+    def events_handling(self):
+        return self.wss is not None
+        
     def stop_events_handling(self):
         if self.wss:
             log.debug('{m}.{f}: closing web socket %s...', self.wss.bind_addr)

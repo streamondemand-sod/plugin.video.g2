@@ -35,7 +35,6 @@ setting = _addon.getSetting
 setSetting = _addon.setSetting
 
 condition = xbmc.getCondVisibility
-execute = xbmc.executebuiltin
 
 
 def freshsetting(setid):
@@ -88,21 +87,25 @@ def prop(module='', value=None, name='status', addon=addonInfo('id')):
         return None
 
 
-def pluginaction(action_name, **kwargs):
-    return 'RunPlugin(%s)'%itemaction(action_name, **kwargs)
+def runplugin(action, **kwargs):
+    xbmc.executebuiltin(action if action.startswith('RunPlugin') else pluginaction(action, **kwargs))
 
 
-def itemaction(action_name, **kwargs):
-    return _action('%s?action=%s'%(sys.argv[0] or 'plugin://%s/'%addonInfo('id'), action_name), **kwargs)
+def pluginaction(action, **kwargs):
+    return 'RunPlugin(%s)'%itemaction(action, **kwargs)
 
 
-def scriptaction(action_name, **kwargs):
-    return 'RunScript(%s)'%_action(action_name, args_sep=',', **kwargs)
+def itemaction(action, **kwargs):
+    return _action('%s?action=%s'%(sys.argv[0] or 'plugin://%s/'%addonInfo('id'), action), **kwargs)
 
 
-def _action(action_name, args_sep='&', **kwargs):
-    return action_name + ('' if not len(kwargs) else
-                          args_sep.join(['']+['%s=%s'%(k, v) for k, v in kwargs.iteritems()]))
+def scriptaction(action, **kwargs):
+    return 'RunScript(%s)'%_action(action, args_sep=',', **kwargs)
+
+
+def _action(action, args_sep='&', **kwargs):
+    return action + ('' if not len(kwargs) else
+                     args_sep.join(['']+['%s=%s'%(k, v) for k, v in kwargs.iteritems()]))
 
 
 # def executeJSONRPC(method, params):

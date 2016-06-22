@@ -43,6 +43,7 @@ ListItem = xbmcgui.ListItem
 PlayList = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
 Keyboard = xbmc.Keyboard
 Monitor = xbmc.Monitor
+Player = xbmc.Player
 
 infoLabel = xbmc.getInfoLabel
 sleep = xbmc.sleep
@@ -205,6 +206,6 @@ def endDirectory(next_item=None, content=None):
 try:
     from .sourcesdialog import *
     from .packagesdialog import *
-    from .player import *
+    from .playerdialog import *
 except Exception as ex:
     log.error('{m}: %s', repr(ex), trace=True)

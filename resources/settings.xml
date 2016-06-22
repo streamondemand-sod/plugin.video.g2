@@ -16,9 +16,11 @@
 		<setting type="lsep" label="[CR]" />
 		<setting type="lsep" label="IMDb" />
 		<setting id="imdb_user" type="text" label="30911" default="" />
+		<setting id="imdb_nickname" type="text" label="IMDb nickname" default="" enable="false" visible="!eq(-1,)" />
 		<setting type="lsep" label="[CR]" />
 		<setting type="lsep" label="Pushbullet" />
 		<setting id="pushbullet_apikey" type="text" label="Pushbullet API key" default="" />
+		<setting id="pushbullet_email" type="text" label="Pushbullet email" default="" enable="false" visible="!eq(-1,)" />
 		<setting type="lsep" label="[CR]" />
 		<setting type="lsep" label="TMDB" />
 		<setting id="tmdb_apikey" type="text" label="TMDB API key" default="" />

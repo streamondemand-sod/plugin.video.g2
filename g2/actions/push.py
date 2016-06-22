@@ -35,6 +35,9 @@ from .lib import ui
 from . import action
 
 
+_PLAYER = ui.Player()
+
+
 # (fixme) need to abstract from the actual pushbullet dict.
 # - new(iden, target_all=bool, body, url)
 # - delete(iden, target_all=bool)
@@ -81,9 +84,9 @@ def new(push):
                 title = push.get('body', '')
             if not title:
                 title = ''
-            addon.execute(addon.pluginaction('sources.playurl',
-                                             name=urllib.quote_plus(title.encode('utf-8')),
-                                             url=urllib.quote_plus(url)))
+            addon.runplugin('sources.playurl',
+                            name=urllib.quote_plus(title.encode('utf-8')),
+                            url=urllib.quote_plus(url))
 
         elif sites[netloc]['type'] == 'addon':
             adn = sites[netloc]
@@ -93,8 +96,7 @@ def new(push):
                 url=urllib.quote_plus(url.encode('utf-8')),
             )
             plugin = 'RunPlugin(plugin://%s/?%s)'%(adn['addon'], query)
-            log.debug('{m}.{f}: executing %s...', plugin)
-            addon.execute(plugin)
+            addon.runplugin(plugin)
 
         elif sites[netloc]['type'] == 'db':
             site = sites[netloc]
@@ -105,11 +107,11 @@ def new(push):
 
             log.debug('{m}.{f}: meta=%s', meta)
 
-            addon.execute(addon.pluginaction('sources.dialog',
-                                             title=urllib.quote_plus(meta['title']),
-                                             year=urllib.quote_plus(meta['year']),
-                                             imdb=urllib.quote_plus(meta['imdb']),
-                                             meta=urllib.quote_plus(json.dumps(meta))))
+            addon.runplugin('sources.dialog',
+                            title=urllib.quote_plus(meta['title']),
+                            year=urllib.quote_plus(meta['year']),
+                            imdb=urllib.quote_plus(meta['imdb']),
+                            meta=urllib.quote_plus(json.dumps(meta)))
         else:
             raise Exception('unknown site type: %s'%sites[netloc])
 
@@ -122,7 +124,7 @@ def new(push):
 def delete(push):
     log.debug('{m}.{f}: %s', push)
 
-    player = ui.Player()
-    if addon.prop('player.notice.id') == push['iden'] and player.isPlayingVideo():
-        player.stop()
-        notifiers.notices(_('Forced player stop'))
+    if addon.prop('player.notice.id') == push['iden']:
+        if _PLAYER.isPlayingVideo():
+            notifiers.notices(_('Forced player stop'))
+        _PLAYER.stop()

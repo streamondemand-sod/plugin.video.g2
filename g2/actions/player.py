@@ -33,17 +33,20 @@ from .lib import ui
 from . import action
 
 
+_PLAYER = ui.Player()
+
+
 @action
 def notify():
-    player = ui.Player()
-    if not player.isPlaying():
+    if not _PLAYER.isPlaying():
         notice_id = addon.prop('player.notice.id')
         if notice_id:
+            # (fixme) if the player is stopped by push-deletion, this should not be done
             log.debug('{m}.{f}: deleting notice_id=%s...', notice_id)
             notifiers.notices([], targets='remote', identifier=[notice_id])
             addon.prop('player.notice.id', '')
 
-    elif not player.isPlayingVideo():
+    elif not _PLAYER.isPlayingVideo():
         return
 
     else:

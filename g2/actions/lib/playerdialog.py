@@ -31,10 +31,10 @@ from g2.libraries import addon
 from .ui import addon_poster
 
 
-__all__ = ['Player']
+__all__ = ['PlayerDialog']
 
 
-class Player(xbmc.Player):
+class PlayerDialog(xbmc.Player):
     def __init__(self):
         self.name = None
         self.offset = 0

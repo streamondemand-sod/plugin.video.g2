@@ -42,6 +42,7 @@ class Monitor(xbmc.Monitor):
 
 _MONITOR_OBJECTS = {}
 _MONITOR = Monitor()
+_PLAYER = ui.Player()
 
 
 def monitor(monitorid, kind, callback, *args, **kwargs):
@@ -91,10 +92,9 @@ def _get_objectvalue(monitorid, kind):
 
 def _player_state(monitorid):
     if monitorid == 'playing':
-        player = ui.Player()
-        return None if not player.isPlaying() else \
-               'audio' if player.isPlayingAudio() else \
-               'video' if player.isPlayingVideo() else None
+        return None if not _PLAYER.isPlaying() else \
+               'audio' if _PLAYER.isPlayingAudio() else \
+               'video' if _PLAYER.isPlayingVideo() else None
 
     return None
 

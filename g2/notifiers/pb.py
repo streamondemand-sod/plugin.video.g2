@@ -36,6 +36,10 @@ _PB = PushBullet(addon.setting('pushbullet_apikey'), user_agent=addon.addonInfo(
 
 def notices(notes, playing=None, origin=ui.infoLabel('System.FriendlyName'), identifier=None, url=None, **kwargs):
     """Push a comulative note to the pushbullet account"""
+
+    if not addon.setting('pushbullet_email'):
+        return
+
     body = '\n'.join(notes)
     if body:
         _PB.pushNote(origin, body, iden=identifier, url=url, **kwargs)
@@ -61,13 +65,11 @@ class PushBulletEvents(object):
         elif event_type == 'pushes':
             for push in event_value:
                 log.debug('{m}.{f}: %s: %s', self.recipient, push)
-                if self.recipient and push.get('target_device_iden') != self.recipient:
-                    pass # ignore all the pushes but the one addressed to us!
-                elif not push['active']:
+                if not push['active']:
                     self.on_push_delete(push)
                 elif push['dismissed']:
                     self.on_push_dismissed(push)
-                else:
+                elif not self.recipient or push.get('target_device_iden') == self.recipient:
                     self.on_push(push)
         else:
             log.notice('{m}.{f}: event %s not filtered: %s', event_type, event_value)
@@ -79,7 +81,11 @@ def _nop(dummy):
 
 def events(start=False, on_push=_nop, on_push_dismissed=_nop, on_push_delete=_nop):
     """Start or stop the reading of the real time events stream"""
+
     if start:
+        if not addon.setting('pushbullet_email'):
+            return None
+
         def pb_last_modified(dummy_apikey):
             return 0.0
         modified = cache.get(pb_last_modified, -1, _PB.api_key)
@@ -102,9 +108,14 @@ def events(start=False, on_push=_nop, on_push_dismissed=_nop, on_push_delete=_no
                                          ['opened', 'pushes', 'closed'], modified=modified)
 
     try:
+        if not _PB.events_handling():
+            return None
+
         def pb_last_modified(dummy_apikey):
             return _PB.stop_events_handling()
         modified = cache.get(pb_last_modified, 0, _PB.api_key)
         log.debug('{m}.{f}: last modified timestamp: %f (saved to cache)', modified)
     except Exception as ex:
         log.notice('{m}.{f}: %s', ex)
+
+    return None
