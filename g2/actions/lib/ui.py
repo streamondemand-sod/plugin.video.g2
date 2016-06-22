@@ -26,27 +26,97 @@ import urllib
 import xbmc
 import xbmcgui
 import xbmcplugin
+import xbmcaddon
 
 from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries.language import _
 
 
-# (fixem)[code]: pylint-fy, so rename all these methods
-__all__ = [
-    'doQuery',
-    'addDirectoryItem',
-    'endDirectory',
-]
-
+_addon = xbmcaddon.Addon()
 _artPath = addon.artPath()
 _addonFanart = addon.addonFanart()
 
+Window = xbmcgui.Window
+Dialog = xbmcgui.Dialog
+DialogProgress = xbmcgui.DialogProgress
+DialogProgressBG = xbmcgui.DialogProgressBG
+ListItem = xbmcgui.ListItem
+PlayList = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+Keyboard = xbmc.Keyboard
+Monitor = xbmc.Monitor
 
-def doQuery(title):
-    k = xbmc.Keyboard('', title)
+infoLabel = xbmc.getInfoLabel
+sleep = xbmc.sleep
+condition = xbmc.getCondVisibility
+execute = xbmc.executebuiltin
+
+setContent = xbmcplugin.setContent
+finishDirectory = xbmcplugin.endOfDirectory
+
+
+def isfolderaction():
+    try:
+        thread = int(sys.argv[1])
+        return thread > 0
+    except Exception:
+        return False
+
+
+def resolvedPlugin():
+    try:
+        thread = int(sys.argv[1])
+        if thread > 0:
+            xbmcplugin.setResolvedUrl(thread, True, xbmcgui.ListItem(path=''))
+    except Exception:
+        pass
+
+
+def abortRequested():
+    return xbmc.abortRequested
+
+
+def keyboard(heading):
+    k = xbmc.Keyboard('', heading)
     k.doModal()
     return k.getText() if k.isConfirmed() else None
+
+
+def infoDialog(message, heading=_addon.getAddonInfo('name'), icon=addon.addonIcon(), time=3000):
+    try:
+        xbmcgui.Dialog().notification(heading, message, icon, time, sound=False)
+    except Exception:
+        xbmc.executebuiltin("Notification(%s,%s, %s, %s)"%(heading, message, time, icon))
+
+
+def yesnoDialog(line1, line2='', line3='', heading=_addon.getAddonInfo('name'), nolabel='', yeslabel=''):
+    return xbmcgui.Dialog().yesno(heading, line1, line2, line3, nolabel=nolabel, yeslabel=yeslabel)
+
+
+def busydialog(stop=False):
+    return xbmc.executebuiltin('Dialog.Close(busydialog)' if stop else 'ActivateWindow(busydialog)')
+
+
+def idle():
+    return busydialog(stop=True)
+
+
+def refresh(action=None, **kwargs):
+    if not action:
+        return xbmc.executebuiltin('Container.Refresh')
+    else:
+        return xbmc.executebuiltin('Container.Update(%s)'%addon.itemaction(action, **kwargs))
+
+
+def addItem(url, listitem, isFolder=False, totalItems=None):
+    try:
+        thread = int(sys.argv[1])
+    except Exception:
+        raise
+    if totalItems is None:
+        xbmcplugin.addDirectoryItem(thread, url, listitem, isFolder=isFolder)
+    else:
+        xbmcplugin.addDirectoryItem(thread, url, listitem, isFolder=isFolder, totalItems=totalItems)
 
 
 def addDirectoryItem(name, query, thumb, icon, context=None, isAction=True, isFolder=True):
@@ -58,8 +128,8 @@ def addDirectoryItem(name, query, thumb, icon, context=None, isAction=True, isFo
     thumb = thumb if thumb.startswith('http://') else os.path.join(_artPath, thumb) if _artPath is not None else icon
     cmds = []
     if context:
-        cmds.append((context[0] if isinstance(context[0], basestring) else
-                     _(context[0]), context[1][1:] if context[1][0] == ':' else addon.pluginaction(context[1])))
+        cmds.append((context[0] if isinstance(context[0], basestring) else _(context[0]),
+                     context[1][1:] if context[1][0] == ':' else addon.pluginaction(context[1])))
     item = xbmcgui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
     item.addContextMenuItems(cmds, replaceItems=False)
     if _addonFanart:
@@ -67,7 +137,7 @@ def addDirectoryItem(name, query, thumb, icon, context=None, isAction=True, isFo
     xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=isFolder)
 
 
-def endDirectory(next_item=None, content=None, updateListing=False, cacheToDisc=True):
+def endDirectory(next_item=None, content=None):
     viewmode = None
     if type(next_item) == dict and next_item.get('next_action') and next_item.get('next_url'):
         log.debug('{m}.{f}: next_action:%s, next_url:%s, next_page:%s, max_pages:%s',
@@ -90,7 +160,15 @@ def endDirectory(next_item=None, content=None, updateListing=False, cacheToDisc=
     if content:
         xbmcplugin.setContent(int(sys.argv[1]), content)
 
-    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing=updateListing, cacheToDisc=cacheToDisc)
+    xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
     if viewmode:
         xbmc.executebuiltin("Container.SetViewMode(%s)" % viewmode)
+
+
+try:
+    from .sourcesdialog import *
+    from .packagesdialog import *
+    from .player import *
+except Exception as ex:
+    xbmc.log(repr(ex))

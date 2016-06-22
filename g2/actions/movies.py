@@ -21,7 +21,6 @@
 
 
 import os
-import sys
 import json
 import urllib
 
@@ -75,26 +74,26 @@ def menu():
 
 @action
 def searchbytitle():
-    query = ui.doQuery(_('Search Title'))
+    query = ui.keyboard(_('Title to search'))
     if query:
         url = dbs.resolve('movies{title}', title=query, quote_plus=True)
-        ui.execute('Container.Update(%s)'%addon.itemaction('movies.movielist', url=url))
+        ui.refresh('movies.movielist', url=url)
 
 
 @action
 def searchbyperson():
-    query = ui.doQuery(_('Search Person'))
+    query = ui.keyboard(_('Person to search'))
     if query:
         url = dbs.resolve('persons{name}', name=query, quote_plus=True)
-        ui.execute('Container.Update(%s)'%addon.itemaction('movies.personlist', url=url))
+        ui.refresh('movies.personlist', url=url)
 
 
 @action
 def searchbyyear():
-    query = ui.doQuery(_('Search Year'))
+    query = ui.keyboard(_('Year'))
     if query:
         url = dbs.resolve('movies{year}', year=query, quote_plus=True)
-        ui.execute('Container.Update(%s)'%addon.itemaction('movies.movielist', url=url))
+        ui.refresh('movies.movielist', url=url)
 
 
 @action
@@ -174,16 +173,17 @@ def lists(kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', user_id=''
     if not items:
         ui.infoDialog(_('No results'))
         return
-    _add_directory(items, show_genre_line=True)
+    # (fixme) in lists{} put the meta in 'meta', not 'genre'...
+    _add_directory(items, show_genre_as='genre')
 
 
-@busyaction()
+@busyaction
 def watched(imdb):
     dbs.watched('movie{imdb_id}', True, imdb_id=imdb)
     ui.refresh()
 
 
-@busyaction()
+@busyaction
 def unwatched(imdb):
     dbs.watched('movie{imdb_id}', False, imdb_id=imdb)
     ui.refresh()
@@ -265,7 +265,7 @@ def _add_movie_directory(items):
             item.setInfo(type='Video', infoLabels=meta)
             item.setProperty('Video', 'true')
             item.addContextMenuItems(cmds, replaceItems=False)
-            ui.addItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=True)
+            ui.addItem(url, item, isFolder=True, totalItems=len(items))
         except Exception:
             import traceback
             log.notice(traceback.format_exc())
@@ -276,7 +276,7 @@ def _add_movie_directory(items):
         ui.endDirectory(content='movies')
 
 
-def _add_directory(items, show_genre_line=False, is_person=False):
+def _add_directory(items, show_genre_as=False, is_person=False):
     if not items:
         items = []
 
@@ -308,27 +308,28 @@ def _add_directory(items, show_genre_line=False, is_person=False):
 
             item = ui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
 
-            if show_genre_line:
-                if 'genre' in i:
-                    item.setInfo(type='Video', infoLabels={'genre': i['genre']})
+            if show_genre_as:
+                if show_genre_as in i:
+                    item.setInfo(type='Video', infoLabels={'genre': i[show_genre_as]})
                     item.setProperty('Video', 'true')
-                if 'poster' in i:
-                    if i['poster'].startswith('http://'):
-                        poster = i['poster']
-                    elif artPath:
-                        poster = os.path.join(artPath, i['poster'])
-                    else:
-                        poster = addonPoster
-                    item.setArt({'poster': poster, 'banner': poster})
+
+            if 'poster' in i:
+                if i['poster'].startswith('http://'):
+                    poster = i['poster']
+                elif artPath:
+                    poster = os.path.join(artPath, i['poster'])
+                else:
+                    poster = addonPoster
+                item.setArt({'poster': poster, 'banner': poster})
 
             item.addContextMenuItems(cmds, replaceItems=False)
             if addonFanart:
                 item.setProperty('Fanart_Image', addonFanart)
-            ui.addItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=True)
+            ui.addItem(url, item, isFolder=True, totalItems=len(items))
         except Exception as ex:
             log.error('{m}.{f}: %s: %s', i, repr(ex))
 
-    content = 'movies' if show_genre_line else None
+    content = 'movies' if show_genre_as else None
     if len(items) and 'next_action' in items[0]:
         ui.endDirectory(content=content, next_item=items[0])
     else:

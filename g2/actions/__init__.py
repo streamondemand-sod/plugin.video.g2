@@ -27,15 +27,13 @@ from g2.libraries import log
 from .lib import ui
 
 
-def busyaction():
-    def wrap(func):
-        def busyaction_func(*args, **kwargs):
-            ui.busydialog()
-            func(*args, **kwargs)
-            ui.busydialog(stop=True)
-        busyaction_func.is_action = True
-        return busyaction_func
-    return wrap
+def busyaction(func):
+    def func_wrapper(*args, **kwargs):
+        ui.busydialog()
+        func(*args, **kwargs)
+        ui.busydialog(stop=True)
+    func_wrapper.is_action = True
+    return func_wrapper
 
 
 def action(func):
@@ -43,26 +41,26 @@ def action(func):
     return func
 
 
-def execute(action, kwargs=None):
+def execute(act, kwargs=None):
     """Execute the plugin actions"""
-    if '.' not in action:
-        log.error('{m}.{f}(%s, ...): malformed action identifier (it should be module.action)', action)
+    if '.' not in act:
+        log.error('{m}.{f}(%s, ...): malformed action identifier (it should be module.action)', act)
         return
 
     if kwargs is None:
         kwargs = {}
 
-    log.debug('{m}.{f}: tID:%s, ACTION:%s, ARGS:%.80s...', sys.argv[1], action, repr(kwargs))
+    log.debug('{m}.{f}: tID:%s, ACTION:%s, ARGS:%.80s...', sys.argv[1], act, repr(kwargs))
 
-    module, action = action.split('.')
+    module, act = act.split('.')
 
     try:
         mod = __import__(module, globals(), locals(), [], -1)
-        if not hasattr(mod, action):
+        if not hasattr(mod, act):
             raise Exception('missing action function')
-        function = getattr(mod, action)
+        function = getattr(mod, act)
         if not hasattr(function, 'is_action'):
             raise Exception('action function is not decorated')
         function(**kwargs)
     except Exception as ex:
-        log.error('{m}.{f}: %s.%s: %s', module, action, ex, trace=True)
+        log.error('{m}.{f}: %s.%s: %s', module, act, ex, trace=True)

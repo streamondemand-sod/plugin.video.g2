@@ -57,21 +57,21 @@ def menu():
     ui.endDirectory()
 
 
-@busyaction()
+@busyaction
 def start():
     addon.property('downloader', True)
     ui.sleep(3000)
     ui.refresh()
 
 
-@busyaction()
+@busyaction
 def stop():
     addon.property('downloader', False)
     ui.sleep(3000)
     ui.refresh()
 
 
-@busyaction()
+@busyaction
 def remove(url):
     downloader.removeDownload(url)
     ui.sleep(500)
