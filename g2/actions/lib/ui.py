@@ -34,8 +34,6 @@ from g2.libraries.language import _
 
 
 _addon = xbmcaddon.Addon()
-_artPath = addon.artPath()
-_addonFanart = addon.addonFanart()
 
 Window = xbmcgui.Window
 Dialog = xbmcgui.Dialog
@@ -54,6 +52,43 @@ execute = xbmc.executebuiltin
 setContent = xbmcplugin.setContent
 finishDirectory = xbmcplugin.endOfDirectory
 
+
+def addon_icon():
+    return _media('icon.png', addon.addonInfo('icon'))
+
+
+def addon_poster():
+    return _media('poster.png', 'DefaultVideo.png')
+
+
+def addon_banner():
+    return _media('banner.png', 'DefaultVideo.png')
+
+
+def addon_thumb():
+    return _media('icon.png', 'DefaultFolder.png', addon.addonInfo('icon'))
+
+
+def addon_fanart():
+    return _media('fanart.png', None, addon.addonInfo('fanart'))
+
+
+def addon_next():
+    return _media('next.jpg', 'DefaultFolderBack.png', 'DefaultFolderBack.png')
+
+
+def artpath():
+    return _media('', None, None)
+
+
+def _media(icon, icon_default, icon_default2=None):
+    appearance = addon.setting('appearance').lower()
+    if appearance == '-':
+        return icon_default
+    elif appearance == '':
+        return icon_default2
+    else:
+        return os.path.join(addon.addonPath, 'resources', 'media', appearance, icon)
 
 def isfolderaction():
     try:
@@ -82,7 +117,7 @@ def keyboard(heading):
     return k.getText() if k.isConfirmed() else None
 
 
-def infoDialog(message, heading=_addon.getAddonInfo('name'), icon=addon.addonIcon(), time=3000):
+def infoDialog(message, heading=_addon.getAddonInfo('name'), icon=addon_icon(), time=3000):
     try:
         xbmcgui.Dialog().notification(heading, message, icon, time, sound=False)
     except Exception:
@@ -125,15 +160,16 @@ def addDirectoryItem(name, query, thumb, icon, context=None, isAction=True, isFo
     except Exception:
         pass
     url = addon.itemaction(query) if isAction else query
-    thumb = thumb if thumb.startswith('http://') else os.path.join(_artPath, thumb) if _artPath is not None else icon
+    thumb = thumb if thumb.startswith('http://') else os.path.join(artpath(), thumb) if artpath() is not None else icon
     cmds = []
     if context:
         cmds.append((context[0] if isinstance(context[0], basestring) else _(context[0]),
                      context[1][1:] if context[1][0] == ':' else addon.pluginaction(context[1])))
     item = xbmcgui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
     item.addContextMenuItems(cmds, replaceItems=False)
-    if _addonFanart:
-        item.setProperty('Fanart_Image', _addonFanart)
+    fanart = addon_fanart()
+    if fanart:
+        item.setProperty('Fanart_Image', fanart)
     xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=isFolder)
 
 
@@ -144,14 +180,14 @@ def endDirectory(next_item=None, content=None):
                   next_item.get('next_action'), next_item.get('next_url'), next_item.get('next_page'), next_item.get('max_pages'))
 
         url = addon.itemaction(next_item['next_action'], url=urllib.quote_plus(next_item['next_url']))
-        addon_next = addon.addonNext()
 
         pages = '' if not next_item.get('max_pages') or not next_item.get('next_page') else \
                 _('[{page_of} of {max_pages}]').format(page_of=next_item['next_page'], max_pages=next_item['max_pages'])
-        item = xbmcgui.ListItem(label=_('[I]Next Page[/I]')+' '+pages, iconImage=addon_next, thumbnailImage=addon_next)
+        item = xbmcgui.ListItem(label=_('[I]Next Page[/I]')+' '+pages, iconImage=addon_next(), thumbnailImage=addon_next())
         item.addContextMenuItems([], replaceItems=False)
-        if _addonFanart:
-            item.setProperty('Fanart_Image', _addonFanart)
+        fanart = addon_fanart()
+        if fanart:
+            item.setProperty('Fanart_Image', fanart)
         xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=True)
         # On paged directories, replicate the current viewmode when displaying the pages after the first
         if next_item.get('next_page') > 2:
@@ -171,4 +207,4 @@ try:
     from .packagesdialog import *
     from .player import *
 except Exception as ex:
-    xbmc.log(repr(ex))
+    log.error('{m}: %s', repr(ex), trace=True)

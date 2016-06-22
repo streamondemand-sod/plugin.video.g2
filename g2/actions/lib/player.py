@@ -28,6 +28,8 @@ import xbmcgui
 
 from g2.libraries import addon
 
+from .ui import addon_poster
+
 
 __all__ = ['Player']
 
@@ -61,11 +63,11 @@ class Player(xbmc.Player):
 
         poster = meta.get('poster', '0')
         if poster == '0':
-            poster = addon.addonPoster()
+            poster = addon_poster()
         thumb = meta.get('thumb', poster)
 
-        addon.property(addon='script.trakt', name='ids', value=json.dumps(ids))
-        addon.property('player', name='mpaa', value=meta.get('mpaa', ''))
+        addon.prop(addon='script.trakt', name='ids', value=json.dumps(ids))
+        addon.prop('player', name='mpaa', value=meta.get('mpaa', ''))
 
         item = xbmcgui.ListItem(path=url, iconImage='DefaultVideo.png', thumbnailImage=thumb)
         item.setProperty('Video', 'true')
@@ -97,8 +99,8 @@ class Player(xbmc.Player):
                 pass
             xbmc.sleep(1000)
 
-        addon.property(addon='script.trakt', name='ids', value='')
-        addon.property('player', name='mpaa', value='')
+        addon.prop(addon='script.trakt', name='ids', value='')
+        addon.prop('player', name='mpaa', value='')
 
         return -1 if not self.play_started else 0 if not total_time else int(100*self.current_time/total_time)
 

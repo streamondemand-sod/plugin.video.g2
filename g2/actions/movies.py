@@ -193,9 +193,9 @@ def _add_movie_directory(items):
     if not items:
         return
 
-    addonPoster = addon.addonPoster()
-    addonBanner = addon.addonBanner()
-    addonFanart = addon.addonFanart()
+    addonPoster = ui.addon_poster()
+    addonBanner = ui.addon_banner()
+    addonFanart = ui.addon_fanart()
     settingFanart = addon.setting('fanart')
 
     for i in items:
@@ -280,10 +280,10 @@ def _add_directory(items, show_genre_as=False, is_person=False):
     if not items:
         items = []
 
-    addonPoster = addon.addonPoster()
-    addonFanart = addon.addonFanart()
-    addonThumb = addon.addonThumb()
-    artPath = addon.artPath()
+    addonPoster = ui.addon_poster()
+    addonFanart = ui.addon_fanart()
+    addonThumb = ui.addon_thumb()
+    artPath = ui.artpath()
 
     for i in items:
         try:

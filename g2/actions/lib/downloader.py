@@ -96,7 +96,7 @@ def removeDownload(url):
 
 
 def status():
-    return addon.property('downloader', name='filepath')
+    return addon.prop('downloader', name='filepath')
 
 
 def statusItem(item):
@@ -108,8 +108,8 @@ def statusItem(item):
         percentage = None
 
     completition_time = None \
-        if addon.property('downloader', name='filepath') != _file_path(downloads_path, item['filename']) else \
-                        addon.property('downloader', name='completition_time')
+        if addon.prop('downloader', name='filepath') != _file_path(downloads_path, item['filename']) else \
+                        addon.prop('downloader', name='completition_time')
 
     return percentage, completition_time
 
@@ -139,7 +139,7 @@ def worker():
 
         for item in items:
             try:
-                addon.property('downloader', '-', name='filepath')
+                addon.prop('downloader', '-', name='filepath')
 
                 url = item['url']
                 dest = _file_path(downloads_path, item['filename'])
@@ -187,8 +187,8 @@ def worker():
                         completition_time = str(datetime.timedelta(seconds=completition_time))
                     except Exception:
                         completition_time = '...'
-                    addon.property('downloader', completition_time, name='completition_time')
-                    addon.property('downloader', dest, name='filepath')
+                    addon.prop('downloader', completition_time, name='completition_time')
+                    addon.prop('downloader', dest, name='filepath')
 
                     # json.loads(json.dumps(unicode(a, 'ISO-8859-1'))).encode('ISO-8859-1')
                     progress = '[%s%%, %s] %s'%(percent, completition_time, unicode(os.path.basename(dest), 'ISO-8859-1'))
@@ -271,7 +271,7 @@ def worker():
             except Exception as ex:
                 log.error('{m}.{f}: %s: %s', os.path.basename(dest), ex)
 
-            addon.property('downloader', '', name='filepath')
+            addon.prop('downloader', '', name='filepath')
 
             if this.die:
                 break

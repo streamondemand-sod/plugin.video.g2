@@ -24,8 +24,6 @@ import json
 import urllib
 import urlparse
 
-import xbmc
-
 from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries.language import _
@@ -37,26 +35,23 @@ from .lib import ui
 from . import action
 
 
-_PLAYER = xbmc.Player()
-
-
 # (fixme) need to abstract from the actual pushbullet dict.
 # - new(iden, target_all=bool, body, url)
 # - delete(iden, target_all=bool)
 @action
 def new(push):
     """Find a movie in the push and schedule the sources dialog"""
+    log.debug('{m}.{f}: %s', push)
+
+    url = push.get('url')
+    if not url:
+        return
 
     if 'target_device_iden' in push:
         # Remove the push if addressed to kodi
         notifiers.notices([], identifier=[push['iden']])
 
     try:
-        log.debug('{m}.{f}: %s', push)
-        url = push.get('url')
-        if not url:
-            return
-
         sites = {
             'imdb.com': {
                 'type': 'db',
@@ -126,6 +121,8 @@ def new(push):
 @action
 def delete(push):
     log.debug('{m}.{f}: %s', push)
-    if addon.property('player.notice.id') == push['iden']:
-        _PLAYER.stop()
+
+    player = ui.Player()
+    if addon.prop('player.notice.id') == push['iden'] and player.isPlayingVideo():
+        player.stop()
         notifiers.notices(_('Forced player stop'))

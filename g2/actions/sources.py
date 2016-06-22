@@ -96,7 +96,7 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
 
         poster = meta.get('poster', '0')
         if poster == '0':
-            poster = addon.addonPoster()
+            poster = ui.addon_poster()
 
         log.debug('{m}.{f}: %s %s: meta:%s', name, imdb, meta)
 

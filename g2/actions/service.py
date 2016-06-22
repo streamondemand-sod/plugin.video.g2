@@ -41,7 +41,6 @@ class Monitor(xbmc.Monitor):
 
 
 _MONITOR_OBJECTS = {}
-_PLAYER = xbmc.Player()
 _MONITOR = Monitor()
 
 
@@ -78,23 +77,24 @@ def _get_objectvalue(monitorid, kind):
     if kind == 'setting':
         return addon.freshsetting(monitorid)
     elif kind == 'property':
-        return addon.property(monitorid)
+        return addon.prop(monitorid)
     elif kind == 'player':
         return _player_state(monitorid)
     elif kind == 'service':
         try:
-            value = addon.property(monitorid) + 1
+            value = addon.prop(monitorid) + 1
         except Exception:
             value = 1
-        addon.property(monitorid, value)
+        addon.prop(monitorid, value)
         return value
 
 
 def _player_state(monitorid):
     if monitorid == 'playing':
-        return None if not _PLAYER.isPlaying() else \
-               'audio' if _PLAYER.isPlayingAudio() else \
-               'video' if _PLAYER.isPlayingVideo() else None
+        player = ui.Player()
+        return None if not player.isPlaying() else \
+               'audio' if player.isPlayingAudio() else \
+               'video' if player.isPlayingVideo() else None
 
     return None
 
@@ -171,7 +171,7 @@ def _service_thread_cleanup(monitorid):
     if _MONITOR_OBJECTS[monitorid]['kind'] == 'setting':
         addon.setSetting(monitorid, 'false')
     elif _MONITOR_OBJECTS[monitorid]['kind'] == 'property':
-        addon.property(monitorid, False)
+        addon.prop(monitorid, False)
 
 
 @action
@@ -183,7 +183,7 @@ def thread(name):
             log.notice('service[%s]: monitored %s %s', name, mobj['id'], mobj['kind'])
 
         _check_changes('service')
-        while not ui.abortRequested() and addon.property('service', name=name):
+        while not ui.abortRequested() and addon.prop('service', name=name):
             _check_changes('property')
             _check_changes('player')
 
@@ -214,4 +214,4 @@ def thread(name):
 
     log.notice('service thread[%s] stopped ({t})', name)
 
-    addon.property('service', '', name=name)
+    addon.prop('service', '', name=name)

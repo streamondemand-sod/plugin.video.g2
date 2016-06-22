@@ -22,8 +22,6 @@
 import re
 import json
 
-import xbmc
-
 from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries.language import _
@@ -31,36 +29,37 @@ from g2.libraries.language import _
 from g2 import dbs
 from g2 import notifiers
 
+from .lib import ui
 from . import action
 
 
 @action
 def notify():
-    player = xbmc.Player()
+    player = ui.Player()
     if not player.isPlaying():
-        notice_id = addon.property('player.notice.id')
+        notice_id = addon.prop('player.notice.id')
         if notice_id:
             log.debug('{m}.{f}: deleting notice_id=%s...', notice_id)
             notifiers.notices([], targets='remote', identifier=[notice_id])
-            addon.property('player.notice.id', '')
+            addon.prop('player.notice.id', '')
 
     elif not player.isPlayingVideo():
         return
 
     else:
-        title = xbmc.getInfoLabel('VideoPlayer.Title')
-        year = xbmc.getInfoLabel('VideoPlayer.Year')
+        title = ui.infoLabel('VideoPlayer.Title')
+        year = ui.infoLabel('VideoPlayer.Year')
 
         # Look for the MPAA rating if set by the player or the addons
-        mpaa = xbmc.getInfoLabel('VideoPlayer.mpaa')
+        mpaa = ui.infoLabel('VideoPlayer.mpaa')
         if not mpaa:
-            mpaa = addon.property('player', name='mpaa')
+            mpaa = addon.prop('player', name='mpaa')
 
         # Look for the IMDB id, if set by the player or the addons
-        imdb = xbmc.getInfoLabel('VideoPlayer.IMDBNumber')
+        imdb = ui.infoLabel('VideoPlayer.IMDBNumber')
         if not imdb:
             try:
-                ids = json.loads(addon.property(addon='script.trakt', name='ids'))
+                ids = json.loads(addon.prop(addon='script.trakt', name='ids'))
             except Exception:
                 ids = {}
             imdb = ids.get('imdb')
@@ -87,7 +86,7 @@ def notify():
 
         if len(notice_id):
             log.debug('{m}.{f}: created notice_id=%s', notice_id[0])
-            addon.property('player.notice.id', notice_id[0])
+            addon.prop('player.notice.id', notice_id[0])
 
 
 def _fetch_db_meta(imdb, title, year):

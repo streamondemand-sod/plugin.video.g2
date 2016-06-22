@@ -33,25 +33,25 @@ def main():
     service_thread_id = 0
     next_restart_after = time.time()
     start_service_thread = True
-    addon.property('service', '')
+    addon.prop('service', '')
     while not xbmc.abortRequested:
         # The current thread terminated
-        if service_thread_id and addon.property('service', name=str(service_thread_id)) is None:
+        if service_thread_id and addon.prop('service', name=str(service_thread_id)) is None:
             log.notice('service manager: service thread with id %d terminated', service_thread_id)
             start_service_thread = True
 
         # User/system asked to terminate the current thread
-        if addon.property('service') is False:
-            addon.property('service', '')
-            if service_thread_id and addon.property('service', name=str(service_thread_id)) is True:
+        if addon.prop('service') is False:
+            addon.prop('service', '')
+            if service_thread_id and addon.prop('service', name=str(service_thread_id)) is True:
                 log.notice('service manager: terminating the service thread with id %d...', service_thread_id)
-                addon.property('service', False, name=str(service_thread_id))
+                addon.prop('service', False, name=str(service_thread_id))
 
         # User/system asked to start the service thread
         if start_service_thread and time.time() >= next_restart_after:
             service_thread_id += 1
             log.notice('service manager: scheduling the service thread with id %d...', service_thread_id)
-            addon.property('service', True, name=str(service_thread_id))
+            addon.prop('service', True, name=str(service_thread_id))
             addon.execute(addon.pluginaction('service.thread', name=service_thread_id))
             next_restart_after = time.time() + 15
             start_service_thread = False

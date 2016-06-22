@@ -59,14 +59,14 @@ def menu():
 
 @busyaction
 def start():
-    addon.property('downloader', True)
+    addon.prop('downloader', True)
     ui.sleep(3000)
     ui.refresh()
 
 
 @busyaction
 def stop():
-    addon.property('downloader', False)
+    addon.prop('downloader', False)
     ui.sleep(3000)
     ui.refresh()
 

@@ -19,13 +19,12 @@
 """
 
 
-import xbmc
-
 from g2.libraries import log
 from g2.libraries import cache
 from g2.libraries import addon
 from .lib.pushbullet import PushBullet
 
+from g2.actions.lib import ui
 
 INFO = {
     'methods': ['notices', 'events'],
@@ -35,7 +34,7 @@ INFO = {
 _PB = PushBullet(addon.setting('pushbullet_apikey'), user_agent=addon.addonInfo('id'))
 
 
-def notices(notes, playing=None, origin=xbmc.getInfoLabel('System.FriendlyName'), identifier=None, url=None, **kwargs):
+def notices(notes, playing=None, origin=ui.infoLabel('System.FriendlyName'), identifier=None, url=None, **kwargs):
     """Push a comulative note to the pushbullet account"""
     body = '\n'.join(notes)
     if body:
@@ -87,7 +86,7 @@ def events(start=False, on_push=_nop, on_push_dismissed=_nop, on_push_delete=_no
         log.debug('{m}.{f}: last modified timestamp: %f (restored from cache)', modified)
 
         try:
-            my_nickname = xbmc.getInfoLabel('System.FriendlyName')
+            my_nickname = ui.infoLabel('System.FriendlyName')
             my_iden = [d.get('iden') for d in _PB.getDevices() if d.get('nickname') == my_nickname]
             if my_iden:
                 my_iden = my_iden[0]
