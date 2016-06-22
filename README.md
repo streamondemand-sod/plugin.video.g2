@@ -13,7 +13,7 @@ Features at glance
   - User lists, watched status, ratings, etc.
 - Integration with your pushbullet account (mostly for parental control)
   - Notification of start/stop video playing including the title, mpaa rating and imdb url
-  - Forced stop from any connected device
+  - Forced stop of the current playing title from any connected device
   - Push of video urls that can be resolved in a playable stream
 - Script.extendedinfo integration
   - Movie/Person information
@@ -21,7 +21,6 @@ Features at glance
 - Sources dialog
   - Show the stream sources as they are found by the providers ordered by user preference
   - Check the sources validity and stream resolution (MP4 and FLV formats only)
-- Player helper
   - Stream bookmarking for playing resume
   - Watched status sync with the trakt account
 - Download manager
@@ -30,17 +29,13 @@ Features at glance
 - Easily extensible via addon packages
   - API published soon... :)
   - Notable packages to install
-    - iSOD providers (~51) and resolvers (~139)
-    - URLResolvers resolvers (~111)
+    - iSOD providers and resolvers
+    - URLResolvers resolvers
 
 Attributions
 ---------------------
 - Original code by lambda | http://tvaddons.ag
-- 4orbs theme by Marquerite | http://tvaddons.ag
-- Clean theme by jokster | http://tvaddons.ag
 - Embossed theme by jokster | http://tvaddons.ag
-- GOne theme by jokster | http://tvaddons.ag
-- Metro theme by rayw1986 | http://tvaddons.ag
 
 License
 -------

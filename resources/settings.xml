@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
 	<category label="30800">
-		<setting id="appearance" type="select" label="30801" values="-|4orbs|Clean|Embossed|GOne|Metro" default="GOne" />
+		<setting visible="false" id="appearance" type="select" label="30801" values="-|4orbs|Clean|Embossed|GOne|Metro" default="Embossed" />
 		<setting id="fanart" type="bool" label="30802" default="true" />
 		<setting id="infoLang" type="select" label="30803" values="bg|cs|da|de|el|en|es|fi|fr|he|hr|hu|it|ja|ko|nl|no|pl|pt|ru|sl|sv|tr|zh" default="en" />
 		<setting type="lsep" label="30805" />
