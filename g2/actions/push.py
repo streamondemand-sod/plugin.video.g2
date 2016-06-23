@@ -119,5 +119,5 @@ def delete(notifier, iden):
         del identifiers[notifier]
         addon.prop('player.notice.ids', identifiers or '')
         if _PLAYER.isPlayingVideo():
-            notifiers.notices(_('Forced player stop'))
             _PLAYER.stop()
+            notifiers.notices(_('Forced player stop'))

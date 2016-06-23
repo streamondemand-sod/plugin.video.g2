@@ -32,6 +32,7 @@ INFO = {
 }
 
 _PB = PushBullet(addon.setting('pushbullet_apikey'), user_agent=addon.addonInfo('id'))
+_MYNAME = __name__.split('@')[-1].split('.')[-1]
 
 
 def enabled():
@@ -48,16 +49,16 @@ def notices(notes, playing=None, origin=ui.infoLabel('System.FriendlyName'), ide
     if body:
         push = _PB.pushNote(origin, body, url=url, **kwargs)
         if type(identifiers) is dict:
-            identifiers[__name__] = push['iden']
-    elif identifiers and __name__ in identifiers: # Delete push
-        _PB.deletePush(identifiers[__name__])
+            identifiers[_MYNAME] = push['iden']
+    elif identifiers and _MYNAME in identifiers: # Delete push
+        _PB.deletePush(identifiers[_MYNAME])
 
 
 class PushBulletEvents(object):
-    def __init__(self, recipient, on_push, on_push_dismissed, on_push_delete):
+    def __init__(self, recipient, on_push, on_push_dismiss, on_push_delete):
         self.recipient = recipient
         self.on_push = on_push
-        self.on_push_dismissed = on_push_dismissed
+        self.on_push_dismiss = on_push_dismiss
         self.on_push_delete = on_push_delete
 
     def handler(self, event_value, event_type):
@@ -76,11 +77,11 @@ class PushBulletEvents(object):
                 if not iden:
                     pass
                 elif not push['active']:
-                    self.on_push_delete(__name__, iden)
+                    self.on_push_delete(_MYNAME, iden)
                 elif push['dismissed']:
-                    self.on_push_dismissed(__name__, iden)
+                    self.on_push_dismiss(_MYNAME, iden)
                 elif not self.recipient or push.get('target_device_iden') == self.recipient:
-                    self.on_push(__name__, iden, push.get('title'), push.get('body'), push.get('url'))
+                    self.on_push(_MYNAME, iden, push.get('title'), push.get('body'), push.get('url'))
         else:
             log.notice('{m}.{f}: event %s not filtered: %s', event_type, event_value)
 
@@ -89,7 +90,7 @@ def _nop(*dummy_args):
     pass
 
 
-def events(start=False, on_push=_nop, on_push_dismissed=_nop, on_push_delete=_nop):
+def events(start=False, on_push=_nop, on_push_dismiss=_nop, on_push_delete=_nop):
     """Start or stop the reading of the real time events stream"""
 
     if start:
@@ -114,7 +115,7 @@ def events(start=False, on_push=_nop, on_push_dismissed=_nop, on_push_delete=_no
             my_iden = None
             log.error('{m}.{f}: failed to create a new device: %s', ex)
 
-        return _PB.start_events_handling(PushBulletEvents(my_iden, on_push, on_push_dismissed, on_push_delete).handler,
+        return _PB.start_events_handling(PushBulletEvents(my_iden, on_push, on_push_dismiss, on_push_delete).handler,
                                          ['opened', 'pushes', 'closed'], modified=modified)
 
     try:

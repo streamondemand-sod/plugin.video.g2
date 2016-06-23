@@ -59,7 +59,7 @@ def _all_modules_method(method, targets, *args, **kwargs):
     res = None
     for module in [m for m in info().itervalues()
                    if method in m['methods'] and
-                   (not targets or set([m['module']] + m['targets']) & set(targets))]:
+                   (not targets or set([m['name']] + m['targets']) & set(targets))]:
         try:
             if 'package' in module:
                 with pkg.Context('notifiers', module['package'], [module['module']], module['search_paths']) as mod:
