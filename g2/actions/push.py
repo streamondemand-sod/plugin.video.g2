@@ -38,23 +38,17 @@ from . import action
 _PLAYER = ui.Player()
 
 
-# (fixme) need to abstract from the actual pushbullet dict.
-# - new(iden, target_all=bool, body, url)
-# - delete(iden, target_all=bool)
-@action
-def new(push):
-    """Find a movie in the push and schedule the sources dialog"""
-    log.debug('{m}.{f}: %s', push)
+def new(notifier, iden, title, body, url):
+    """Find a movie in the url pushed and schedule the sources dialog or playurl action"""
+    log.debug('{m}.{f}: %s, %s, "%s", "%s", "%s"', notifier, iden, title, body, url)
 
-    url = push.get('url')
     if not url:
         return
 
-    if 'target_device_iden' in push:
-        # Remove the push if addressed to kodi
-        notifiers.notices([], identifier=[push['iden']])
+    notifiers.notices([], identifiers={notifier: iden})
 
     try:
+        # (fixme) make the sites list a configuration (xml) file
         sites = {
             'imdb.com': {
                 'type': 'db',
@@ -73,30 +67,26 @@ def new(push):
             # 'ilfattoquotidiano.it': {
             #     'type': 'addon',
             #     'addon': 'plugin.video.fattoquotidianotv',
-            #     'query': 'page={url}&id=v',
+            #     'addon_query': 'page={url}&id=v',
             # },
         }
         netloc, path = urlparse.urlparse(url)[1:3]
         netloc = '.'.join(netloc.split('.')[-2:])
         if netloc not in sites:
-            title = push.get('title', '')
-            if not title:
-                title = push.get('body', '')
-            if not title:
-                title = ''
+            title = title or body
+            title = (title or '').encode('utf-8')
             addon.runplugin('sources.playurl',
-                            name=urllib.quote_plus(title.encode('utf-8')),
+                            name=urllib.quote_plus(title),
                             url=urllib.quote_plus(url))
 
         elif sites[netloc]['type'] == 'addon':
-            adn = sites[netloc]
-            if not addon.condition('System.HasAddon(%s)'%adn['addon']):
-                raise Exception(_('Addon {addon} is missing').format(addon=adn['addon']))
-            query = adn['query'].format(
+            site = sites[netloc]
+            if not addon.condition('System.HasAddon(%s)'%site['addon']):
+                raise Exception(_('Addon {addon} is missing').format(addon=site['addon']))
+            query = site['addon_query'].format(
                 url=urllib.quote_plus(url.encode('utf-8')),
             )
-            plugin = 'RunPlugin(plugin://%s/?%s)'%(adn['addon'], query)
-            addon.runplugin(plugin)
+            addon.runplugin(query, plugin='plugin://'+site['addon'])
 
         elif sites[netloc]['type'] == 'db':
             site = sites[netloc]
@@ -120,11 +110,14 @@ def new(push):
         ui.infoDialog(_('URL not supported'))
 
 
-@action
-def delete(push):
-    log.debug('{m}.{f}: %s', push)
+def delete(notifier, iden):
+    identifiers = addon.prop('player.notice.ids')
 
-    if addon.prop('player.notice.id') == push['iden']:
+    log.debug('{m}.{f}: %s, %s: identifiers=%s', notifier, iden, identifiers)
+
+    if identifiers and identifiers.get(notifier) == iden:
+        del identifiers[notifier]
+        addon.prop('player.notice.ids', identifiers or '')
         if _PLAYER.isPlayingVideo():
             notifiers.notices(_('Forced player stop'))
-        _PLAYER.stop()
+            _PLAYER.stop()

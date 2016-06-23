@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 {
     'actions.actions': True,
+    'metastream.mp4': True,     # Show the MP4 decoding
     'actions.sources': True,
     'actions.movies': True,
-    'ui.player': True,
-    'ui.sourcesdialog': True,
-    'push.delete': True,
-    'player.notify': True,
-    'metastream.mp4': True,		# Show the MP4 decoding
-    'cineblog01._get_movie.parseDOM': True,
-    'filmsenzalimiti.get_movie.parseDOM': True,
-    'filmsenzalimiti.get_sources.parseDOM': True,
+    'actions.player': True,
+    'actions.push': True,
+    'notifiers.pushbullet': True,
 
+    'cineblog01._get_movie.parseDOM': False,
+    'filmsenzalimiti.get_movie.parseDOM': False,
+    'filmsenzalimiti.get_sources.parseDOM': False,
+
+    'ui.sourcesdialog': False,
     'dbs.dbs': False,
     'dbs.imdb': False,
     'ui.directory': False,

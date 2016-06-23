@@ -19,8 +19,6 @@
 """
 
 
-import importer
-
 from g2.libraries import log
 from g2.libraries import addon
 
@@ -43,6 +41,11 @@ def info(force=False):
 def notices(notes, targets=None, **kwargs):
     if isinstance(notes, basestring):
         notes = [notes]
+    if not targets:
+        targets = []
+    elif isinstance(targets, basestring):
+        targets = [targets]
+
     _all_modules_method('notices', targets, notes, **kwargs)
 
 
@@ -54,7 +57,9 @@ def events(start, targets=None, **kwargs):
 
 def _all_modules_method(method, targets, *args, **kwargs):
     res = None
-    for module in [m for m in info().itervalues() if method in m['methods'] and (not targets or m['target'] in targets)]:
+    for module in [m for m in info().itervalues()
+                   if method in m['methods'] and
+                   (not targets or set([m['module']] + m['targets']) & set(targets))]:
         try:
             if 'package' in module:
                 with pkg.Context('notifiers', module['package'], [module['module']], module['search_paths']) as mod:

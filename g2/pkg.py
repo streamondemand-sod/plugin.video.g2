@@ -91,7 +91,7 @@ def _settings_category():
 # python2.6 doesn't support {} comprehensions
 _settings_category()
 
-_RESOURCES_PATH = os.path.join(addon.addonInfo('path'), 'resources') 
+_RESOURCES_PATH = os.path.join(addon.PATH, 'resources')
 
 # NOTE: This is the path relative to the one present in sys.path.
 # Remember to update it if you move the hierarchy around relative to sys.path

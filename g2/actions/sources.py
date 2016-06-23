@@ -111,7 +111,7 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
             providers.video_sources(ui_addsources, content,
                                     title=title, year=year, imdb=imdb, tvdb=tvdb, **kwargs)
 
-        win = ui.SourcesDialog('SourcesDialog.xml', addon.addonPath, 'Default', '720p',
+        win = ui.SourcesDialog('SourcesDialog.xml', addon.PATH, 'Default', '720p',
                                sourceName=name,
                                sourcesGenerator=sources_generator,
                                sourcePriority=_source_priority,

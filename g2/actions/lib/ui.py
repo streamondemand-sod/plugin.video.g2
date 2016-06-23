@@ -89,7 +89,7 @@ def _media(icon, icon_default, icon_default2=None):
     elif appearance == '':
         return icon_default2
     else:
-        return os.path.join(addon.addonPath, 'resources', 'media', appearance, icon)
+        return os.path.join(addon.PATH, 'resources', 'media', appearance, icon)
 
 def isfolderaction():
     try:

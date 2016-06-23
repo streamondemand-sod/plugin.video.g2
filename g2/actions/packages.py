@@ -19,7 +19,6 @@
 """
 
 
-from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries import client
@@ -34,8 +33,7 @@ from . import action
 
 @action
 def dialog():
-    addon_dir = fs.translatePath(addon.addonInfo('path'))
-    win = ui.PackagesDialog('PackagesDialog.xml', addon_dir, 'Default', '720p',
+    win = ui.PackagesDialog('PackagesDialog.xml', addon.PATH, 'Default', '720p',
                             onPackageSelected=_manage_package,
                             pkgInstalledStatus=pkg.is_installed)
 

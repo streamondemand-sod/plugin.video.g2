@@ -194,8 +194,8 @@ class PushBullet:
         }
         return self._push(data, **kwargs)
 
-    def _push(self, data, iden=None, guid=None, recipient=None, recipient_type='device_iden', url=None):
-        log.debug('{m}.{f}: %s iden=%s, guid=%s', data, iden, guid)
+    def _push(self, data, guid=None, recipient=None, recipient_type='device_iden', url=None):
+        log.debug('{m}.{f}: %s: guid=%s', data, guid)
         if guid:
             data.update({
                 'guid': guid,
@@ -212,8 +212,6 @@ class PushBullet:
         push = self._request("POST", "pushes", data)
         if push:
             self._update_modified([push])
-            if type(iden) == list:
-                iden[0:] = [push['iden']]
         return push
 
     def getPushHistory(self, modified_after=0, cursor=None, active=True):

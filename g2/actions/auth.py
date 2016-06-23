@@ -75,11 +75,12 @@ def trakt():
 @action
 def pushbullet():
     """Pushbullet apikey validation"""
-    from g2.notifiers import pb as pb_notifier
+    from g2.notifiers import pushbullet as pb_notifier
 
     if not addon.setting('pushbullet_apikey'):
         ui.infoDialog(_('Pushbullet disabled'))
         addon.setSetting('pushbullet_email', '')
+        # (fixme) stop pb events
         return
 
     pbo = pb_notifier.PushBullet(addon.setting('pushbullet_apikey'))
@@ -92,8 +93,11 @@ def pushbullet():
         else:
             ui.Dialog().ok('Pushbullet', _('Authorized account')+' [COLOR orange]%s[/COLOR]'%user['email'])
             addon.setSetting('pushbullet_email', user['email'])
+            # (fixme) re-start pb events
 
     except Exception as ex:
+        # (fixme) stop pb events
+        addon.setSetting('pushbullet_email', '')
         ui.infoDialog(str(ex), time=5000)
 
 
@@ -120,4 +124,5 @@ def imdb():
             ui.refresh()
 
     except Exception as ex:
+        addon.setSetting('imdb_nickname', '')
         ui.infoDialog(str(ex), time=5000)

@@ -22,29 +22,35 @@
 from g2.libraries import log
 from g2.libraries import cache
 from g2.libraries import addon
-from .lib.pushbullet import PushBullet
+from .lib.pb import PushBullet
 
 from g2.actions.lib import ui
 
 INFO = {
     'methods': ['notices', 'events'],
-    'target': 'remote',
+    'targets': ['remote'],
 }
 
 _PB = PushBullet(addon.setting('pushbullet_apikey'), user_agent=addon.addonInfo('id'))
 
 
-def notices(notes, playing=None, origin=ui.infoLabel('System.FriendlyName'), identifier=None, url=None, **kwargs):
+def enabled():
+    return addon.setting('pushbullet_apikey') and addon.setting('pushbullet_email')
+
+
+def notices(notes, playing=None, origin=ui.infoLabel('System.FriendlyName'), identifiers=None, url=None, **kwargs):
     """Push a comulative note to the pushbullet account"""
 
-    if not addon.setting('pushbullet_email'):
+    if not enabled():
         return
 
     body = '\n'.join(notes)
     if body:
-        _PB.pushNote(origin, body, iden=identifier, url=url, **kwargs)
-    elif identifier:
-        _PB.deletePush(identifier[0])
+        push = _PB.pushNote(origin, body, url=url, **kwargs)
+        if type(identifiers) is dict:
+            identifiers[__name__] = push['iden']
+    elif identifiers and __name__ in identifiers: # Delete push
+        _PB.deletePush(identifiers[__name__])
 
 
 class PushBulletEvents(object):
@@ -55,6 +61,8 @@ class PushBulletEvents(object):
         self.on_push_delete = on_push_delete
 
     def handler(self, event_value, event_type):
+        log.debug('{m}.{f}: %s: %s, %s', self.recipient, event_type, event_value)
+
         if event_type == 'opened':
             log.notice('{m}.{f}: connected to the pushbullet websocket for real time events (%s)', repr(event_value))
 
@@ -64,18 +72,20 @@ class PushBulletEvents(object):
 
         elif event_type == 'pushes':
             for push in event_value:
-                log.debug('{m}.{f}: %s: %s', self.recipient, push)
-                if not push['active']:
-                    self.on_push_delete(push)
+                iden = push.get('iden')
+                if not iden:
+                    pass
+                elif not push['active']:
+                    self.on_push_delete(__name__, iden)
                 elif push['dismissed']:
-                    self.on_push_dismissed(push)
+                    self.on_push_dismissed(__name__, iden)
                 elif not self.recipient or push.get('target_device_iden') == self.recipient:
-                    self.on_push(push)
+                    self.on_push(__name__, iden, push.get('title'), push.get('body'), push.get('url'))
         else:
             log.notice('{m}.{f}: event %s not filtered: %s', event_type, event_value)
 
 
-def _nop(dummy):
+def _nop(*dummy_args):
     pass
 
 
@@ -83,7 +93,7 @@ def events(start=False, on_push=_nop, on_push_dismissed=_nop, on_push_delete=_no
     """Start or stop the reading of the real time events stream"""
 
     if start:
-        if not addon.setting('pushbullet_email'):
+        if not enabled():
             return None
 
         def pb_last_modified(dummy_apikey):

@@ -25,7 +25,7 @@ from g2.actions.lib import ui
 
 INFO = {
     'methods': ['notices'],
-    'target': 'ui',
+    'targets': ['ui'],
 }
 
 

@@ -27,12 +27,12 @@ import xbmcaddon
 import xbmcvfs
 
 
-_addon = xbmcaddon.Addon()
+_ADDON = xbmcaddon.Addon()
 
-addonInfo = _addon.getAddonInfo
-setting = _addon.getSetting
+addonInfo = _ADDON.getAddonInfo
+setting = _ADDON.getSetting
 
-setSetting = _addon.setSetting
+setSetting = _ADDON.setSetting
 
 condition = xbmc.getCondVisibility
 
@@ -95,8 +95,9 @@ def pluginaction(action, **kwargs):
     return 'RunPlugin(%s)'%itemaction(action, **kwargs)
 
 
-def itemaction(action, **kwargs):
-    return _action('%s?action=%s'%(sys.argv[0] or 'plugin://%s/'%addonInfo('id'), action), **kwargs)
+def itemaction(action, plugin=None, **kwargs):
+    return _action('%s?%s'%(plugin or sys.argv[0] or 'plugin://%s/'%addonInfo('id'),
+                            action if plugin else 'action=%s'%action), **kwargs)
 
 
 def scriptaction(action, **kwargs):
@@ -114,4 +115,4 @@ def _action(action, args_sep='&', **kwargs):
 #     return json.loads(result)
 
 
-addonPath = xbmc.translatePath(addonInfo('path')).decode('utf-8')
+PATH = xbmc.translatePath(addonInfo('path')).decode('utf-8')

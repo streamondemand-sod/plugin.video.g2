@@ -39,12 +39,11 @@ _PLAYER = ui.Player()
 @action
 def notify():
     if not _PLAYER.isPlaying():
-        notice_id = addon.prop('player.notice.id')
-        if notice_id:
-            # (fixme) if the player is stopped by push-deletion, this should not be done
-            log.debug('{m}.{f}: deleting notice_id=%s...', notice_id)
-            notifiers.notices([], targets='remote', identifier=[notice_id])
-            addon.prop('player.notice.id', '')
+        identifiers = addon.prop('player.notice.ids')
+        log.debug('{m}.{f}: deleting notices with ids=%s...', identifiers)
+        if identifiers:
+            notifiers.notices([], targets='remote', identifiers=identifiers)
+            addon.prop('player.notice.ids', '')
 
     elif not _PLAYER.isPlayingVideo():
         return
@@ -79,17 +78,17 @@ def notify():
             title = '???'
         url = '' if not imdb else 'http://www.imdb.com/title/' + imdb
 
-        notice_id = []
+        identifiers = {}
         notifiers.notices(_('Playing {title}{dashes_if_url}{url}').
                           format(
                               title=title,
                               dashes_if_url='--' if url else '',
                               url=url,
-                          ), targets='remote', identifier=notice_id)
+                          ), targets='remote', identifiers=identifiers)
 
-        if len(notice_id):
-            log.debug('{m}.{f}: created notice_id=%s', notice_id[0])
-            addon.prop('player.notice.id', notice_id[0])
+        if identifiers:
+            log.debug('{m}.{f}: created notices with ids=%s', identifiers)
+            addon.prop('player.notice.ids', identifiers)
 
 
 def _fetch_db_meta(imdb, title, year):
