@@ -67,7 +67,7 @@ def info(force=False):
     return pkg.info(__name__, source_info, force)
 
 
-def video_sources(ui_update, content, **kwargs):
+def content_sources(content, ui_update=None, **kwargs):
     providers = {}
     for dummy_kind, package in pkg.packages([__name__]):
         providers[package] = [mi for mi in info().itervalues() if mi['package'] == package and content in mi['content']]

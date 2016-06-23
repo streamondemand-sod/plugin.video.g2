@@ -101,15 +101,15 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
         log.debug('{m}.{f}: %s %s: meta:%s', name, imdb, meta)
 
         def sources_generator(self):
-            def ui_addsources(progress, total, new_results):
+            def ui_update(progress, total, new_results):
                 self.addItems(_sources_label(new_results))
                 self.updateDialog(progress=(progress, total))
                 if not self.userStopped():
                     ui.sleep(1000)
                 return not self.userStopped()
 
-            providers.video_sources(ui_addsources, content,
-                                    title=title, year=year, imdb=imdb, tvdb=tvdb, **kwargs)
+            providers.content_sources(content, ui_update=ui_update,
+                                      title=title, year=year, imdb=imdb, tvdb=tvdb, **kwargs)
 
         win = ui.SourcesDialog('SourcesDialog.xml', addon.PATH, 'Default', '720p',
                                sourceName=name,
@@ -163,17 +163,17 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
 
     credits_message = [
         m.format(
+            video=name,
             provider=item.getProperty('source_provider').split('.')[-1],
             host=item.getProperty('source_host'),
             media_format=item.getProperty('format') or '???',
             elapsed_time='{elapsed_time}',
         ) for m in [
             _('~*~ CREDITS ~*~'),
-            name,
+            _('{video} loaded in {elapsed_time} seconds'),
             _('Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]'),
             _('Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]'),
             _('Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]'),
-            _('Content loaded in {elapsed_time} seconds'),
         ]]
 
     player = ui.PlayerDialog()
