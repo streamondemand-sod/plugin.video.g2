@@ -32,6 +32,7 @@ from g2 import dbs
 from .lib import ui
 from . import action, busyaction
 
+# KODI:30501
 
 @action
 def menu():

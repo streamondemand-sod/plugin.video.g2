@@ -26,6 +26,7 @@ from g2 import dbs
 from .lib import ui
 from . import action
 
+# KODI:30201
 
 @action
 def menu():
@@ -53,7 +54,7 @@ def menu():
             ui.addDirectoryItem(_('[B]TRAKT[/B] : Recommendations'), 'movies.movielist&url='+url,
                                 'movies.jpg', 'DefaultMovies.png')
 
-        ui.addDirectoryItem(_('[B]TRAKT[/B] : Lists by %s')%trakt_user,
+        ui.addDirectoryItem(_('[B]TRAKT[/B] : Lists by {trakt_user}').format(trakt_user=trakt_user),
                             'movies.lists&kind_user_id=trakt_user_id&kind_list_id=trakt_list_id&user_id=%s'%trakt_user,
                             'movieUserlists.jpg', 'DefaultMovies.png')
 
@@ -61,8 +62,8 @@ def menu():
         ui.addDirectoryItem(_('Configure your IMDB account'), 'tools.settings&category=1&setting=3',
                             'movieUserlists.jpg', 'DefaultMovies.png')
     else:
-        nickname = addon.setting('imdb_nickname') or imdb_user
-        ui.addDirectoryItem(_('[B]IMDB[/B] : Lists by %s')%nickname,
+        imdb_nickname = addon.setting('imdb_nickname') or imdb_user
+        ui.addDirectoryItem(_('[B]IMDB[/B] : Lists by {imdb_nickname}').format(imdb_nickname=imdb_nickname),
                             'movies.lists&kind_user_id=imdb_user_id&kind_list_id=imdb_list_id&user_id=%s'%imdb_user,
                             'movieUserlists.jpg', 'DefaultMovies.png')
 

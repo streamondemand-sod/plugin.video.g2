@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!--
+# KODI:30701
+-->
+<settings>
+	<category label="General">
+		<setting visible="false" id="appearance" type="select" label="Appearance" values="-|4orbs|Clean|Embossed|GOne|Metro" default="Embossed" />
+		<setting id="fanart" type="bool" label="Enable Fanart" default="true" />
+		<setting id="infoLang" type="select" label="Info Language" values="bg|cs|da|de|el|en|es|fi|fr|he|hr|hu|it|ja|ko|nl|no|pl|pt|ru|sl|sv|tr|zh" default="en" />
+		<setting id="downloads" type="folder" label="Downloads" default="" />
+	</category>
+	<category label="Accounts">
+		<setting type="lsep" label="Trakt" />
+		<setting id="trakt_enabled" type="bool" label="Trakt Account" default="false" />
+		<setting id="trakt_user" type="text" label="Trakt User" default="" enable="false" visible="eq(-1,true)" />
+		<setting type="lsep" label="Enabling Trakt will pop up the device authorization dialog" visible="eq(-2,true)" />
+		<setting type="lsep" label="[CR]" />
+		<setting type="lsep" label="IMDb" />
+		<setting id="imdb_user" type="text" label="IMDB User" default="" />
+		<setting id="imdb_nickname" type="text" label="IMDB Nickname" default="" enable="false" visible="!eq(-1,)" />
+		<setting type="lsep" label="[CR]" />
+		<setting type="lsep" label="Pushbullet" />
+		<setting id="pushbullet_apikey" type="text" label="Pushbullet API key" default="" />
+		<setting id="pushbullet_email" type="text" label="Pushbullet email" default="" enable="false" visible="!eq(-1,)" />
+		<setting type="lsep" label="[CR]" />
+		<setting type="lsep" label="TMDB" />
+		<setting id="tmdb_apikey" type="text" label="TMDB API key" default="" />
+	</category>
+	<category label="Providers">
+	</category>
+	<category label="Resolvers">
+	</category>
+</settings>

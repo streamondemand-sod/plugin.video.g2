@@ -28,6 +28,7 @@ from g2 import resolvers
 from .lib import ui
 from . import action
 
+# KODI:30301
 
 @action
 def menu():

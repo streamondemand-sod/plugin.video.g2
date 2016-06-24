@@ -32,6 +32,7 @@ from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries.language import _
 
+# KODI:30401
 
 _addon = xbmcaddon.Addon()
 
@@ -182,9 +183,21 @@ def endDirectory(next_item=None, content=None):
 
         url = addon.itemaction(next_item['next_action'], url=urllib.quote_plus(next_item['next_url']))
 
-        pages = '' if not next_item.get('max_pages') or not next_item.get('next_page') else \
-                _('[{page_of} of {max_pages}]').format(page_of=next_item['next_page'], max_pages=next_item['max_pages'])
-        item = xbmcgui.ListItem(label=_('[I]Next Page[/I]')+' '+pages, iconImage=addon_next(), thumbnailImage=addon_next())
+        if next_item.get('max_pages') and next_item.get('next_page'):
+            # Label for the "Next Page" item when the max number of pages is known
+            next_page_label = _('[I]Next Page[/I]  [{page_of} of {max_pages}]').format(
+                page_of=next_item['next_page'],
+                max_pages=next_item['max_pages']
+            )
+        elif next_item.get('next_page'):
+            # Label for the "Next Page" item when only the current page number is known
+            next_page_label = _('[I]Next Page[/I]  [{page_of}}]').format(
+                page_of=next_item['next_page'],
+            )
+        else:
+            next_page_label = _('[I]Next Page[/I]')
+
+        item = xbmcgui.ListItem(label=next_page_label, iconImage=addon_next(), thumbnailImage=addon_next())
         item.addContextMenuItems([], replaceItems=False)
         fanart = addon_fanart()
         if fanart:

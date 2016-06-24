@@ -33,6 +33,7 @@ from g2 import defs
 
 from .ui import addon_icon, addon_poster
 
+# KODI:30351
 
 __all__ = ['SourcesDialog']
 
@@ -359,9 +360,11 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.select_button_focused = True
 
         if self.check_button_flag:
+            # Label for the button that stops the sources validation
             self.check_button.setLabel(_('Stop'))
             self.check_button.setEnabled(True)
         else:
+            # Label for the button that starts the sources validation
             self.check_button.setLabel(_('Check'))
             items_2resolve = [i for i in self.items if not i.getProperty('url') and i.getProperty('source_url')]
             self.check_button.setEnabled(len(items_2resolve) > 0)

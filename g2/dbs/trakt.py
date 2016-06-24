@@ -33,6 +33,7 @@ from g2.libraries.language import _
 
 from g2 import defs
 
+# KODI:30651
 
 info = {
     'domains': ['api-v2launch.trakt.tv'],
@@ -327,7 +328,7 @@ def _sync_movies(timeout=0):
 
 def authDevice(ui_update):
     try:
-        phase = _('code generation failed')
+        phase = _('Code generation failed')
         addon.setSetting('trakt.token', '')
         addon.setSetting('trakt.refresh', '')
 
@@ -345,12 +346,12 @@ def authDevice(ui_update):
                 'code': str(device_code),
             })
 
-            phase = _('device authorization failed')
+            phase = _('Device authorization failed')
             start_time = time.time()
             next_check_at = start_time + interval
             while time.time()-start_time < expires_in:
                 if not ui_update(code, url, time.time()-start_time, expires_in):
-                    raise Exception('aborted: '+_('user aborted authorization'))
+                    raise Exception('aborted: '+_('User aborted authorization'))
                 if time.time() < next_check_at:
                     continue
 
@@ -374,7 +375,7 @@ def authDevice(ui_update):
                                       headers=authorization, raise_error=True).json()
                     return res['username']
 
-        raise Exception('aborted: '+_('auhorization code expired'))
+        raise Exception('aborted: '+_('Auhorization code expired'))
 
     except Exception as ex:
         if str(ex).startswith('aborted: '):

@@ -34,18 +34,41 @@ from g2.libraries import addon
 from g2.libraries import cache
 from g2.libraries import client
 from g2.libraries import language
+from g2.libraries.language import _
 
 from g2 import defs
 
+# KODI:30001
 
 _PACKAGES_KINDS = {
     'providers': {
         'dialog_order': 1,
         # User setting are generated for each package / module to enable/disable it
-        'settings_category': language.msgcode('Sources'),
+        'settings_category': language.msgcode('Providers'),
         # User settings are generated at the package kind level (e.g. providers:::id)
         # See the code below
-        'settings': {},
+        'settings': {
+            'preferred_provider_1': {
+                'template': 'type="select" label="%s" values="-|{modules_names}"'%(
+                    language.msgcode(_('1st preferred source provider'))),
+                'default': '-',
+            },
+            'preferred_provider_2': {
+                'template': 'type="select" label="%s" values="-|{modules_names}"'%(
+                    language.msgcode(_('2nd preferred source provider'))),
+                'default': '-',
+            },
+            'preferred_provider_3': {
+                'template': 'type="select" label="%s" values="-|{modules_names}"'%(
+                    language.msgcode(_('3rd preferred source provider'))),
+                'default': '-',
+            },
+            'preferred_provider_4': {
+                'template': 'type="select" label="%s" values="-|{modules_names}"'%(
+                    language.msgcode(_('4th preferred source provider'))),
+                'default': '-',
+            },
+        },
         # '0': no content (e.g. disabled); '1': all contents
         'module_enabled_setting_default': '1',
     },
@@ -57,7 +80,28 @@ _PACKAGES_KINDS = {
         'settings_category': language.msgcode('Resolvers'),
         # User settings are generated at the package kind level (e.g. resolvers:::id)
         # See the code below
-        'settings': {},
+        'settings': {
+            'preferred_resolver_1': {
+                'template': 'type="select" label="%s" values="-|{modules_names}"'%(
+                    language.msgcode(_('1st preferred source host'))),
+                'default': '-',
+            },
+            'preferred_resolver_2': {
+                'template': 'type="select" label="%s" values="-|{modules_names}"'%(
+                    language.msgcode(_('2nd preferred source host'))),
+                'default': '-',
+            },
+            'preferred_resolver_3': {
+                'template': 'type="select" label="%s" values="-|{modules_names}"'%(
+                    language.msgcode(_('3rd preferred source host'))),
+                'default': '-',
+            },
+            'preferred_resolver_4': {
+                'template': 'type="select" label="%s" values="-|{modules_names}"'%(
+                    language.msgcode(_('4th preferred source host'))),
+                'default': '-',
+            },
+        },
         'module_enabled_setting_default': 'true',
     },
     'dbs': {
@@ -73,23 +117,23 @@ _PACKAGES_KINDS = {
 }
 
 # (fixme) change to explicit sentences to ease the translation
-def _settings_category():
-    def _ordinal(num):
-        return "%d%s" % (num, "tsnrhtdd"[(num/10%10 != 1)*(num%10 < 4)*num%10::4])
+# def _settings_category():
+#     def _ordinal(num):
+#         return "%d%s" % (num, "tsnrhtdd"[(num/10%10 != 1)*(num%10 < 4)*num%10::4])
 
-    for kind, name in [('providers', 'provider'), ('resolvers', 'host')]:
-        settings = _PACKAGES_KINDS[kind]['settings']
-        for i in range(1, 5):
-            msgcode = language.msgcode('%s preferred source %s'%(_ordinal(i), name))
-            if not msgcode:
-                break
-            settings['preferred_provider_%d'%i] = {
-                'template': 'type="select" label="%s" values="-|{modules_names}"'%msgcode,
-                'default': '-',
-            }
+#     for kind, name in [('providers', 'provider'), ('resolvers', 'host')]:
+#         settings = _PACKAGES_KINDS[kind]['settings']
+#         for i in range(1, 5):
+#             msgcode = language.msgcode('%s preferred source %s'%(_ordinal(i), name))
+#             if not msgcode:
+#                 break
+#             settings['preferred_provider_%d'%i] = {
+#                 'template': 'type="select" label="%s" values="-|{modules_names}"'%msgcode,
+#                 'default': '-',
+#             }
 
-# python2.6 doesn't support {} comprehensions
-_settings_category()
+# # python2.6 doesn't support {} comprehensions
+# _settings_category()
 
 _RESOURCES_PATH = os.path.join(addon.PATH, 'resources')
 
@@ -516,8 +560,9 @@ def update_settings_skema():
 
             elif setid.endswith('::priority'):
                 current_module += 1
-                new_settings_skema += ('\t\t<setting id="%s" type="number" label="Priority" default="%s"'
-                                       ' enable="eq(-%d,true)" subsetting="true" />\n')%(setid, default_value, current_module)
+                new_settings_skema += ('\t\t<setting id="%s" type="number" label="%s" default="%s"'
+                                       ' enable="eq(-%d,true)" subsetting="true" />\n')%(
+                                           setid, _('Priority'), default_value, current_module)
 
             else:
                 current_module += 1
@@ -535,8 +580,8 @@ def update_settings_skema():
 
                 new_settings_skema += ('\t\t<setting id="%s" type="%s" label="%s" %sdefault="%s"'
                                        ' enable="eq(-%d,true)" visible="%s" subsetting="true" />\n')%(
-                                       setid, settype, setid.split(':')[2].title(), setlvalues,
-                                       default_value, current_module, visible)
+                                           setid, settype, setid.split(':')[2].title(), setlvalues,
+                                           default_value, current_module, visible)
 
         if current_category:
             new_settings_skema += '\t</category>\n'

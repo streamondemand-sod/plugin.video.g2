@@ -30,6 +30,7 @@ from g2 import defs
 from .lib import ui
 from . import action
 
+# KODI:30101
 
 @action
 def dialog():
@@ -55,7 +56,7 @@ def dialog():
                 if kind not in pkg.kinds():
                     log.notice('{m}.{f}: %s: kind %s not implemented', url, kind)
                     continue
- 
+
                 site = site.replace('<code>', '').replace('</code>', '')
                 name, url = pkg.parse_site(site)
                 if name is None:
@@ -124,21 +125,30 @@ def _install_package(site):
             pkg.kindinfo(kind, refresh=True)
         else:
             ui.Dialog().ok('PACKAGE MANAGER',
-                           '[CR]'.join([_('The %s.%s package requires these addons:')%(kind, name),
-                                        ' '.join(missing_addons),
-                                        _('Please, install the missing addons')]))
+                           '[CR]'.join([m.format(
+                               package_name='%s.%s'%(kind, name),
+                           ) for m in [
+                               _('The {package_name} package requires these addons:'),
+                               ' '.join(missing_addons),
+                               _('Please, install the missing addons'),   
+                           ]]))
+
         progress_dialog.close()
     except Exception as ex:
         progress_dialog.close()
         log.error('packages.dialog: %s: %s', site, repr(ex))
-        ui.infoDialog(_('Failure to install the package'))
+        ui.infoDialog(_('Package installation failed'))
 
 
 def _uninstall_package(kind, name, site):
-    if not ui.yesnoDialog(_('About to remove the %s.%s package')%(kind, name),
-                          _('Are you sure?'),
-                          _('Please note that this package is missing from the directory') if not site else _(''),
-                          heading=_('PACKAGE MANAGER')):
+    if not ui.yesnoDialog('[CR]'.join([m.format(
+            heading=_('PACKAGE MANAGER'),
+            package_name='%s.%s'%(kind, name),
+        ) for m in [
+            _('About to remove the {package_name} package'),
+            _('Are you sure?'),
+            _('Please note that this package is missing from the packages directory') if not site else '',
+        ]])):
         return
 
     try:
@@ -146,4 +156,4 @@ def _uninstall_package(kind, name, site):
         pkg.kindinfo(kind, refresh=True)
     except Exception as ex:
         log.error('packages.dialog: %s.%s: %s', kind, name, repr(ex))
-        ui.infoDialog(_('Failure to uninstall the package'))        
+        ui.infoDialog(_('Package removal failed'))

@@ -43,6 +43,7 @@ from .lib import ui
 from .lib import downloader
 from . import action
 
+# KODI:30251
 
 @action
 def playurl(name=None, url=None):
@@ -75,7 +76,7 @@ def playurl(name=None, url=None):
 @action
 def clearsourcescache(name, **kwargs):
     if name and providers.clear_sources_cache(**kwargs):
-        ui.infoDialog(_('Cache cleared for %s')%name)
+        ui.infoDialog(_('Cache cleared for {video}').format(video=name))
 
 
 @action
@@ -151,10 +152,12 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
         if offset:
             minutes, seconds = divmod(float(offset), 60)
             hours, minutes = divmod(minutes, 60)
-            if not ui.yesnoDialog(heading=_('Resume from %02d:%02d:%02d')%(hours, minutes, seconds),
-                                  line1=name,
-                                  yeslabel=_('Resume'),
-                                  nolabel=_('Start from beginning')):
+            if not ui.yesnoDialog(
+                    heading=_('Resume from {hours:02d}:{minutes:02d}:{seconds:02d}').format(
+                        hours=hours, minutes=minutes, seconds=seconds),
+                    line1=name,
+                    yeslabel=_('Resume'),
+                    nolabel=_('Start from beginning')):
                 offset = 0
         log.debug('{m}.{f}: %s %s: bookmark=%d', name, imdb, offset)
     except Exception as ex:
@@ -213,16 +216,21 @@ def _download_source(name, poster, item):
         media_size = 0
     rest = item.getProperty('rest') == 'true'
 
-    media_info1 = '' if not media_size else _('Complete file is %dMB%s')\
-        %(int(media_size/(1024*1024)), ' (r)' if rest else '')
-    media_info2 = '' if not media_format else _('Media format is %s')\
-        %media_format
+    media_info1 = '' if not media_size else _('Complete file is {mega_bytes}MB {restartable_flag}').format(
+        mega_bytes=int(media_size/(1024*1024)),
+        # 'R' stand for Restartable download
+        restartable_flag=_('(R)') if rest else '',
+    )
 
-    if ui.yesnoDialog(media_info1, media_info2, _('Continue with download?')):
+    media_info2 = '' if not media_format else _('Media format is {media_format}').format(
+        media_format=media_format
+    )
+
+    if ui.yesnoDialog(media_info1, media_info2, _('Continue with the download?')):
         if downloader.addDownload(name, url, media_format, media_size, rest, poster):
-            ui.infoDialog(_('Item added to download queue'), name)
+            ui.infoDialog(_('Item added to your download queue'), name)
         else:
-            ui.infoDialog(_('Item already in the download queue'), name)
+            ui.infoDialog(_('Item already in your download queue'), name)
 
 
 def _sources_label(sources):

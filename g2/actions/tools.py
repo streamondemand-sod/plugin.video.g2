@@ -26,6 +26,7 @@ from g2.libraries.language import _
 from .lib import ui
 from . import action
 
+# KODI:30051
 
 @action
 def menu():
