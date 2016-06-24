@@ -33,7 +33,6 @@ from g2 import notifiers
 
 from .lib import ui
 
-# KODI:30151
 
 _PLAYER = ui.Player()
 

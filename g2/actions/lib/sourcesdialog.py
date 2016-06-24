@@ -33,7 +33,6 @@ from g2 import defs
 
 from .ui import addon_icon, addon_poster
 
-# KODI:30351
 
 __all__ = ['SourcesDialog']
 

@@ -30,7 +30,6 @@ from g2 import defs
 from .lib import ui
 from . import action
 
-# KODI:30101
 
 @action
 def dialog():

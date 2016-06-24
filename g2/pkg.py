@@ -38,7 +38,6 @@ from g2.libraries.language import _
 
 from g2 import defs
 
-# KODI:30001
 
 _PACKAGES_KINDS = {
     'providers': {
@@ -562,7 +561,7 @@ def update_settings_skema():
                 current_module += 1
                 new_settings_skema += ('\t\t<setting id="%s" type="number" label="%s" default="%s"'
                                        ' enable="eq(-%d,true)" subsetting="true" />\n')%(
-                                           setid, _('Priority'), default_value, current_module)
+                                           setid, language.msgcode('Priority'), default_value, current_module)
 
             else:
                 current_module += 1

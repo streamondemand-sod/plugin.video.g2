@@ -33,7 +33,6 @@ from g2.libraries.language import _
 
 from g2 import defs
 
-# KODI:30651
 
 info = {
     'domains': ['api-v2launch.trakt.tv'],

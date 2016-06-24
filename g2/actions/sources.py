@@ -43,7 +43,6 @@ from .lib import ui
 from .lib import downloader
 from . import action
 
-# KODI:30251
 
 @action
 def playurl(name=None, url=None):

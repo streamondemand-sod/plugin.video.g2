@@ -32,7 +32,6 @@ from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries.language import _
 
-# KODI:30401
 
 _addon = xbmcaddon.Addon()
 

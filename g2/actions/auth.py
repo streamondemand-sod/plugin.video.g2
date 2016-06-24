@@ -25,7 +25,6 @@ from g2.libraries.language import _
 from .lib import ui
 from . import action
 
-# KODI:30551
 
 @action
 def trakt():

@@ -28,7 +28,6 @@ from .lib import ui
 from .lib import downloader
 from . import action, busyaction
 
-# KODI:30451
 
 @action
 def menu():
