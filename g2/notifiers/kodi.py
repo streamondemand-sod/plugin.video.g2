@@ -23,7 +23,7 @@ from g2.libraries import addon
 from g2.actions.lib import ui
 
 
-INFO = {
+info = {
     'methods': ['notices'],
     'targets': ['ui'],
 }

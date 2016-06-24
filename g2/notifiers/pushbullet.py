@@ -26,7 +26,7 @@ from .lib.pb import PushBullet
 
 from g2.actions.lib import ui
 
-INFO = {
+info = {
     'methods': ['notices', 'events'],
     'targets': ['remote'],
 }

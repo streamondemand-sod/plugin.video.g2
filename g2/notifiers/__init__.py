@@ -27,12 +27,12 @@ from g2 import pkg
 
 def info(force=False):
     def notifiers_info(dummy_package, dummy_module, mod, paths):
-        if not hasattr(mod, 'INFO'):
+        if not hasattr(mod, 'info'):
             return []
-        if callable(mod.INFO):
-            nfo = mod.INFO(paths)
+        if callable(mod.info):
+            nfo = mod.info(paths)
         else:
-            nfo = mod.INFO
+            nfo = mod.info
         return [dict(nfo)]
 
     return pkg.info('notifiers', notifiers_info, force)
