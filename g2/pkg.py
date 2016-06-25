@@ -49,22 +49,22 @@ _PACKAGES_KINDS = {
         'settings': {
             'preferred_provider_1': {
                 'template': 'type="select" label="%s" values="-|{modules_names}"'%(
-                    language.msgcode(_('1st preferred source provider'))),
+                    language.msgcode('1st preferred source provider')),
                 'default': '-',
             },
             'preferred_provider_2': {
                 'template': 'type="select" label="%s" values="-|{modules_names}"'%(
-                    language.msgcode(_('2nd preferred source provider'))),
+                    language.msgcode('2nd preferred source provider')),
                 'default': '-',
             },
             'preferred_provider_3': {
                 'template': 'type="select" label="%s" values="-|{modules_names}"'%(
-                    language.msgcode(_('3rd preferred source provider'))),
+                    language.msgcode('3rd preferred source provider')),
                 'default': '-',
             },
             'preferred_provider_4': {
                 'template': 'type="select" label="%s" values="-|{modules_names}"'%(
-                    language.msgcode(_('4th preferred source provider'))),
+                    language.msgcode('4th preferred source provider')),
                 'default': '-',
             },
         },
@@ -82,22 +82,22 @@ _PACKAGES_KINDS = {
         'settings': {
             'preferred_resolver_1': {
                 'template': 'type="select" label="%s" values="-|{modules_names}"'%(
-                    language.msgcode(_('1st preferred source host'))),
+                    language.msgcode('1st preferred source host')),
                 'default': '-',
             },
             'preferred_resolver_2': {
                 'template': 'type="select" label="%s" values="-|{modules_names}"'%(
-                    language.msgcode(_('2nd preferred source host'))),
+                    language.msgcode('2nd preferred source host')),
                 'default': '-',
             },
             'preferred_resolver_3': {
                 'template': 'type="select" label="%s" values="-|{modules_names}"'%(
-                    language.msgcode(_('3rd preferred source host'))),
+                    language.msgcode('3rd preferred source host')),
                 'default': '-',
             },
             'preferred_resolver_4': {
                 'template': 'type="select" label="%s" values="-|{modules_names}"'%(
-                    language.msgcode(_('4th preferred source host'))),
+                    language.msgcode('4th preferred source host')),
                 'default': '-',
             },
         },
