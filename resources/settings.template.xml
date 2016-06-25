@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!--
-# KODI:30701
--->
 <settings>
 	<category label="General">
 		<setting visible="false" id="appearance" type="select" label="Appearance" values="-|4orbs|Clean|Embossed|GOne|Metro" default="Embossed" />

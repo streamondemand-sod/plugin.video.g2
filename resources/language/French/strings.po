@@ -1,0 +1,1617 @@
+# Addon Name: Genesis
+# Addon id: plugin.video.genesis
+# Addon Provider: Genesis
+# Translators:
+# Translators:
+# Addon Master, 2015
+# Jrm, 2015
+# lambda81, 2015
+msgid ""
+msgstr ""
+"Project-Id-Version: Genesis\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2015-09-23 23:18+0000\n"
+"Last-Translator: lambda81\n"
+"Language-Team: French (http://www.transifex.com/tv-addons/genesis/language/fr/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgctxt "#30001"
+msgid "General"
+msgstr "Général"
+
+msgctxt "#30002"
+msgid "Appearance"
+msgstr "Apparence"
+
+msgctxt "#30003"
+msgid "Enable Fanart"
+msgstr "Activer le Fan Art"
+
+msgctxt "#30004"
+msgid "Info Language"
+msgstr "Langue des informations"
+
+msgctxt "#30005"
+msgid "Downloads"
+msgstr "Téléchargement"
+
+msgctxt "#30006"
+msgid "Accounts"
+msgstr "Comptes"
+
+#: resources/settings.template.xml:13
+msgctxt "#30007"
+msgid "Trakt"
+msgstr "Trakt"
+
+#: resources/settings.template.xml:14
+msgctxt "#30008"
+msgid "Trakt Account"
+msgstr "Trakt Account"
+
+#: resources/settings.template.xml:15
+msgctxt "#30009"
+msgid "Trakt User"
+msgstr "Trakt User"
+
+#: resources/settings.template.xml:16
+msgctxt "#30010"
+msgid "Enabling Trakt will pop up the device authorization dialog"
+msgstr "Enabling Trakt will pop up the device authorization dialog"
+
+#: resources/settings.template.xml:18
+msgctxt "#30011"
+msgid "IMDb"
+msgstr "IMDb"
+
+#: resources/settings.template.xml:19
+msgctxt "#30012"
+msgid "IMDB User"
+msgstr "IMDB User"
+
+#: resources/settings.template.xml:20
+msgctxt "#30013"
+msgid "IMDB Nickname"
+msgstr "IMDB Nickname"
+
+#: resources/settings.template.xml:22
+msgctxt "#30014"
+msgid "Pushbullet"
+msgstr "Pushbullet"
+
+#: resources/settings.template.xml:23
+msgctxt "#30015"
+msgid "Pushbullet API key"
+msgstr "Pushbullet API key"
+
+#: resources/settings.template.xml:24
+msgctxt "#30016"
+msgid "Pushbullet email"
+msgstr "Pushbullet email"
+
+#: resources/settings.template.xml:26
+msgctxt "#30017"
+msgid "TMDB"
+msgstr "TMDB"
+
+#: resources/settings.template.xml:27
+msgctxt "#30018"
+msgid "TMDB API key"
+msgstr "TMDB API key"
+
+#. User setting are generated for each package / module to enable/disable it
+#: resources/settings.template.xml:29 g2/pkg.py:46
+msgctxt "#30019"
+msgid "Providers"
+msgstr "Providers"
+
+#. User setting are generated for each package / module to enable/disable it
+#. For resolvers, if there is a single module in the package,
+#. the module setting is not displated.
+#: resources/settings.template.xml:31 g2/pkg.py:79
+msgctxt "#30020"
+msgid "Resolvers"
+msgstr "Resolvers"
+
+#: g2/actions/auth.py:35
+msgctxt "#30021"
+msgid "Trakt disabled"
+msgstr "Trakt disabled"
+
+#: g2/actions/auth.py:41
+#, python-brace-format
+msgctxt "#30022"
+msgid "There is already an authorized account: {trakt_user}"
+msgstr "There is already an authorized account: {trakt_user}"
+
+#: g2/actions/auth.py:43
+msgctxt "#30023"
+msgid "Do you wanto to keep it?"
+msgstr "Do you wanto to keep it?"
+
+#: g2/actions/auth.py:55
+#, python-brace-format
+msgctxt "#30024"
+msgid "Provide the code {code} at the site:"
+msgstr "Provide the code {code} at the site:"
+
+#: g2/actions/auth.py:57
+#, python-brace-format
+msgctxt "#30025"
+msgid "You have {minutes:02d}:{seconds:02d} left"
+msgstr "You have {minutes:02d}:{seconds:02d} left"
+
+#: g2/actions/auth.py:67
+#, python-brace-format
+msgctxt "#30026"
+msgid "Authorized username: [COLOR orange]{trakt_user}[/COLOR]"
+msgstr "Authorized username: [COLOR orange]{trakt_user}[/COLOR]"
+
+#: g2/actions/auth.py:85
+msgctxt "#30027"
+msgid "Pushbullet disabled"
+msgstr "Pushbullet disabled"
+
+#: g2/actions/auth.py:98
+#, python-brace-format
+msgctxt "#30028"
+msgid "Authorized account email: [COLOR orange]{pushbullet_email}[/COLOR]"
+msgstr "Authorized account email: [COLOR orange]{pushbullet_email}[/COLOR]"
+
+#: g2/actions/auth.py:116
+msgctxt "#30029"
+msgid "IMDb user disabled"
+msgstr "IMDb user disabled"
+
+#: g2/actions/auth.py:127
+#, python-brace-format
+msgctxt "#30030"
+msgid "IMDb user nickname: [COLOR orange]{imdb_nickname}[/COLOR]"
+msgstr "IMDb user nickname: [COLOR orange]{imdb_nickname}[/COLOR]"
+
+#. Command to refresh the download directory listing
+msgctxt "#30031"
+msgid "Refresh"
+msgstr "Rafraîchir"
+
+#. (fixme) this has no effect for ongoing downloads
+#. Remove the specific entry from the download queue
+#: g2/actions/download.py:58
+msgctxt "#30032"
+msgid "Remove from queue"
+msgstr "Remove from queue"
+
+#: g2/actions/lib/sourcesdialog.py:169
+msgctxt "#30033"
+msgid "Source not valid"
+msgstr "Source not valid"
+
+#: g2/actions/lib/sourcesdialog.py:191
+msgctxt "#30034"
+msgid "Play"
+msgstr "Play"
+
+#: g2/actions/lib/sourcesdialog.py:194
+msgctxt "#30035"
+msgid "Download"
+msgstr "Download"
+
+#: g2/actions/lib/sourcesdialog.py:208
+msgctxt "#30036"
+msgid "SEARCHING SOURCES"
+msgstr "SEARCHING SOURCES"
+
+#: g2/actions/lib/sourcesdialog.py:220
+msgctxt "#30037"
+msgid "NO SOURCES FOUND"
+msgstr "NO SOURCES FOUND"
+
+#: g2/actions/lib/sourcesdialog.py:224
+msgctxt "#30038"
+msgid "CHECKING SOURCES"
+msgstr "CHECKING SOURCES"
+
+#: g2/actions/lib/sourcesdialog.py:246
+msgctxt "#30039"
+msgid "SELECT SOURCE"
+msgstr "SELECT SOURCE"
+
+#: g2/actions/lib/sourcesdialog.py:247
+msgctxt "#30040"
+msgid "CHECKING COMPLETE"
+msgstr "CHECKING COMPLETE"
+
+#: g2/actions/lib/sourcesdialog.py:250
+msgctxt "#30041"
+msgid "CHECKING STOPPED"
+msgstr "CHECKING STOPPED"
+
+#. Label for the button that stops the sources validation
+#: g2/actions/lib/sourcesdialog.py:363
+msgctxt "#30042"
+msgid "Stop"
+msgstr "Stop"
+
+#. Label for the button that starts the sources validation
+#: g2/actions/lib/sourcesdialog.py:367
+msgctxt "#30043"
+msgid "Check"
+msgstr "Check"
+
+#. Label for the "Next Page" item when the max number of pages is known
+#: g2/actions/lib/ui.py:187
+#, python-brace-format
+msgctxt "#30044"
+msgid "[I]Next Page[/I]  [{page_of} of {max_pages}]"
+msgstr "[I]Next Page[/I]  [{page_of} of {max_pages}]"
+
+#. Label for the "Next Page" item when only the current page number is known
+#: g2/actions/lib/ui.py:193
+#, python-brace-format
+msgctxt "#30045"
+msgid "[I]Next Page[/I]  [{page_of}}]"
+msgstr "[I]Next Page[/I]  [{page_of}}]"
+
+msgctxt "#30046"
+msgid "[I]Next Page[/I]"
+msgstr "[I]Page Suivante[/I]"
+
+msgctxt "#30047"
+msgid "Movies"
+msgstr "Films"
+
+#: g2/actions/main.py:35
+msgctxt "#30048"
+msgid "My Movies"
+msgstr "My Movies"
+
+msgctxt "#30049"
+msgid "Latest Movies"
+msgstr "Derniers films"
+
+msgctxt "#30049"
+msgid "Latest Movies"
+msgstr "Derniers Films"
+
+msgctxt "#30050"
+msgid "Tools"
+msgstr "Outils"
+
+#: g2/actions/main.py:40
+msgctxt "#30051"
+msgid "[COLOR red]Install providers and resolvers packages to find video sources[/COLOR]"
+msgstr "[COLOR red]Install providers and resolvers packages to find video sources[/COLOR]"
+
+#: g2/actions/movies.py:44
+msgctxt "#30052"
+msgid "Search by Title"
+msgstr "Search by Title"
+
+#: g2/actions/movies.py:45
+msgctxt "#30053"
+msgid "Search by Person"
+msgstr "Search by Person"
+
+#: g2/actions/movies.py:46
+msgctxt "#30054"
+msgid "Search by Year"
+msgstr "Search by Year"
+
+msgctxt "#30055"
+msgid "Genres"
+msgstr "Genres"
+
+msgctxt "#30055"
+msgid "Genres"
+msgstr "Genres"
+
+msgctxt "#30056"
+msgid "Certificates"
+msgstr "Certificats"
+
+msgctxt "#30057"
+msgid "Featured"
+msgstr "À l'Affiche"
+
+msgctxt "#30058"
+msgid "People Watching"
+msgstr "Visionné en ce moment"
+
+msgctxt "#30058"
+msgid "People Watching"
+msgstr "Regardé en ce moment"
+
+msgctxt "#30059"
+msgid "Most Popular"
+msgstr "Les Plus Populaires"
+
+msgctxt "#30059"
+msgid "Most Popular"
+msgstr "Les plus Populaires"
+
+msgctxt "#30060"
+msgid "Most Voted"
+msgstr "Les mieux Notés"
+
+msgctxt "#30060"
+msgid "Most Voted"
+msgstr "Les Plus Votés"
+
+msgctxt "#30061"
+msgid "Box Office"
+msgstr "Box Office"
+
+msgctxt "#30062"
+msgid "Oscar Winners"
+msgstr "Gagnants d'Oscars"
+
+msgctxt "#30063"
+msgid "In Theaters"
+msgstr "Au Cinéma"
+
+#: g2/actions/movies.py:77
+msgctxt "#30064"
+msgid "Title to search"
+msgstr "Title to search"
+
+#: g2/actions/movies.py:85
+msgctxt "#30065"
+msgid "Person to search"
+msgstr "Person to search"
+
+msgctxt "#30066"
+msgid "Year"
+msgstr "Année"
+
+msgctxt "#30066"
+msgid "Year"
+msgstr "Année"
+
+#: g2/actions/movies.py:126 g2/actions/movies.py:138 g2/actions/movies.py:174
+msgctxt "#30067"
+msgid "No results"
+msgstr "No results"
+
+msgctxt "#30068"
+msgid "Movie information"
+msgstr "Informations film"
+
+#: g2/actions/movies.py:242
+msgctxt "#30069"
+msgid "Trailer"
+msgstr "Trailer"
+
+msgctxt "#30070"
+msgid "Mark as unwatched"
+msgstr "Marquer comme non-vu"
+
+msgctxt "#30071"
+msgid "Mark as watched"
+msgstr "Marquer comme vu"
+
+#: g2/actions/movies.py:250
+msgctxt "#30072"
+msgid "Clear sources cache"
+msgstr "Clear sources cache"
+
+#: g2/actions/movies.py:306
+msgctxt "#30073"
+msgid "Person information"
+msgstr "Person information"
+
+#: g2/actions/my.py:35
+msgctxt "#30074"
+msgid "Configure your Trakt account"
+msgstr "Configure your Trakt account"
+
+msgctxt "#30075"
+msgid "[B]TRAKT[/B] : Collection"
+msgstr "[B]TRAKT[/B] : Collection"
+
+msgctxt "#30076"
+msgid "[B]TRAKT[/B] : Watchlist"
+msgstr "[B]TRAKT[/B] : Liste de Surveillance"
+
+msgctxt "#30077"
+msgid "[B]TRAKT[/B] : Ratings"
+msgstr "[B]TRAKT[/B] : Classement"
+
+#: g2/actions/my.py:53
+msgctxt "#30078"
+msgid "[B]TRAKT[/B] : Recommendations"
+msgstr "[B]TRAKT[/B] : Recommendations"
+
+#: g2/actions/my.py:56
+#, python-brace-format
+msgctxt "#30079"
+msgid "[B]TRAKT[/B] : Lists by {trakt_user}"
+msgstr "[B]TRAKT[/B] : Lists by {trakt_user}"
+
+#: g2/actions/my.py:61
+msgctxt "#30080"
+msgid "Configure your IMDB account"
+msgstr "Configure your IMDB account"
+
+#: g2/actions/my.py:65
+#, python-brace-format
+msgctxt "#30081"
+msgid "[B]IMDB[/B] : Lists by {imdb_nickname}"
+msgstr "[B]IMDB[/B] : Lists by {imdb_nickname}"
+
+#: g2/actions/my.py:72
+msgctxt "#30082"
+msgid "Configure the download directory"
+msgstr "Configure the download directory"
+
+#: g2/actions/packages.py:82
+msgctxt "#30083"
+msgid "Orphaned"
+msgstr "Orphaned"
+
+#: g2/actions/packages.py:130
+#, python-brace-format
+msgctxt "#30084"
+msgid "The {package_name} package requires these addons:"
+msgstr "The {package_name} package requires these addons:"
+
+#: g2/actions/packages.py:132
+msgctxt "#30085"
+msgid "Please, install the missing addons"
+msgstr "Please, install the missing addons"
+
+#: g2/actions/packages.py:139
+msgctxt "#30086"
+msgid "Package installation failed"
+msgstr "Package installation failed"
+
+#: g2/actions/packages.py:144
+msgctxt "#30087"
+msgid "PACKAGE MANAGER"
+msgstr "PACKAGE MANAGER"
+
+#: g2/actions/packages.py:147
+#, python-brace-format
+msgctxt "#30088"
+msgid "About to remove the {package_name} package"
+msgstr "About to remove the {package_name} package"
+
+msgctxt "#30089"
+msgid "Are you sure?"
+msgstr "Êtes-vous sûr ?"
+
+#: g2/actions/packages.py:149
+msgctxt "#30090"
+msgid "Please note that this package is missing from the packages directory"
+msgstr "Please note that this package is missing from the packages directory"
+
+#: g2/actions/packages.py:158
+msgctxt "#30091"
+msgid "Package removal failed"
+msgstr "Package removal failed"
+
+#: g2/actions/player.py:82
+#, python-brace-format
+msgctxt "#30092"
+msgid "Playing {title}{dashes_if_url}{url}"
+msgstr "Playing {title}{dashes_if_url}{url}"
+
+#: g2/actions/push.py:84
+#, python-brace-format
+msgctxt "#30093"
+msgid "Addon {addon} is missing"
+msgstr "Addon {addon} is missing"
+
+#: g2/actions/push.py:109
+msgctxt "#30094"
+msgid "URL not supported"
+msgstr "URL not supported"
+
+#: g2/actions/push.py:122
+msgctxt "#30095"
+msgid "Forced player stop"
+msgstr "Forced player stop"
+
+#: g2/actions/sources.py:64 g2/actions/sources.py:72 g2/actions/sources.py:188
+msgctxt "#30096"
+msgid "Not a valid stream"
+msgstr "Not a valid stream"
+
+#: g2/actions/sources.py:78
+#, python-brace-format
+msgctxt "#30097"
+msgid "Cache cleared for {video}"
+msgstr "Cache cleared for {video}"
+
+msgctxt "#30098"
+msgid "No stream available"
+msgstr "Aucun flux disponible"
+
+msgctxt "#30099"
+msgid "Movies"
+msgstr "Films"
+
+#: g2/actions/sources.py:155
+#, python-brace-format
+msgctxt "#30099"
+msgid "Resume from {hours:02d}:{minutes:02d}:{seconds:02d}"
+msgstr "Resume from {hours:02d}:{minutes:02d}:{seconds:02d}"
+
+msgctxt "#30100"
+msgid "Resume"
+msgstr "Reprendre"
+
+msgctxt "#30101"
+msgid "Start from beginning"
+msgstr "Lire du début"
+
+#: g2/actions/sources.py:174
+msgctxt "#30102"
+msgid "~*~ CREDITS ~*~"
+msgstr "~*~ CREDITS ~*~"
+
+#: g2/actions/sources.py:175
+#, python-brace-format
+msgctxt "#30103"
+msgid "{video} loaded in {elapsed_time} seconds"
+msgstr "{video} loaded in {elapsed_time} seconds"
+
+#: g2/actions/sources.py:176
+#, python-brace-format
+msgctxt "#30104"
+msgid "Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]"
+msgstr "Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]"
+
+#: g2/actions/sources.py:177
+#, python-brace-format
+msgctxt "#30105"
+msgid "Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]"
+msgstr "Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]"
+
+#: g2/actions/sources.py:178
+#, python-brace-format
+msgctxt "#30106"
+msgid "Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]"
+msgstr "Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]"
+
+#: g2/actions/sources.py:218
+#, python-brace-format
+msgctxt "#30107"
+msgid "Complete file is {mega_bytes}MB {restartable_flag}"
+msgstr "Complete file is {mega_bytes}MB {restartable_flag}"
+
+#. 'R' stand for Restartable download
+#: g2/actions/sources.py:221
+msgctxt "#30108"
+msgid "(R)"
+msgstr "(R)"
+
+#: g2/actions/sources.py:224
+#, python-brace-format
+msgctxt "#30109"
+msgid "Media format is {media_format}"
+msgstr "Media format is {media_format}"
+
+#: g2/actions/sources.py:228
+msgctxt "#30110"
+msgid "Continue with the download?"
+msgstr "Continue with the download?"
+
+#: g2/actions/sources.py:230
+msgctxt "#30111"
+msgid "Item added to your download queue"
+msgstr "Item added to your download queue"
+
+#: g2/actions/sources.py:232
+msgctxt "#30112"
+msgid "Item already in your download queue"
+msgstr "Item already in your download queue"
+
+#: g2/actions/tools.py:32
+msgctxt "#30113"
+msgid "[B]SETTINGS[/B]"
+msgstr "[B]SETTINGS[/B]"
+
+#: g2/actions/tools.py:34
+msgctxt "#30114"
+msgid "[B]SETTINGS[/B] : Providers"
+msgstr "[B]SETTINGS[/B] : Providers"
+
+#: g2/actions/tools.py:36
+msgctxt "#30115"
+msgid "[B]SETTINGS[/B] : Resolvers"
+msgstr "[B]SETTINGS[/B] : Resolvers"
+
+#: g2/actions/tools.py:38
+msgctxt "#30116"
+msgid "[B]G2[/B] : Packages"
+msgstr "[B]G2[/B] : Packages"
+
+#: g2/actions/tools.py:40
+msgctxt "#30117"
+msgid "[B]G2[/B] : Clear cache..."
+msgstr "[B]G2[/B] : Clear cache..."
+
+msgctxt "#30118"
+msgid "Process Complete"
+msgstr "Opération terminée"
+
+#: g2/dbs/trakt.py:330
+msgctxt "#30119"
+msgid "Code generation failed"
+msgstr "Code generation failed"
+
+#: g2/dbs/trakt.py:348
+msgctxt "#30120"
+msgid "Device authorization failed"
+msgstr "Device authorization failed"
+
+#: g2/dbs/trakt.py:353
+msgctxt "#30121"
+msgid "User aborted authorization"
+msgstr "User aborted authorization"
+
+#: g2/dbs/trakt.py:377
+msgctxt "#30122"
+msgid "Auhorization code expired"
+msgstr "Auhorization code expired"
+
+#: g2/pkg.py:52
+msgctxt "#30123"
+msgid "1st preferred source provider"
+msgstr "1st preferred source provider"
+
+#: g2/pkg.py:57
+msgctxt "#30124"
+msgid "2nd preferred source provider"
+msgstr "2nd preferred source provider"
+
+#: g2/pkg.py:62
+msgctxt "#30125"
+msgid "3rd preferred source provider"
+msgstr "3rd preferred source provider"
+
+#: g2/pkg.py:67
+msgctxt "#30126"
+msgid "4th preferred source provider"
+msgstr "4th preferred source provider"
+
+#: g2/pkg.py:85
+msgctxt "#30127"
+msgid "1st preferred source host"
+msgstr "1st preferred source host"
+
+#: g2/pkg.py:90
+msgctxt "#30128"
+msgid "2nd preferred source host"
+msgstr "2nd preferred source host"
+
+#: g2/pkg.py:95
+msgctxt "#30129"
+msgid "3rd preferred source host"
+msgstr "3rd preferred source host"
+
+#: g2/pkg.py:100
+msgctxt "#30130"
+msgid "4th preferred source host"
+msgstr "4th preferred source host"
+
+#: g2/pkg.py:564
+msgctxt "#30131"
+msgid "Priority"
+msgstr "Priority"
+
+msgctxt "#30151"
+msgid "Movies"
+msgstr "Films"
+
+msgctxt "#30234"
+msgid "Mark as watched"
+msgstr "Marquer comme vu"
+
+msgctxt "#30235"
+msgid "Mark as unwatched"
+msgstr "Marquer comme non-vu"
+
+msgctxt "#30241"
+msgid "[I]Next Page[/I]"
+msgstr "[I]Page Suivante[/I]"
+
+msgctxt "#30263"
+msgid "Mark as watched"
+msgstr "Marquer comme vu"
+
+msgctxt "#30264"
+msgid "Mark as unwatched"
+msgstr "Marquer comme non-vu"
+
+msgctxt "#30423"
+msgid "Process Complete"
+msgstr "Opération terminée"
+
+msgctxt "#30425"
+msgid "Are you sure?"
+msgstr "Êtes-vous sûr ?"
+
+msgctxt "#30502"
+msgid "Movie information"
+msgstr "Informations sur le film"
+
+msgctxt "#30510"
+msgid "Are you sure?"
+msgstr "Êtes-vous sûr ?"
+
+msgctxt "#30511"
+msgid "Process Complete"
+msgstr "Opération terminée"
+
+msgctxt "#30806"
+msgid "Latest Movies"
+msgstr "Derniers films"
+
+msgctxt "#30809"
+msgid "Featured"
+msgstr "À l'affiche"
+
+msgctxt "#30810"
+msgid "People Watching"
+msgstr "Les gens regardent"
+
+msgctxt "#30860"
+msgid "Movies"
+msgstr "Films"
+
+msgctxt "#30922"
+msgid "Movies"
+msgstr "Films"
+
+msgctxt "#30950"
+msgid "Downloads"
+msgstr "Téléchargement"
+
+msgctxt "#30951"
+msgid "Movies"
+msgstr "Films"
+
+#~ msgctxt "#99999"
+#~ msgid "TV Shows"
+#~ msgstr "Séries TV"
+
+#~ msgctxt "#99999"
+#~ msgid "Channels"
+#~ msgstr "Canaux"
+
+#~ msgctxt "#99999"
+#~ msgid "My Genesis"
+#~ msgstr "Mon Genesis"
+
+#~ msgctxt "#99999"
+#~ msgid "Latest Episodes"
+#~ msgstr "Derniers Épisodes"
+
+#~ msgctxt "#99999"
+#~ msgid "TV Calendar"
+#~ msgstr "Calendrier de Diffusion TV"
+
+#~ msgctxt "#99999"
+#~ msgid "Search"
+#~ msgstr "Recherche"
+
+#~ msgctxt "#99999"
+#~ msgid "People"
+#~ msgstr "Personnes"
+
+#~ msgctxt "#99999"
+#~ msgid "Favourites"
+#~ msgstr "Favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "People Search"
+#~ msgstr "Recherché en ce moment"
+
+#~ msgctxt "#99999"
+#~ msgid "Search"
+#~ msgstr "Rechercher"
+
+#~ msgctxt "#99999"
+#~ msgid "Networks"
+#~ msgstr "Réseaux"
+
+#~ msgctxt "#99999"
+#~ msgid "Airing today"
+#~ msgstr "Diffusé Aujourd'hui"
+
+#~ msgctxt "#99999"
+#~ msgid "Returning TV Shows"
+#~ msgstr "Séries TV de Retour"
+
+#~ msgctxt "#99999"
+#~ msgid "New TV Shows"
+#~ msgstr "Nouvelles Séries TV"
+
+#~ msgctxt "#99999"
+#~ msgid "Highly Rated"
+#~ msgstr "Les Mieux Notés"
+
+#~ msgctxt "#99999"
+#~ msgid "TV Calendar"
+#~ msgstr "Calendrier TV "
+
+#~ msgctxt "#99999"
+#~ msgid "Latest Episodes"
+#~ msgstr "Derniers Épisodes"
+
+#~ msgctxt "#99999"
+#~ msgid "Favourite Episodes"
+#~ msgstr "Épisodes Favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Favourites"
+#~ msgstr "Favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "People Search"
+#~ msgstr "Recherché en ce moment"
+
+#~ msgctxt "#99999"
+#~ msgid "Search"
+#~ msgstr "Rechercher"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]TRAKT[/B] : Featured"
+#~ msgstr "[B]TRAKT[/B] : À l'Affiche"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]TRAKT[/B] : TV Collection"
+#~ msgstr "[B]TRAKT[/B] : Collection TV"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]TRAKT[/B] : TV Watchlist"
+#~ msgstr "[B]TRAKT[/B] : Liste de surveillance TV"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]TRAKT[/B] : TV Featured"
+#~ msgstr "[B]TRAKT[/B] : À l'Affiche TV"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]TRAKT[/B] : TV Ratings"
+#~ msgstr "B]TRAKT[/B] : Classement TV"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]TRAKT[/B] : Progress"
+#~ msgstr "[B]TRAKT[/B] : Progression"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]TRAKT[/B] : Episodes"
+#~ msgstr "[B]TRAKT[/B] : Épisodes"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]IMDB[/B] : Watchlist"
+#~ msgstr "[B]IMDB[/B] : Liste de Surveillance"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]IMDB[/B] : TV Watchlist"
+#~ msgstr "[B]IMDB[/B] : Liste de Surveillance TV"
+
+#~ msgctxt "#99999"
+#~ msgid "Movie Lists"
+#~ msgstr "Liste de Films"
+
+#~ msgctxt "#99999"
+#~ msgid "TV Show Lists"
+#~ msgstr "Liste d'Émissions de TV"
+
+#~ msgctxt "#99999"
+#~ msgid "Favourite Movies"
+#~ msgstr "Films Favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Favourite Episodes"
+#~ msgstr "Épisodes Favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Favourite TV"
+#~ msgstr "TV Favorites"
+
+#~ msgctxt "#99999"
+#~ msgid "TV"
+#~ msgstr "TV"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]SETTINGS[/B] : General"
+#~ msgstr "[B]CONFIGURATION[/B] : Générale"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]SETTINGS[/B] : Accounts"
+#~ msgstr "[B]SETTINGS[/B] : Comptes"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]SETTINGS[/B] : Playback"
+#~ msgstr "[B]SETTINGS[/B] : Lecture"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]SETTINGS[/B] : Subtitles"
+#~ msgstr "[B]SETTINGS[/B] : Sous-titres"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]SOURCES[/B] : Movies"
+#~ msgstr "[B]SOURCES[/B] : Films"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]SOURCES[/B] : TV"
+#~ msgstr "[B]SOURCES[/B] : TV"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]HOSTS[/B] : HD Priority"
+#~ msgstr "[B]SERVEURS[/B] : Priorité HD"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]HOSTS[/B] : SD Priority"
+#~ msgstr "[B]SERVEURS[/B] : Priorité SD"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]GENESIS[/B] : Clear sources..."
+#~ msgstr "[B]GENESIS[/B] : Effacer sources..."
+
+#~ msgctxt "#99999"
+#~ msgid "[B]GENESIS[/B] : Clear cache..."
+#~ msgstr "[B]GENESIS[/B] : Effacer cache..."
+
+#~ msgctxt "#99999"
+#~ msgid "[B]GENESIS[/B] : Library"
+#~ msgstr "[B]GENESIS[/B] : Librarie"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]GENESIS[/B] : Downloads"
+#~ msgstr "[B]GENESIS[/B] : Téléchargement"
+
+#~ msgctxt "#99999"
+#~ msgid "[B]LIBRARY[/B] : Settings"
+#~ msgstr "[B]LIBRAIRIE[/B] : Configuration..."
+
+#~ msgctxt "#99999"
+#~ msgid "[B]GENESIS[/B] : Update folders..."
+#~ msgstr "[B]GENESIS[/B] : Mettre à jour répertoires..."
+
+#~ msgctxt "#99999"
+#~ msgid "[B]GENESIS[/B] : Movie folder..."
+#~ msgstr "[B]GENESIS[/B] : Répertoire Films..."
+
+#~ msgctxt "#99999"
+#~ msgid "[B]GENESIS[/B] : TV folder..."
+#~ msgstr "[B]GENESIS[/B] : Répertoire TV..."
+
+#~ msgctxt "#99999"
+#~ msgid "[B]TRAKT[/B] : Import Collection..."
+#~ msgstr "[B]TRAKT[/B] : Importer Collection..."
+
+#~ msgctxt "#99999"
+#~ msgid "[B]TRAKT[/B] : Import Watchlist..."
+#~ msgstr "[B]TRAKT[/B] : Importer Liste de visionnage..."
+
+#~ msgctxt "#99999"
+#~ msgid "[B]TRAKT[/B] : Import TV Collection..."
+#~ msgstr "[B]TRAKT[/B] : Importer Collection TV..."
+
+#~ msgctxt "#99999"
+#~ msgid "[B]TRAKT[/B] : Import TV Watchlist..."
+#~ msgstr "[B]TRAKT[/B] : Importer Liste de visionnage TV..."
+
+#~ msgctxt "#99999"
+#~ msgid "[B]IMDB[/B] : Import Watchlist..."
+#~ msgstr "[B]IMDB[/B] : Importer Liste de visionnage..."
+
+#~ msgctxt "#99999"
+#~ msgid "[B]IMDB[/B] : Import TV Watchlist..."
+#~ msgstr "[B]IMDB[/B] : Importer Liste de visionnage TV..."
+
+#~ msgctxt "#99999"
+#~ msgid "TV Shows"
+#~ msgstr "Séries TV"
+
+#~ msgctxt "#99999"
+#~ msgid "People (Movies)"
+#~ msgstr "Personnes (Films)"
+
+#~ msgctxt "#99999"
+#~ msgid "People (TV)"
+#~ msgstr "Personnes (TV)"
+
+#~ msgctxt "#99999"
+#~ msgid "Add to Library"
+#~ msgstr "Ajouter à la librairie"
+
+#~ msgctxt "#99999"
+#~ msgid "Search"
+#~ msgstr "Rechercher"
+
+#~ msgctxt "#99999"
+#~ msgid "Queue item"
+#~ msgstr "Mettre en file d'attente"
+
+#~ msgctxt "#99999"
+#~ msgid "Auto-play"
+#~ msgstr "Lecture Auto"
+
+#~ msgctxt "#99999"
+#~ msgid "Play using..."
+#~ msgstr "Lire avec..."
+
+#~ msgctxt "#99999"
+#~ msgid "Trakt Manager"
+#~ msgstr "Gestionnaire Trakt"
+
+#~ msgctxt "#99999"
+#~ msgid "Add to favourites"
+#~ msgstr "Ajouter aux favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Remove from favourites"
+#~ msgstr "Supprimer des favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Add to Library"
+#~ msgstr "Ajouter à la librairie"
+
+#~ msgctxt "#99999"
+#~ msgid "Set Movies view"
+#~ msgstr "Définir vue Films"
+
+#~ msgctxt "#99999"
+#~ msgid "Search"
+#~ msgstr "Rechercher"
+
+#~ msgctxt "#99999"
+#~ msgid "Queue item"
+#~ msgstr "Mettre en file d'attente"
+
+#~ msgctxt "#99999"
+#~ msgid "TV show information"
+#~ msgstr "Informations Série TV"
+
+#~ msgctxt "#99999"
+#~ msgid "Trakt Manager"
+#~ msgstr "Gestionnaire Trakt"
+
+#~ msgctxt "#99999"
+#~ msgid "Add to favourites"
+#~ msgstr "Ajouter aux favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Remove from favourites"
+#~ msgstr "Supprimer des favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Add to Library"
+#~ msgstr "Ajouter à la librarie"
+
+#~ msgctxt "#99999"
+#~ msgid "Set TV Shows view"
+#~ msgstr "Définir vue Séries TV"
+
+#~ msgctxt "#99999"
+#~ msgid "Queue item"
+#~ msgstr "Mettre en file d'attente"
+
+#~ msgctxt "#99999"
+#~ msgid "TV show information"
+#~ msgstr "Informations Série Tv"
+
+#~ msgctxt "#99999"
+#~ msgid "Trakt Manager"
+#~ msgstr "Gestionnaire Trakt"
+
+#~ msgctxt "#99999"
+#~ msgid "Add to favourites"
+#~ msgstr "Ajouter aux favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Remove from favourites"
+#~ msgstr "Supprimer des favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Add to Library"
+#~ msgstr "Ajouter à la librairie"
+
+#~ msgctxt "#99999"
+#~ msgid "Set Seasons view"
+#~ msgstr "Définir vue Saisons"
+
+#~ msgctxt "#99999"
+#~ msgid "Auto-play"
+#~ msgstr "Lecture Auto"
+
+#~ msgctxt "#99999"
+#~ msgid "Play using..."
+#~ msgstr "Lire avec..."
+
+#~ msgctxt "#99999"
+#~ msgid "Episode information"
+#~ msgstr "Informations sur l'épisode"
+
+#~ msgctxt "#99999"
+#~ msgid "Set Episodes view"
+#~ msgstr "Définir vue Épisodes"
+
+#~ msgctxt "#99999"
+#~ msgid "Auto-play"
+#~ msgstr "Lecture Auto"
+
+#~ msgctxt "#99999"
+#~ msgid "Play using..."
+#~ msgstr "Lire avec..."
+
+#~ msgctxt "#99999"
+#~ msgid "Information"
+#~ msgstr "Informations"
+
+#~ msgctxt "#99999"
+#~ msgid "Add-on settings"
+#~ msgstr "Paramètres de l'addon"
+
+#~ msgctxt "#99999"
+#~ msgid "Now playing..."
+#~ msgstr "En cours de lecture..."
+
+#~ msgctxt "#99999"
+#~ msgid "Added to Favourites"
+#~ msgstr "Ajouté aux favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Removed from Favourites"
+#~ msgstr "Supprimé des favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Adding to library..."
+#~ msgstr "Ajout à la librairie..."
+
+#~ msgctxt "#99999"
+#~ msgid "Updating TV shows..."
+#~ msgstr "Mise à jour des Séries TV..."
+
+#~ msgctxt "#99999"
+#~ msgid "Getting information"
+#~ msgstr "Récupération des informations"
+
+#~ msgctxt "#99999"
+#~ msgid "Resume from"
+#~ msgstr "Reprendre depuis"
+
+#~ msgctxt "#99999"
+#~ msgid "Loaded in"
+#~ msgstr "Chargé en"
+
+#~ msgctxt "#99999"
+#~ msgid "seconds"
+#~ msgstr "secondes"
+
+#~ msgctxt "#99999"
+#~ msgid "Trakt Manager"
+#~ msgstr "Gestionnaire Trakt"
+
+#~ msgctxt "#99999"
+#~ msgid "Add to Collection"
+#~ msgstr "Ajouter à la collection"
+
+#~ msgctxt "#99999"
+#~ msgid "Remove from Collection"
+#~ msgstr "Supprimer de la collection"
+
+#~ msgctxt "#99999"
+#~ msgid "Add to Watchlist"
+#~ msgstr "Ajouter à la liste de visionnage"
+
+#~ msgctxt "#99999"
+#~ msgid "Remove from Watchlist"
+#~ msgstr "Supprimer de la liste de visionnage"
+
+#~ msgctxt "#99999"
+#~ msgid "Add to new List"
+#~ msgstr "Ajouter à une nouvelle liste"
+
+#~ msgctxt "#99999"
+#~ msgid "Add to"
+#~ msgstr "Ajouter à"
+
+#~ msgctxt "#99999"
+#~ msgid "Remove from"
+#~ msgstr "Supprimer de"
+
+#~ msgctxt "#99999"
+#~ msgid "This View is now Default"
+#~ msgstr "Cette vue est maintenant la vue par défaut"
+
+#~ msgctxt "#99999"
+#~ msgid "Episode information"
+#~ msgstr "Informations sur l'épisode"
+
+#~ msgctxt "#99999"
+#~ msgid "Queue item"
+#~ msgstr "Mettre en file d'attente"
+
+#~ msgctxt "#99999"
+#~ msgid "Download item"
+#~ msgstr "Télécharger"
+
+#~ msgctxt "#99999"
+#~ msgid "Refresh sources"
+#~ msgstr "Rafraîchir les sources"
+
+#~ msgctxt "#99999"
+#~ msgid "Add-on settings"
+#~ msgstr "Paramètres de l'addon"
+
+#~ msgctxt "#99999"
+#~ msgid "Now playing..."
+#~ msgstr "En cours de lecture..."
+
+#~ msgctxt "#99999"
+#~ msgid "Auto-play"
+#~ msgstr "Lecture Auto"
+
+#~ msgctxt "#99999"
+#~ msgid "Monday"
+#~ msgstr "Lundi"
+
+#~ msgctxt "#99999"
+#~ msgid "Tuesday"
+#~ msgstr "Mardi"
+
+#~ msgctxt "#99999"
+#~ msgid "Wednesday"
+#~ msgstr "Mercredi"
+
+#~ msgctxt "#99999"
+#~ msgid "Thursday"
+#~ msgstr "Jeudi"
+
+#~ msgctxt "#99999"
+#~ msgid "Friday"
+#~ msgstr "Vendredi"
+
+#~ msgctxt "#99999"
+#~ msgid "Saturday"
+#~ msgstr "Samedi"
+
+#~ msgctxt "#99999"
+#~ msgid "Sunday"
+#~ msgstr "Dimanche"
+
+#~ msgctxt "#99999"
+#~ msgid "January"
+#~ msgstr "Janvier"
+
+#~ msgctxt "#99999"
+#~ msgid "February"
+#~ msgstr "Février"
+
+#~ msgctxt "#99999"
+#~ msgid "March"
+#~ msgstr "Mars"
+
+#~ msgctxt "#99999"
+#~ msgid "April"
+#~ msgstr "Avril"
+
+#~ msgctxt "#99999"
+#~ msgid "May"
+#~ msgstr "Mai"
+
+#~ msgctxt "#99999"
+#~ msgid "June"
+#~ msgstr "Juin"
+
+#~ msgctxt "#99999"
+#~ msgid "July"
+#~ msgstr "Juillet"
+
+#~ msgctxt "#99999"
+#~ msgid "August"
+#~ msgstr "Août"
+
+#~ msgctxt "#99999"
+#~ msgid "September"
+#~ msgstr "Septembre"
+
+#~ msgctxt "#99999"
+#~ msgid "October"
+#~ msgstr "Octobre"
+
+#~ msgctxt "#99999"
+#~ msgid "November"
+#~ msgstr "Novembre"
+
+#~ msgctxt "#99999"
+#~ msgid "December"
+#~ msgstr "Décembre"
+
+#~ msgctxt "#99999"
+#~ msgid "Sources Timeout"
+#~ msgstr "Temps d'attente des sources"
+
+#~ msgctxt "#99999"
+#~ msgid "Main menu"
+#~ msgstr "Menu principal"
+
+#~ msgctxt "#99999"
+#~ msgid "Disabled"
+#~ msgstr "Désactivé"
+
+#~ msgctxt "#99999"
+#~ msgid "Default"
+#~ msgstr "Défaut"
+
+#~ msgctxt "#99999"
+#~ msgid "Latest Episodes"
+#~ msgstr "Derniers épisodes"
+
+#~ msgctxt "#99999"
+#~ msgid "Disabled"
+#~ msgstr "Désactivé"
+
+#~ msgctxt "#99999"
+#~ msgid "Default"
+#~ msgstr "Défaut"
+
+#~ msgctxt "#99999"
+#~ msgid "Favourites"
+#~ msgstr "Favoris"
+
+#~ msgctxt "#99999"
+#~ msgid "Trakt Progress"
+#~ msgstr "Progrès Trakt"
+
+#~ msgctxt "#99999"
+#~ msgid "Trakt Episodes"
+#~ msgstr "Épisodes Trakt"
+
+#~ msgctxt "#99999"
+#~ msgid "TV Calendar"
+#~ msgstr "Calendrier TV"
+
+#~ msgctxt "#99999"
+#~ msgid "Disabled"
+#~ msgstr "Désactivé"
+
+#~ msgctxt "#99999"
+#~ msgid "Enabled"
+#~ msgstr "Activé"
+
+#~ msgctxt "#99999"
+#~ msgid "Playback"
+#~ msgstr "Lecture"
+
+#~ msgctxt "#99999"
+#~ msgid "Max Quality"
+#~ msgstr "Qualité max"
+
+#~ msgctxt "#99999"
+#~ msgid "Host selection"
+#~ msgstr "Sélection du serveur"
+
+#~ msgctxt "#99999"
+#~ msgid "Dialog"
+#~ msgstr "Dialogue"
+
+#~ msgctxt "#99999"
+#~ msgid "Directory"
+#~ msgstr "Répertoire"
+
+#~ msgctxt "#99999"
+#~ msgid "File Hosting Filters"
+#~ msgstr "Filtres d'hébergement de fichiers"
+
+#~ msgctxt "#99999"
+#~ msgid "Hosters with captchas"
+#~ msgstr "Serveurs avec captchas"
+
+#~ msgctxt "#99999"
+#~ msgid "Hosters with 1080p files"
+#~ msgstr "Serveurs avec fichiers 1080p"
+
+#~ msgctxt "#99999"
+#~ msgid "Hosters with 720p files"
+#~ msgstr "Serveurs avec fichiers 720p"
+
+#~ msgctxt "#99999"
+#~ msgid "Auto-play"
+#~ msgstr "Lecture Auto"
+
+#~ msgctxt "#99999"
+#~ msgid "Auto-play"
+#~ msgstr "Lecture Auto"
+
+#~ msgctxt "#99999"
+#~ msgid "Auto-play (Library)"
+#~ msgstr "Lecture Auto (Librairie)"
+
+#~ msgctxt "#99999"
+#~ msgid "Force SD playback in Auto-play"
+#~ msgstr "Forcer qualité SD en lecture auto"
+
+#~ msgctxt "#99999"
+#~ msgid "When playback starts..."
+#~ msgstr "Quand la lecture commence..."
+
+#~ msgctxt "#99999"
+#~ msgid "Resume Playback"
+#~ msgstr "Reprendre la lecture"
+
+#~ msgctxt "#99999"
+#~ msgid "Playback Info"
+#~ msgstr "Informations de lecture"
+
+#~ msgctxt "#99999"
+#~ msgid "TV"
+#~ msgstr "Tv"
+
+#~ msgctxt "#99999"
+#~ msgid "HD Hosts"
+#~ msgstr "Serveurs HD"
+
+#~ msgctxt "#99999"
+#~ msgid "SD Hosts"
+#~ msgstr "Serveurs SD"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 1"
+#~ msgstr "Priorité 1"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 2"
+#~ msgstr "Priorité 2"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 3"
+#~ msgstr "Priorité 3"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 4"
+#~ msgstr "Priorité 4"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 5"
+#~ msgstr "Priorité 5"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 6"
+#~ msgstr "Priorité 6"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 7"
+#~ msgstr "Priorité 7"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 8"
+#~ msgstr "Priorité 8"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 9"
+#~ msgstr "Priorité 9"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 10"
+#~ msgstr "Priorité 10"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 11"
+#~ msgstr "Priorité 11"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 12"
+#~ msgstr "Priorité 12"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 13"
+#~ msgstr "Priorité 13"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 14"
+#~ msgstr "Priorité 14"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 15"
+#~ msgstr "Priorité 15"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 16"
+#~ msgstr "Priorité 16"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 17"
+#~ msgstr "Priorité 17"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 18"
+#~ msgstr "Priorité 18"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 19"
+#~ msgstr "Priorité 19"
+
+#~ msgctxt "#99999"
+#~ msgid "Priority 20"
+#~ msgstr "Priorité 20"
+
+#~ msgctxt "#99999"
+#~ msgid "User"
+#~ msgstr "Utilisateuir"
+
+#~ msgctxt "#99999"
+#~ msgid "Email"
+#~ msgstr "Email"
+
+#~ msgctxt "#99999"
+#~ msgid "Password"
+#~ msgstr "Mot de passe"
+
+#~ msgctxt "#99999"
+#~ msgid "Library"
+#~ msgstr "Librairie"
+
+#~ msgctxt "#99999"
+#~ msgid "Genesis folders will be imported to library if they are added to media sources."
+#~ msgstr "Les répertoires Genesis seront importés dans la librairie síls sont ajoutés aux sources média."
+
+#~ msgctxt "#99999"
+#~ msgid "TV"
+#~ msgstr "TV"
+
+#~ msgctxt "#99999"
+#~ msgid "Auto update TV Shows"
+#~ msgstr "Mise à jour automatique des séries TV"
+
+#~ msgctxt "#99999"
+#~ msgid "Show notifications during update"
+#~ msgstr "Afficher les notifications pendant la mise à jour"
+
+#~ msgctxt "#99999"
+#~ msgid "Update library after adding content"
+#~ msgstr "Mettre à jour la librarie après l'ajout de contenu"
+
+#~ msgctxt "#99999"
+#~ msgid "Avoid creating duplicate content"
+#~ msgstr "Éviter de créer du contenu dupliqué"
+
+#~ msgctxt "#99999"
+#~ msgid "Check movie before adding it"
+#~ msgstr "Verifier le film avant de l'ajouter"
+
+#~ msgctxt "#99999"
+#~ msgid "Check first episode of season before adding it"
+#~ msgstr "Vérifier le premier épisode de la saison avant de l'ajouter"
+
+#~ msgctxt "#99999"
+#~ msgid "Subtitles"
+#~ msgstr "Sous-titres"
+
+#~ msgctxt "#99999"
+#~ msgid "Subtitles could be unavailable or out of sync."
+#~ msgstr "Les sous-titres peuvent êtres indisponibles ou hors de la synchro."
+
+#~ msgctxt "#99999"
+#~ msgid "In that case use your own subtitles."
+#~ msgstr "Dans ce cas, utilisez vos propres sous-titres."
+
+#~ msgctxt "#99999"
+#~ msgid "Enable subtitles"
+#~ msgstr "Activer les sous-titres"
+
+#~ msgctxt "#99999"
+#~ msgid "Convert subtitles to UTF-8"
+#~ msgstr "Convertir les sous-titres en UTF-8"
+
+#~ msgctxt "#99999"
+#~ msgid "Primary Language"
+#~ msgstr "Langue principale"
+
+#~ msgctxt "#99999"
+#~ msgid "Secondary Language"
+#~ msgstr "Langue secondaire"
+
+#~ msgctxt "#99999"
+#~ msgid "TV"
+#~ msgstr "TV"

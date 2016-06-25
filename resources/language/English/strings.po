@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-24 23:10+0000\n"
+"POT-Creation-Date: 2016-06-25 12:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,98 +17,98 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: \n"
 
-#: resources/settings.template.xml:6
+#: resources/settings.template.xml:3
 msgctxt "#30001"
 msgid "General"
 msgstr "General"
 
-#: resources/settings.template.xml:7
+#: resources/settings.template.xml:4
 msgctxt "#30002"
 msgid "Appearance"
 msgstr "Appearance"
 
-#: resources/settings.template.xml:8
+#: resources/settings.template.xml:5
 msgctxt "#30003"
 msgid "Enable Fanart"
 msgstr "Enable Fanart"
 
-#: resources/settings.template.xml:9
+#: resources/settings.template.xml:6
 msgctxt "#30004"
 msgid "Info Language"
 msgstr "Info Language"
 
-#: resources/settings.template.xml:10 g2/actions/my.py:70
+#: resources/settings.template.xml:7 g2/actions/my.py:70
 msgctxt "#30005"
 msgid "Downloads"
 msgstr "Downloads"
 
-#: resources/settings.template.xml:12
+#: resources/settings.template.xml:9
 msgctxt "#30006"
 msgid "Accounts"
 msgstr "Accounts"
 
-#: resources/settings.template.xml:13
+#: resources/settings.template.xml:10
 msgctxt "#30007"
 msgid "Trakt"
 msgstr "Trakt"
 
-#: resources/settings.template.xml:14
+#: resources/settings.template.xml:11
 msgctxt "#30008"
 msgid "Trakt Account"
 msgstr "Trakt Account"
 
-#: resources/settings.template.xml:15
+#: resources/settings.template.xml:12
 msgctxt "#30009"
 msgid "Trakt User"
 msgstr "Trakt User"
 
-#: resources/settings.template.xml:16
+#: resources/settings.template.xml:13
 msgctxt "#30010"
 msgid "Enabling Trakt will pop up the device authorization dialog"
 msgstr "Enabling Trakt will pop up the device authorization dialog"
 
-#: resources/settings.template.xml:18
+#: resources/settings.template.xml:15
 msgctxt "#30011"
 msgid "IMDb"
 msgstr "IMDb"
 
-#: resources/settings.template.xml:19
+#: resources/settings.template.xml:16
 msgctxt "#30012"
 msgid "IMDB User"
 msgstr "IMDB User"
 
-#: resources/settings.template.xml:20
+#: resources/settings.template.xml:17
 msgctxt "#30013"
 msgid "IMDB Nickname"
 msgstr "IMDB Nickname"
 
-#: resources/settings.template.xml:22
+#: resources/settings.template.xml:19
 msgctxt "#30014"
 msgid "Pushbullet"
 msgstr "Pushbullet"
 
-#: resources/settings.template.xml:23
+#: resources/settings.template.xml:20
 msgctxt "#30015"
 msgid "Pushbullet API key"
 msgstr "Pushbullet API key"
 
-#: resources/settings.template.xml:24
+#: resources/settings.template.xml:21
 msgctxt "#30016"
 msgid "Pushbullet email"
 msgstr "Pushbullet email"
 
-#: resources/settings.template.xml:26
+#: resources/settings.template.xml:23
 msgctxt "#30017"
 msgid "TMDB"
 msgstr "TMDB"
 
-#: resources/settings.template.xml:27
+#: resources/settings.template.xml:24
 msgctxt "#30018"
 msgid "TMDB API key"
 msgstr "TMDB API key"
 
 #. User setting are generated for each package / module to enable/disable it
-#: resources/settings.template.xml:29 g2/pkg.py:46
+#: resources/settings.template.xml:26 g2/pkg.py:46
 msgctxt "#30019"
 msgid "Providers"
 msgstr "Providers"
@@ -116,7 +116,7 @@ msgstr "Providers"
 #. User setting are generated for each package / module to enable/disable it
 #. For resolvers, if there is a single module in the package,
 #. the module setting is not displated.
-#: resources/settings.template.xml:31 g2/pkg.py:79
+#: resources/settings.template.xml:28 g2/pkg.py:79
 msgctxt "#30020"
 msgid "Resolvers"
 msgstr "Resolvers"
