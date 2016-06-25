@@ -82,9 +82,12 @@ def pushbullet():
     from g2.notifiers import pushbullet as pb_notifier
 
     if not addon.setting('pushbullet_apikey'):
-        ui.infoDialog(_('Pushbullet disabled'))
         addon.setSetting('pushbullet_email', '')
-        # (fixme) stop pb events
+        ui.infoDialog(_('Pushbullet disabled'))
+        # (fixme) enabling/disabling the pb events handling requires,
+        #   for now, a complete restart of service thread.
+        #   This could be improved/changed in the future
+        addon.prop('service', False)
         return
 
     pbo = pb_notifier.PushBullet(addon.setting('pushbullet_apikey'))
@@ -97,11 +100,19 @@ def pushbullet():
         else:
             ui.Dialog().ok('Pushbullet', _('Authorized account email: [COLOR orange]{pushbullet_email}[/COLOR]').format(
                 pushbullet_email=user['email']))
+            if not pb_notifier.enabled():
+                # (fixme) enabling/disabling the pb events handling requires,
+                #   for now, a complete restart of service thread.
+                #   This could be improved/changed in the future
+                addon.prop('service', False)
             addon.setSetting('pushbullet_email', user['email'])
-            # (fixme) re-start pb events
 
     except Exception as ex:
-        # (fixme) stop pb events
+        if pb_notifier.enabled():
+            # (fixme) enabling/disabling the pb events handling requires,
+            #   for now, a complete restart of service thread.
+            #   This could be improved/changed in the future
+            addon.prop('service', False)
         addon.setSetting('pushbullet_email', '')
         ui.infoDialog(str(ex), time=5000)
 

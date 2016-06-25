@@ -116,7 +116,7 @@ def get(function, timeout, *args, **kwargs):
 def clear(tables=None):
     try:
         if tables == None:
-            tables = ['rel_list', 'rel_trakt']
+            tables = ['rel_list', 'rel_trakt', 'rel_url', 'rel_src']
         elif type(tables) not in [list, tuple]:
             tables = [tables]
 
