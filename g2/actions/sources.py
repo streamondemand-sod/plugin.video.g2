@@ -52,8 +52,7 @@ def playurl(name=None, url=None):
 
         ui.busydialog()
         def ui_cancel():
-            ui.sleep(1000)
-            return not ui.abortRequested()
+            return not ui.abortRequested(1)
         thd = _resolve(None, url, ui_update=ui_cancel)
         ui.busydialog(stop=True)
 

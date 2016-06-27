@@ -33,7 +33,8 @@ from g2.libraries import addon
 from g2.libraries.language import _
 
 
-_addon = xbmcaddon.Addon()
+_ADDON = xbmcaddon.Addon()
+_MONITOR = xbmc.Monitor()
 
 Window = xbmcgui.Window
 Dialog = xbmcgui.Dialog
@@ -108,8 +109,8 @@ def resolvedPlugin():
         pass
 
 
-def abortRequested():
-    return xbmc.abortRequested
+def abortRequested(timeout=None):
+    return _MONITOR.waitForAbort(timeout) if timeout else _MONITOR.abortRequested()
 
 
 def keyboard(heading):
@@ -118,14 +119,14 @@ def keyboard(heading):
     return k.getText() if k.isConfirmed() else None
 
 
-def infoDialog(message, heading=_addon.getAddonInfo('name'), icon=addon_icon(), time=3000):
+def infoDialog(message, heading=_ADDON.getAddonInfo('name'), icon=addon_icon(), time=3000):
     try:
         xbmcgui.Dialog().notification(heading, message, icon, time, sound=False)
     except Exception:
         xbmc.executebuiltin("Notification(%s,%s, %s, %s)"%(heading, message, time, icon))
 
 
-def yesnoDialog(line1, line2='', line3='', heading=_addon.getAddonInfo('name'), nolabel='', yeslabel=''):
+def yesnoDialog(line1, line2='', line3='', heading=_ADDON.getAddonInfo('name'), nolabel='', yeslabel=''):
     return xbmcgui.Dialog().yesno(heading, line1, line2, line3, nolabel=nolabel, yeslabel=yeslabel)
 
 

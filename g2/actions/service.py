@@ -188,7 +188,7 @@ def thread(name):
             log.notice('service[%s]: monitored %s %s', name, mobj['id'], mobj['kind'])
 
         _check_changes('service')
-        while not ui.abortRequested() and addon.prop('service', name=name):
+        while not ui.abortRequested(1) and addon.prop('service', name=name):
             _check_changes('property')
             _check_changes('player')
 
@@ -205,15 +205,17 @@ def thread(name):
             if notices:
                 notifiers.notices(notices, playing=_player_state('playing'))
 
-            ui.sleep(1000)
-
+        alive_threads = []
         for dummy_secs in range(5):
             alive_threads = [t for t in _THREADS.values() if t.is_alive()]
             if not alive_threads:
                 break
             for thd in alive_threads:
                 _service_thread_shutdown(thd.name)
-            ui.sleep(1000)
+            ui.sleep(100)
+
+        if len(alive_threads):
+            log.notice('service thread[%s]: %d threads still running', len(alive_threads))
     except Exception as ex:
         log.error('service[%s]: %s', name, ex, trace=True)
 

@@ -30,11 +30,15 @@ from g2.libraries import addon
 
 def main():
     """(Re)schedule the g2 service thread"""
+    monitor = xbmc.Monitor()
     service_thread_id = 0
     next_restart_after = time.time()
     start_service_thread = True
     addon.prop('service', '')
-    while not xbmc.abortRequested:
+
+    log.notice('service manager started [v{v}]')
+
+    while not monitor.waitForAbort(1):
         # The current thread terminated
         if service_thread_id and addon.prop('service', name=str(service_thread_id)) is None:
             log.notice('service manager: service thread with id %d terminated', service_thread_id)
@@ -56,8 +60,8 @@ def main():
             next_restart_after = time.time() + 15
             start_service_thread = False
 
-        xbmc.sleep(1000)
+    log.notice('service manager stopped')
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

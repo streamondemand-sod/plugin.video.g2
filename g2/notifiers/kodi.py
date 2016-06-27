@@ -34,4 +34,3 @@ def notices(notes, playing=None, origin=addon.addonInfo('id'), **dummy_kwargs):
     if playing != 'video':
         for note in notes:
             ui.infoDialog(note, time=5000, heading=origin)
-            ui.sleep(5000)           

@@ -57,8 +57,7 @@ def trakt():
                                    _('You have {minutes:02d}:{seconds:02d} left').format(
                                        minutes=minutes,
                                        seconds=seconds))
-            ui.sleep(1000)
-            return not ui.abortRequested() and not dialog_progress.iscanceled()
+            return not ui.abortRequested(1) and not dialog_progress.iscanceled()
 
         user = trakt_db.authDevice(ui_update=ui_update)
 
