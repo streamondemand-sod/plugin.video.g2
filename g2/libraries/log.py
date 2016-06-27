@@ -32,7 +32,9 @@ import xbmc
 import xbmcaddon
 
 
-_ADDON_ID = xbmcaddon.Addon().getAddonInfo('id')
+_ADDON = xbmcaddon.Addon()
+_ADDON_ID = _ADDON.getAddonInfo('id')
+_ADDON_VERSION = _ADDON.getAddonInfo('version')
 try:
     _THREAD_ID = int(sys.argv[1])
 except Exception:
@@ -44,6 +46,7 @@ _SPECIAL_TAGS = [
     'f',    # function name
     't',    # thread object address
     'cf',   # calling module.function
+    'v',    # addon version
 ]
 
 _CONFIG = {}
@@ -142,7 +145,9 @@ def _fetch_ids(ids_level=2):
         return os.path.basename(os.path.dirname(path)) if path.endswith('__init__.py') else \
                os.path.splitext(os.path.basename(path))[0]
 
-    ids = {}
+    ids = {
+        'v': _ADDON_VERSION,
+    }
     stack = None
     try:
         ids_level += 1
