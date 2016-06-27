@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <window>
+	<defaultcontrol always="true">101</defaultcontrol>
 	<zorder>0</zorder>
 	<coordinates>
 		<posx>170</posx>
@@ -44,6 +45,10 @@
 				<top>0</top>
 				<width>190</width>
 				<height>300</height>
+				<onup>noop</onup>
+				<ondown>noop</ondown>
+				<onleft>201</onleft>
+				<onright>201</onright>
 				<orientation>vertical</orientation>
 		        <texture border="5">inner.png</texture>
 				<itemlayout width="190" height="30">
@@ -91,6 +96,10 @@
 				<top>0</top>
 				<width>720</width>
 				<height>300</height>
+				<onup>noop</onup>
+				<ondown>noop</ondown>
+				<onleft>101</onleft>
+				<onright>101</onright>
 				<orientation>vertical</orientation>
 				<pagecontrol>1001</pagecontrol>
 				<scrolltime tween="sine" easing="out">240</scrolltime>

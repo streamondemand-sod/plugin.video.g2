@@ -21,6 +21,8 @@
 
 import xbmcgui
 
+from g2.libraries import log
+
 
 __all__ = ['PackagesDialog']
 
@@ -64,6 +66,7 @@ class PackagesDialog(xbmcgui.WindowXMLDialog):
         self._update_packages_list('providers')
 
     def onClick(self, controlID):
+        log.debug('{m}.{f}: %s', controlID)
         if controlID == self.kinds_listid:
             kind = self.kinds_lst.getSelectedItem().getLabel().lower()
             self._update_packages_list(kind)
