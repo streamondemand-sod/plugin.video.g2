@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-25 12:39+0000\n"
+"POT-Creation-Date: 2016-06-27 08:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -149,7 +149,7 @@ msgctxt "#30025"
 msgid "You have {minutes:02d}:{seconds:02d} left"
 msgstr "You have {minutes:02d}:{seconds:02d} left"
 
-#: g2/actions/auth.py:67
+#: g2/actions/auth.py:66
 #, python-brace-format
 msgctxt "#30026"
 msgid "Authorized username: [COLOR orange]{trakt_user}[/COLOR]"
@@ -160,18 +160,18 @@ msgctxt "#30027"
 msgid "Pushbullet disabled"
 msgstr "Pushbullet disabled"
 
-#: g2/actions/auth.py:98
+#: g2/actions/auth.py:100
 #, python-brace-format
 msgctxt "#30028"
 msgid "Authorized account email: [COLOR orange]{pushbullet_email}[/COLOR]"
 msgstr "Authorized account email: [COLOR orange]{pushbullet_email}[/COLOR]"
 
-#: g2/actions/auth.py:116
+#: g2/actions/auth.py:126
 msgctxt "#30029"
 msgid "IMDb user disabled"
 msgstr "IMDb user disabled"
 
-#: g2/actions/auth.py:127
+#: g2/actions/auth.py:137
 #, python-brace-format
 msgctxt "#30030"
 msgid "IMDb user nickname: [COLOR orange]{imdb_nickname}[/COLOR]"
@@ -248,20 +248,20 @@ msgid "Check"
 msgstr "Check"
 
 #. Label for the "Next Page" item when the max number of pages is known
-#: g2/actions/lib/ui.py:187
+#: g2/actions/lib/ui.py:188
 #, python-brace-format
 msgctxt "#30044"
 msgid "[I]Next Page[/I]  [{page_of} of {max_pages}]"
 msgstr "[I]Next Page[/I]  [{page_of} of {max_pages}]"
 
 #. Label for the "Next Page" item when only the current page number is known
-#: g2/actions/lib/ui.py:193
+#: g2/actions/lib/ui.py:194
 #, python-brace-format
 msgctxt "#30045"
 msgid "[I]Next Page[/I]  [{page_of}}]"
 msgstr "[I]Next Page[/I]  [{page_of}}]"
 
-#: g2/actions/lib/ui.py:197
+#: g2/actions/lib/ui.py:198
 msgctxt "#30046"
 msgid "[I]Next Page[/I]"
 msgstr "[I]Next Page[/I]"
@@ -517,191 +517,197 @@ msgctxt "#30095"
 msgid "Forced player stop"
 msgstr "Forced player stop"
 
-#: g2/actions/sources.py:64 g2/actions/sources.py:72 g2/actions/sources.py:188
+#: g2/actions/service.py:183
+#, python-brace-format
 msgctxt "#30096"
+msgid "{g2_name} service started"
+msgstr "{g2_name} service started"
+
+#: g2/actions/sources.py:63 g2/actions/sources.py:71 g2/actions/sources.py:187
+msgctxt "#30097"
 msgid "Not a valid stream"
 msgstr "Not a valid stream"
 
-#: g2/actions/sources.py:78
+#: g2/actions/sources.py:77
 #, python-brace-format
-msgctxt "#30097"
+msgctxt "#30098"
 msgid "Cache cleared for {video}"
 msgstr "Cache cleared for {video}"
 
-#: g2/actions/sources.py:143
-msgctxt "#30098"
+#: g2/actions/sources.py:142
+msgctxt "#30099"
 msgid "No stream available"
 msgstr "No stream available"
 
-#: g2/actions/sources.py:155
+#: g2/actions/sources.py:154
 #, python-brace-format
-msgctxt "#30099"
+msgctxt "#30100"
 msgid "Resume from {hours:02d}:{minutes:02d}:{seconds:02d}"
 msgstr "Resume from {hours:02d}:{minutes:02d}:{seconds:02d}"
 
-#: g2/actions/sources.py:158
-msgctxt "#30100"
+#: g2/actions/sources.py:157
+msgctxt "#30101"
 msgid "Resume"
 msgstr "Resume"
 
-#: g2/actions/sources.py:159
-msgctxt "#30101"
+#: g2/actions/sources.py:158
+msgctxt "#30102"
 msgid "Start from beginning"
 msgstr "Start from beginning"
 
-#: g2/actions/sources.py:174
-msgctxt "#30102"
+#: g2/actions/sources.py:173
+msgctxt "#30103"
 msgid "~*~ CREDITS ~*~"
 msgstr "~*~ CREDITS ~*~"
 
-#: g2/actions/sources.py:175
+#: g2/actions/sources.py:174
 #, python-brace-format
-msgctxt "#30103"
+msgctxt "#30104"
 msgid "{video} loaded in {elapsed_time} seconds"
 msgstr "{video} loaded in {elapsed_time} seconds"
 
-#: g2/actions/sources.py:176
+#: g2/actions/sources.py:175
 #, python-brace-format
-msgctxt "#30104"
+msgctxt "#30105"
 msgid "Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]"
 msgstr "Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]"
 
-#: g2/actions/sources.py:177
+#: g2/actions/sources.py:176
 #, python-brace-format
-msgctxt "#30105"
+msgctxt "#30106"
 msgid "Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]"
 msgstr "Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]"
 
-#: g2/actions/sources.py:178
+#: g2/actions/sources.py:177
 #, python-brace-format
-msgctxt "#30106"
+msgctxt "#30107"
 msgid "Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]"
 msgstr "Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]"
 
-#: g2/actions/sources.py:218
+#: g2/actions/sources.py:217
 #, python-brace-format
-msgctxt "#30107"
+msgctxt "#30108"
 msgid "Complete file is {mega_bytes}MB {restartable_flag}"
 msgstr "Complete file is {mega_bytes}MB {restartable_flag}"
 
 #. 'R' stand for Restartable download
-#: g2/actions/sources.py:221
-msgctxt "#30108"
+#: g2/actions/sources.py:220
+msgctxt "#30109"
 msgid "(R)"
 msgstr "(R)"
 
-#: g2/actions/sources.py:224
+#: g2/actions/sources.py:223
 #, python-brace-format
-msgctxt "#30109"
+msgctxt "#30110"
 msgid "Media format is {media_format}"
 msgstr "Media format is {media_format}"
 
-#: g2/actions/sources.py:228
-msgctxt "#30110"
+#: g2/actions/sources.py:227
+msgctxt "#30111"
 msgid "Continue with the download?"
 msgstr "Continue with the download?"
 
-#: g2/actions/sources.py:230
-msgctxt "#30111"
+#: g2/actions/sources.py:229
+msgctxt "#30112"
 msgid "Item added to your download queue"
 msgstr "Item added to your download queue"
 
-#: g2/actions/sources.py:232
-msgctxt "#30112"
+#: g2/actions/sources.py:231
+msgctxt "#30113"
 msgid "Item already in your download queue"
 msgstr "Item already in your download queue"
 
 #: g2/actions/tools.py:32
-msgctxt "#30113"
+msgctxt "#30114"
 msgid "[B]SETTINGS[/B]"
 msgstr "[B]SETTINGS[/B]"
 
 #: g2/actions/tools.py:34
-msgctxt "#30114"
+msgctxt "#30115"
 msgid "[B]SETTINGS[/B] : Providers"
 msgstr "[B]SETTINGS[/B] : Providers"
 
 #: g2/actions/tools.py:36
-msgctxt "#30115"
+msgctxt "#30116"
 msgid "[B]SETTINGS[/B] : Resolvers"
 msgstr "[B]SETTINGS[/B] : Resolvers"
 
 #: g2/actions/tools.py:38
-msgctxt "#30116"
+msgctxt "#30117"
 msgid "[B]G2[/B] : Packages"
 msgstr "[B]G2[/B] : Packages"
 
 #: g2/actions/tools.py:40
-msgctxt "#30117"
+msgctxt "#30118"
 msgid "[B]G2[/B] : Clear cache..."
 msgstr "[B]G2[/B] : Clear cache..."
 
 #: g2/actions/tools.py:58
-msgctxt "#30118"
+msgctxt "#30119"
 msgid "Process Complete"
 msgstr "Process Complete"
 
 #: g2/dbs/trakt.py:330
-msgctxt "#30119"
+msgctxt "#30120"
 msgid "Code generation failed"
 msgstr "Code generation failed"
 
 #: g2/dbs/trakt.py:348
-msgctxt "#30120"
+msgctxt "#30121"
 msgid "Device authorization failed"
 msgstr "Device authorization failed"
 
 #: g2/dbs/trakt.py:353
-msgctxt "#30121"
+msgctxt "#30122"
 msgid "User aborted authorization"
 msgstr "User aborted authorization"
 
 #: g2/dbs/trakt.py:377
-msgctxt "#30122"
+msgctxt "#30123"
 msgid "Auhorization code expired"
 msgstr "Auhorization code expired"
 
 #: g2/pkg.py:52
-msgctxt "#30123"
+msgctxt "#30124"
 msgid "1st preferred source provider"
 msgstr "1st preferred source provider"
 
 #: g2/pkg.py:57
-msgctxt "#30124"
+msgctxt "#30125"
 msgid "2nd preferred source provider"
 msgstr "2nd preferred source provider"
 
 #: g2/pkg.py:62
-msgctxt "#30125"
+msgctxt "#30126"
 msgid "3rd preferred source provider"
 msgstr "3rd preferred source provider"
 
 #: g2/pkg.py:67
-msgctxt "#30126"
+msgctxt "#30127"
 msgid "4th preferred source provider"
 msgstr "4th preferred source provider"
 
 #: g2/pkg.py:85
-msgctxt "#30127"
+msgctxt "#30128"
 msgid "1st preferred source host"
 msgstr "1st preferred source host"
 
 #: g2/pkg.py:90
-msgctxt "#30128"
+msgctxt "#30129"
 msgid "2nd preferred source host"
 msgstr "2nd preferred source host"
 
 #: g2/pkg.py:95
-msgctxt "#30129"
+msgctxt "#30130"
 msgid "3rd preferred source host"
 msgstr "3rd preferred source host"
 
 #: g2/pkg.py:100
-msgctxt "#30130"
+msgctxt "#30131"
 msgid "4th preferred source host"
 msgstr "4th preferred source host"
 
 #: g2/pkg.py:564
-msgctxt "#30131"
+msgctxt "#30132"
 msgid "Priority"
 msgstr "Priority"
