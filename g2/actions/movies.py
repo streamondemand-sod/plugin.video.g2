@@ -193,10 +193,10 @@ def _add_movie_directory(items):
     if not items:
         return
 
-    addonPoster = ui.addon_poster()
-    addonBanner = ui.addon_banner()
-    addonFanart = ui.addon_fanart()
-    settingFanart = addon.setting('fanart')
+    addon_poster = ui.addon_poster()
+    addon_banner = ui.addon_banner()
+    addon_fanart = ui.addon_fanart()
+    fanart_enabled = addon.setting('fanart') == 'true'
 
     for i in items:
         try:
@@ -204,19 +204,17 @@ def _add_movie_directory(items):
             systitle = urllib.quote_plus(i['title'])
             imdb, tmdb, year = i['imdb'], i['tmdb'], i['year']
 
-            poster, banner, fanart = i['poster'], i['banner'], i['fanart']
+            poster = i.get('poster', '0')
             if poster == '0':
-                poster = addonPoster
+                poster = addon_poster
+            banner = i.get('banner', '0')
+            fanart = i.get('fanart', '0')
             if banner == '0' and poster == '0':
-                banner = addonBanner
+                banner = addon_banner
             elif banner == '0':
                 banner = poster
 
             meta = dict((k, v) for k, v in i.iteritems() if not v == '0')
-            # if i['duration'] == '0':
-            #     meta.update({
-            #         'duration': '120',
-            #     })
             try:
                 meta.update({
                     'duration': str(int(meta['duration']) * 60),
@@ -257,10 +255,11 @@ def _add_movie_directory(items):
             except Exception:
                 pass
 
-            if settingFanart == 'true' and not fanart == '0':
-                item.setProperty('Fanart_Image', fanart)
-            elif addonFanart:
-                item.setProperty('Fanart_Image', addonFanart)
+            if fanart_enabled:
+                if fanart != '0':
+                    item.setProperty('Fanart_Image', fanart)
+                elif addon_fanart:
+                    item.setProperty('Fanart_Image', addon_fanart)
 
             item.setInfo(type='Video', infoLabels=meta)
             item.setProperty('Video', 'true')
@@ -280,10 +279,10 @@ def _add_directory(items, show_genre_as=False, is_person=False):
     if not items:
         items = []
 
-    addonPoster = ui.addon_poster()
-    addonFanart = ui.addon_fanart()
-    addonThumb = ui.addon_thumb()
-    artPath = ui.artpath()
+    addon_poster = ui.addon_poster()
+    addon_fanart = ui.addon_fanart()
+    addon_thumb = ui.addon_thumb()
+    art_path = ui.artpath()
 
     for i in items:
         try:
@@ -294,10 +293,10 @@ def _add_directory(items, show_genre_as=False, is_person=False):
 
             if i['image'].startswith('http://'):
                 thumb = i['image']
-            elif artPath:
-                thumb = os.path.join(artPath, i['image'])
+            elif art_path:
+                thumb = os.path.join(art_path, i['image'])
             else:
-                thumb = addonThumb
+                thumb = addon_thumb
 
             url = addon.itemaction(i['action'], url=urllib.quote_plus(i['url']))
 
@@ -316,15 +315,15 @@ def _add_directory(items, show_genre_as=False, is_person=False):
             if 'poster' in i:
                 if i['poster'].startswith('http://'):
                     poster = i['poster']
-                elif artPath:
-                    poster = os.path.join(artPath, i['poster'])
+                elif art_path:
+                    poster = os.path.join(art_path, i['poster'])
                 else:
-                    poster = addonPoster
+                    poster = addon_poster
                 item.setArt({'poster': poster, 'banner': poster})
 
             item.addContextMenuItems(cmds, replaceItems=False)
-            if addonFanart:
-                item.setProperty('Fanart_Image', addonFanart)
+            if addon_fanart:
+                item.setProperty('Fanart_Image', addon_fanart)
             ui.addItem(url, item, isFolder=True, totalItems=len(items))
         except Exception as ex:
             log.error('{m}.{f}: %s: %s', i, repr(ex))
