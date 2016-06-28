@@ -148,7 +148,7 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
     try:
         offset = _get_bookmark(name, imdb)
         if offset:
-            minutes, seconds = divmod(float(offset), 60)
+            minutes, seconds = divmod(int(offset), 60)
             hours, minutes = divmod(minutes, 60)
             if not ui.yesnoDialog(
                     heading=_('Resume from {hours:02d}:{minutes:02d}:{seconds:02d}').format(

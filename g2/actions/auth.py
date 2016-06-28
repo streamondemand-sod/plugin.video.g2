@@ -50,7 +50,7 @@ def trakt():
 
         def ui_update(code, url, elapsed, expire):
             """Show the device authorization code to the user and allow him to cancel the procedure"""
-            minutes, seconds = divmod(expire-elapsed, 60)
+            minutes, seconds = divmod(int(expire-elapsed), 60)
             dialog_progress.update(int(100 * elapsed) / expire,
                                    _('Provide the code {code} at the site:').format(code=code),
                                    url,
