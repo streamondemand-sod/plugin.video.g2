@@ -33,7 +33,7 @@ def menu():
     imdb_user = addon.setting('imdb_user')
     if not trakt_user or addon.setting('trakt_enabled') != 'true':
         ui.addDirectoryItem(_('Configure your Trakt account'), 'tools.settings&category=1&setting=1',
-                            'moviesTraktcollection.jpg', 'DefaultMovies.png')
+                            'moviesTraktcollection.jpg', 'DefaultMovies.png', isFolder=False)
     else:
         url = dbs.resolve('movies_collection{trakt_user_id}', trakt_user_id=trakt_user, quote_plus=True)
         if url:
@@ -59,7 +59,7 @@ def menu():
 
     if not imdb_user:
         ui.addDirectoryItem(_('Configure your IMDB account'), 'tools.settings&category=1&setting=3',
-                            'movieUserlists.jpg', 'DefaultMovies.png')
+                            'movieUserlists.jpg', 'DefaultMovies.png', isFolder=False)
     else:
         imdb_nickname = addon.setting('imdb_nickname') or imdb_user
         ui.addDirectoryItem(_('[B]IMDB[/B] : Lists by {imdb_nickname}').format(imdb_nickname=imdb_nickname),
@@ -70,6 +70,6 @@ def menu():
         ui.addDirectoryItem(_('Downloads'), 'download.menu', 'downloads.jpg', 'DefaultFolder.png')
     else:
         ui.addDirectoryItem(_('Configure the download directory'), 'tools.settings&category=0&setting=5',
-                            'downloads.jpg', 'DefaultFolder.png')
+                            'downloads.jpg', 'DefaultFolder.png', isFolder=False)
 
     ui.endDirectory()
