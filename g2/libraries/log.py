@@ -88,14 +88,26 @@ def error(msg, *args, **kwargs):
     return _log(msg, xbmc.LOGERROR, *args, **kwargs)
 
 
+def perfactive():
+    ids = _fetch_ids(1)
+    # Log performance related stats for...
+    config = (_CONFIG.get(ids['m']+'.'+ids['f']) or
+              _CONFIG.get(ids['cf']+'.'+ids['m']+'.'+ids['f']))
+    try:
+        return 'P' in config
+    except Exception:
+        return False
+
+
 def debugactive(ids=None, calling_context=True):
     if ids is None:
         ids = {}
     ids.update(_fetch_ids(1 if calling_context else 3))
-    return (_CONFIG.get(ids['p']) or                    # Debug the entire package
-            _CONFIG.get(ids['p']+'.'+ids['m']) or       # Debug a specific package.module
-            _CONFIG.get(ids['m']+'.'+ids['f']) or       # Debug a specific module.function
-            _CONFIG.get(ids['cf']+'.'+ids['f']))        # Debug a specific function when called by a specific module.function
+    # Debug...
+    return (_CONFIG.get(ids['p']) or                    # the entire package
+            _CONFIG.get(ids['p']+'.'+ids['m']) or       # a specific package.module
+            _CONFIG.get(ids['m']+'.'+ids['f']) or       # a specific module.function
+            _CONFIG.get(ids['cf']+'.'+ids['f']))        # a specific function when called by a specific module.function
 
 
 def _log(msg, level, *args, **kwargs):
