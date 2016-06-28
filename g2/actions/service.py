@@ -185,7 +185,7 @@ def thread(name):
 
     try:
         for mobj in _MONITOR_OBJECTS.itervalues():
-            log.notice('service[%s]: monitored %s %s', name, mobj['id'], mobj['kind'])
+            log.notice('service[%s]: monitored %s %s (now: %s)', name, mobj['id'], mobj['kind'], mobj['value'])
 
         _check_changes('service')
         while not ui.abortRequested(1) and addon.prop('service', name=name):
