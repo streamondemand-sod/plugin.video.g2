@@ -47,7 +47,7 @@ def settings(category='0', setting='0'):
     ui.idle()
     ui.execute('Addon.OpenSettings(%s)'%addon.addonInfo('id'))
     ui.execute('SetFocus(%i)' % (int(category) + 100))
-    ui.execute('SetFocus(%i)' % (int(setting) + 200))
+    # ui.execute('SetFocus(%i)' % (int(setting) + 200))
 
 
 @action
