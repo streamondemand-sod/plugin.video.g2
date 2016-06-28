@@ -72,7 +72,7 @@ def addon_thumb():
 
 
 def addon_fanart():
-    return _media('fanart.png', None, addon.addonInfo('fanart'))
+    return _media('fanart.jpg', None, addon.addonInfo('fanart'))
 
 
 def addon_next():
