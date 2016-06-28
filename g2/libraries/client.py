@@ -23,6 +23,7 @@
 
 
 import re
+import time
 import HTMLParser
 
 import requests
@@ -89,7 +90,17 @@ def request(url, debug=None, data=None, json=None, **kwargs):
 
 
 def get(url, debug=None, **kwargs):
-    return _request(requests.get, url, debug=_set_debug(debug), **kwargs)
+    # (fixme) also on other public methods... a decorator?!?
+    logperf = log.perfactive()
+    if logperf:
+        started = time.time()
+
+    res = _request(requests.get, url, debug=_set_debug(debug), **kwargs)
+
+    if logperf:
+        log.debug('{m}.{f}: {cf}.{m}.{f}: %s: completed in %.2f seconds', url, time.time()-started, debug=True)
+
+    return res
 
 
 def post(url, debug=None, **kwargs):
@@ -153,23 +164,33 @@ def replaceHTMLCodes(txt):
     return txt
 
 
+_DEBUG = None
+
+
 def parseDOM(html, name=u"", attrs=None, ret=False):
-    log.debug("{m}.{f}: Name: " + repr(name) + " - Attrs:" + repr(attrs) + " - Ret: " + repr(ret) + " - HTML: " + str(type(html)))
+    global _DEBUG
+    _DEBUG = log.debugactive()
+
+    if _DEBUG:
+        log.debug("{m}.{f}: Name: "+repr(name)+" - Attrs:"+repr(attrs)+" - Ret: "+repr(ret)+" - HTML: "+str(type(html)))
 
     if not name.strip():
-        log.debug("{m}.{f}: Missing tag name")
+        if _DEBUG:
+            log.debug("{m}.{f}: Missing tag name")
         return u""
 
     if isinstance(html, str):
         try:
             html = [html.decode("utf-8")] # Replace with chardet thingy
         except Exception:
-            log.debug("{m}.{f}: Couldn't decode html binary string. Data length: " + repr(len(html)))
+            if _DEBUG:
+                log.debug("{m}.{f}: Couldn't decode html binary string. Data length: " + repr(len(html)))
             html = [html]
     elif isinstance(html, unicode):
         html = [html]
     elif not isinstance(html, list):
-        log.debug("{m}.{f}: Input isn't list or string/unicode.")
+        if _DEBUG:
+            log.debug("{m}.{f}: Input isn't list or string/unicode.")
         return u""
 
     ret_lst = []
@@ -185,7 +206,8 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
         for match in lst:
             if ret:
                 match_string = match if isinstance(match, basestring) else match.group()
-                log.debug("{m}.{f}: Getting attribute(s) %s content for %s", ret, match_string)
+                if _DEBUG:
+                    log.debug("{m}.{f}: Getting attribute(s) %s content for %s", ret, match_string)
                 if isinstance(ret, basestring):
                     rets += _getDOMAttributes(match_string, name, ret)
                 else:
@@ -195,25 +217,30 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
                     rets.append(retdict)
 
             elif match.start() < item_offset:
-                log.debug("{m}.{f}: Skipping %s@%d as included in the previous element", match.group(), match.start())
+                if _DEBUG:
+                    log.debug("{m}.{f}: Skipping %s@%d as included in the previous element", match.group(), match.start())
 
             else:
-                log.debug("{m}.{f}: Getting element content for %s@%d", match.group(), match.start())
+                if _DEBUG:
+                    log.debug("{m}.{f}: Getting element content for %s@%d", match.group(), match.start())
                 temp = _getDOMContent(item, item_offset, name, match.group()).strip()
                 item_offset = item.find(temp, item_offset) + len(temp)
                 rets.append(temp)
 
         ret_lst += rets
 
-    log.debug("{m}.{f}: Done: " + repr(ret_lst))
+    if _DEBUG:
+        log.debug("{m}.{f}: Done: " + repr(ret_lst))
     return ret_lst
 
 
 def _getDOMElements(item, name, attrs):
-    log.debug("{m}.{f}:")
+    if _DEBUG:
+        log.debug("{m}.{f}:")
 
     if not attrs:
-        log.debug("{m}.{f}: No attributes specified, matching on name only")
+        if _DEBUG:
+            log.debug("{m}.{f}: No attributes specified, matching on name only")
         lst = [m for m in re.compile('(<' + name + '(?:>| .*?>))', re.M|re.S).finditer(item)]
 
     else:
@@ -228,24 +255,29 @@ def _getDOMElements(item, name, attrs):
                 lst2 = [m for m in re.compile('(<' + name + '[^>]*?(?:' + key + '=' + attrs[key] + '.*?>))',
                                               re.M|re.S).finditer(item)]
             if len(lst) == 0:
-                log.debug("{m}.{f}: Setting main list " + repr(lst2))
+                if _DEBUG:
+                    log.debug("{m}.{f}: Setting main list " + repr(lst2))
                 lst = lst2
                 lst2 = []
             else:
-                log.debug("{m}.{f}: Setting new list " + repr(lst2))
+                if _DEBUG:
+                    log.debug("{m}.{f}: Setting new list " + repr(lst2))
                 test = range(len(lst))
                 test.reverse()
                 for i in test:  # Delete anything missing from the next list.
                     if lst[i].group() not in lst2.group():
-                        log.debug("{m}.{f}: Purging mismatch " + str(len(lst)) + " - " + repr(lst[i].group()))
+                        if _DEBUG:
+                            log.debug("{m}.{f}: Purging mismatch " + str(len(lst)) + " - " + repr(lst[i].group()))
                         del lst[i]
 
-    log.debug("{m}.{f}: Done: " + str(type(lst)))
+    if _DEBUG:
+        log.debug("{m}.{f}: Done: " + str(type(lst)))
     return lst
 
 
 def _getDOMContent(html, offset, name, match):
-    log.debug("{m}.{f}: Match: " + match)
+    if _DEBUG:
+        log.debug("{m}.{f}: Match: " + match)
 
     endstr = u"</" + name  # + ">"
 
@@ -253,16 +285,20 @@ def _getDOMContent(html, offset, name, match):
     end = html.find(endstr, start)
     pos = html.find("<" + name, start + 1)
 
-    log.debug(str(start) + " < " + str(end) + ", pos = " + str(pos) + ", endpos: " + str(end))
+    if _DEBUG:
+        log.debug(str(start) + " < " + str(end) + ", pos = " + str(pos) + ", endpos: " + str(end))
 
     while pos < end and pos != -1:  # Ignore too early </endstr> return
         tend = html.find(endstr, end + len(endstr))
         if tend != -1:
             end = tend
         pos = html.find("<" + name, pos + 1)
-        log.debug("{m}.{f}: loop: " + str(start) + " < " + str(end) + " pos = " + str(pos))
+        if _DEBUG:
+            log.debug("{m}.{f}: loop: " + str(start) + " < " + str(end) + " pos = " + str(pos))
 
-    log.debug("{m}.{f}: start: %s, len: %s, end: %s" % (start, len(match), end))
+    if _DEBUG:
+        log.debug("{m}.{f}: start: %s, len: %s, end: %s" % (start, len(match), end))
+
     if start == -1 and end == -1:
         result = u""
     elif start > -1 and end > -1:
@@ -272,12 +308,14 @@ def _getDOMContent(html, offset, name, match):
     elif start > -1:
         result = html[start + len(match):]
 
-    log.debug("{m}.{f}: done result length: " + str(len(result)))
+    if _DEBUG:
+        log.debug("{m}.{f}: done result length: " + str(len(result)))
     return result
 
 
 def _getDOMAttributes(match, name, ret):
-    log.debug('{m}.{f}')
+    if _DEBUG:
+        log.debug('{m}.{f}')
 
     # (fixme): collapse the two re.compile in a single one where the opening quote, if present,
     #   must match the closing quote, otherwise in scenario where there is a mix of the two
@@ -289,7 +327,8 @@ def _getDOMAttributes(match, name, ret):
     for tmp in lst:
         cont_char = tmp[0]
         if cont_char in "'\"":
-            log.debug("{m}.{f}: Using %s as quotation mark" % cont_char)
+            if _DEBUG:
+                log.debug("{m}.{f}: Using %s as quotation mark" % cont_char)
 
             # Limit down to next variable.
             if tmp.find('=' + cont_char, tmp.find(cont_char)) > -1:
@@ -299,7 +338,9 @@ def _getDOMAttributes(match, name, ret):
             if tmp.rfind(cont_char) > -1:
                 tmp = tmp[1:tmp.rfind(cont_char)]
         else:
-            log.debug("{m}.{f}: No quotation mark found")
+            if _DEBUG:
+                log.debug("{m}.{f}: No quotation mark found")
+
             if tmp.find(" ") > 0:
                 tmp = tmp[:tmp.find(" ")]
             elif tmp.find("/") > 0:
@@ -309,5 +350,7 @@ def _getDOMAttributes(match, name, ret):
 
         ret.append(tmp.strip())
 
-    log.debug("{m}.{f}: done: " + repr(ret))
+    if _DEBUG:
+        log.debug("{m}.{f}: done: " + repr(ret))
+
     return ret
