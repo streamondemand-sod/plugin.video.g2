@@ -115,7 +115,8 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
                                sourcesGenerator=sources_generator,
                                sourcePriority=_source_priority,
                                sourceResolve=_resolve,
-                               posterImage=poster)
+                               posterImage=poster,
+                               autoPlay=addon.setting('auto_play') == 'true')
 
         ui.idle()
 
@@ -180,7 +181,6 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
     player = ui.PlayerDialog()
     player_status = player.run(name, meta, url, offset=offset, info=credits_message)
 
-    _del_bookmark(name, imdb)
     if player_status < 0:
         log.notice('{m}.{f}: %s: %s: invalid source', name, url)
         source = item.getLabel()
@@ -190,7 +190,7 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
         item.setProperty('url', '')
 
     elif player_status > defs.WATCHED_THRESHOLD:
-        # (fixme) user setting to sync the watched status w/ each backend
+        _del_bookmark(name, imdb)
         watched = dbs.watched('movie{imdb_id}', imdb_id=imdb)
         if not watched:
             watched = True
@@ -200,6 +200,9 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
 
     elif player_status > 2:
         _add_bookmark(player.elapsed(), name, imdb)
+
+    else:
+        _del_bookmark(name, imdb)
 
     return False
 
@@ -255,8 +258,14 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
     - User preference for the source provider
     - User preference for the source host
     """
-    # Actual resolution wins all over criteria
-    priority = resolution * 1000
+    PRIORITY1 = 1000
+    PRIORITY2 = 100
+    PRIORITY3 = 10
+    PRIORITY4 = 1
+
+    priority = 0
+
+    priority += resolution * PRIORITY1
 
     # (fixme) [code]: define the labels as class constants in lib/sources/__init__.py:
     # class SourceQuality:
@@ -265,17 +274,24 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
     # ...
     # so that sources/providers modules can use SourceQuality.res_8K as tag
     _quality_priority = {
-        '8K': 400,
-        '4K': 300,
-        '1080p': 200,
-        'HD': 100,
+        '8K': 4,
+        '4K': 3,
+        '1080p': 2,
+        'HD': 1,
         'SD': 0,
     }
 
-    # then use quality tags set by the providers
-    priority += _quality_priority.get(quality_tag, 0)
+    priority += _quality_priority.get(quality_tag, 0) * PRIORITY2
 
-    # then use the user preference for the source providers
+    if host:
+        host = host.split('.')[-1].lower()
+        for top in range(1, 10):
+            pref = pkg.setting('resolvers', name='preferred_resolver_%d'%top)
+            if not pref:
+                break
+            if  pref.lower() == host:
+                priority += (10 - top) * PRIORITY3
+
     if provider:
         provider = provider.split('.')[-1].lower()
         for top in range(1, 10):
@@ -283,17 +299,7 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
             if not pref:
                 break
             if pref.lower() == provider:
-                priority += 10 * (10 - top)
-
-    # finally use the user preference for the content hosts
-    if host:
-        host = host.split('.')[-1].lower()
-        for top in range(1, 10):
-            pref = pkg.setting('resolvers', name='preferred_host_%d'%top)
-            if not pref:
-                break
-            if  pref.lower() == host:
-                priority += 10 - top
+                priority += (10 - top) * PRIORITY4
 
     return priority
 

@@ -720,3 +720,8 @@ msgstr "Notifiers"
 msgctxt "#30135"
 msgid "Notify player events"
 msgstr "Notify player events"
+
+#: resources/settings.template.xml:7
+msgctxt "#30136"
+msgid "Auto Play"
+msgstr "Auto Play"

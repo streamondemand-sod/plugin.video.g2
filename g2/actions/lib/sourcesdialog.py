@@ -52,7 +52,8 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
     cancel_button_id = 33
 
     def __init__(self, strXMLname, strFallbackPath, strDefaultName, forceFallback,
-                 sourceName=None, sourcesGenerator=None, sourcePriority=None, sourceResolve=None, posterImage=None):
+                 sourceName=None, sourcesGenerator=None, sourcePriority=None, sourceResolve=None, posterImage=None,
+                 autoPlay=False):
         self.title_label = None
         self.progress = None
         self.elapsed_label = None
@@ -82,6 +83,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         self.source_priority = sourcePriority
         self.source_resolve = sourceResolve
         self.poster_image = posterImage
+        self.auto_play = autoPlay
 
     def close(self):
         self.dialog_closed = True
@@ -238,6 +240,11 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
                 break
 
             self.resolver(item)
+            if self.auto_play and item.getProperty('url'):
+                self.selected = item
+                self.close()
+                break
+
             self.updateDialog()
             xbmc.sleep(500)
 
