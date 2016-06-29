@@ -34,6 +34,8 @@ sys.path_hooks.append(importer.ImpImporterSandbox)
 from g2.libraries import addon
 
 from g2 import actions
+from g2 import pkg
+
 
 def main():
     params = dict(urlparse.parse_qsl(sys.argv[2].replace('?', '')))
@@ -57,6 +59,8 @@ def main():
 
 
 def service_monitor_setup():
+    pkg.update_settings_skema()
+
     from g2.actions import service
     service.monitor('trakt_enabled', 'setting', addon.runplugin, 'auth.trakt')
 
