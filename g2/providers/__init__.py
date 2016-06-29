@@ -44,7 +44,7 @@ _MIN_FUZZINESS_VALUE = 84
 _IGNORE_BODY_EXCEPTIONS = True
 
 
-def info(force=False):
+def info(force_refresh=False):
     def source_info(package, module, m, paths):
         content = set()
         if hasattr(m, 'get_movie'):
@@ -64,7 +64,7 @@ def info(force=False):
                 i['content'] = list(content)
         return nfo
 
-    return pkg.info(__name__, source_info, force)
+    return pkg.info(__name__, source_info, force_refresh)
 
 
 def content_sources(content, ui_update=None, **kwargs):

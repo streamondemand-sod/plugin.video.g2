@@ -25,7 +25,7 @@ from g2.libraries import addon
 from g2 import pkg
 
 
-def info(force=False):
+def info(force_refresh=False):
     def notifiers_info(dummy_package, dummy_module, mod, paths):
         if not hasattr(mod, 'info'):
             return []
@@ -35,7 +35,7 @@ def info(force=False):
             nfo = mod.info
         return [dict(nfo)]
 
-    return pkg.info('notifiers', notifiers_info, force)
+    return pkg.info('notifiers', notifiers_info, force_refresh)
 
 
 def notices(notes, targets=None, **kwargs):

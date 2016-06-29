@@ -41,7 +41,7 @@ from g2 import defs
 _INFO_LANG = addon.setting('infoLang') or 'en'
 
 
-def info(force=False):
+def info(force_refresh=False):
     def db_info(package, module, m, paths):
         if not hasattr(m, 'info'):
             return []
@@ -56,7 +56,7 @@ def info(force=False):
         })
         return [nfo]
 
-    return pkg.info('dbs', db_info, force)
+    return pkg.info('dbs', db_info, force_refresh)
 
 
 def resolve(kind=None, **kwargs):

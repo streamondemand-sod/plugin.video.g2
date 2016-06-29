@@ -339,15 +339,25 @@ def kindinfo(kind, refresh=False):
     return kind_module.info(refresh)
 
 
-def info(kind, infofunc, force=False):
+def info(kind, infofunc, force_refresh=False):
+    """Return the list of modules implemented by a certain :kind: of packages.
+    The :infofunc: is a per-kind specific info module compiler.
+    The :force_refresh: can be:
+        None    - do not check for cache validity if present (quick mode used by the UI)
+        True    - force a refresh of the info even if the cache might still be valid
+        False   - use the cache if still valid and none of the associated paths is newer or missing
+    """
     kind = kind.split('.')[-1]
-    response_infos = {}
     try:
-        update_needed = True
-        if not force:
+        if force_refresh:
+            update_needed = True
+
+        else:
+            timeout = -1 if force_refresh is None else 60
+            response_infos = {}
+            infos_paths, infos_modules = cache.get(_info_get, timeout, kind, infofunc, hash_args=1, response_info=response_infos)
             update_needed = False
-            infos_paths, infos_modules = cache.get(_info_get, 60, kind, infofunc, hash_args=1, response_info=response_infos) 
-            if 'cached' in response_infos:
+            if timeout > 0 and 'cached' in response_infos:
                 log.debug('{m}.{f}: %s packages: cached=%s, paths=%s', kind, response_infos['cached'], infos_paths)
                 for path in infos_paths:
                     try:
@@ -359,6 +369,8 @@ def info(kind, infofunc, force=False):
                     except Exception as ex:
                         log.debug('{m}.{f}: %s: %s', path, repr(ex))
                         update_needed = True
+                        break
+
         if update_needed:
             infos_paths, infos_modules = cache.get(_info_get, 0, kind, infofunc, hash_args=1)
     except Exception as ex:
