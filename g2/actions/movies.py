@@ -270,9 +270,9 @@ def _add_movie_directory(items):
             log.notice(traceback.format_exc())
 
     if len(items) and 'next_action' in items[0]:
-        ui.endDirectory(content='movies', next_item=items[0])
+        ui.endDirectory(content='movies', next_item=items[0], sort_methods=[17, 18, 23])
     else:
-        ui.endDirectory(content='movies')
+        ui.endDirectory(content='movies', sort_methods=[17, 18, 23])
 
 
 def _add_directory(items, show_genre_as=False, is_person=False):

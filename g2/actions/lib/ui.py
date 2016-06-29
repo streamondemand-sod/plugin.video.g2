@@ -175,7 +175,7 @@ def addDirectoryItem(name, query, thumb, icon, context=None, isAction=True, isFo
     xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=isFolder)
 
 
-def endDirectory(next_item=None, content=None):
+def endDirectory(next_item=None, content=None, sort_methods=None):
     viewmode = None
     if type(next_item) == dict and next_item.get('next_action') and next_item.get('next_url'):
         log.debug('{m}.{f}: next_action:%s, next_url:%s, next_page:%s, max_pages:%s',
@@ -206,6 +206,12 @@ def endDirectory(next_item=None, content=None):
         # On paged directories, replicate the current viewmode when displaying the pages after the first
         if next_item.get('next_page') > 2:
             viewmode = repr(xbmcgui.Window(xbmcgui.getCurrentWindowId()).getFocusId())
+
+    elif sort_methods:
+        # (fixme) it would be nice to sort also for paged directories, but, apparently, there is no way
+        # to mark a specific item as being nailed down at the bottom!
+        for method in sort_methods:
+            xbmcplugin.addSortMethod(int(sys.argv[1]), method)
 
     if content:
         xbmcplugin.setContent(int(sys.argv[1]), content)
