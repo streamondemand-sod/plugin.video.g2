@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -15,7 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
+"Language: it\n"
 
 #: resources/settings.template.xml:3
 msgctxt "#30001"
@@ -40,12 +39,12 @@ msgstr "Lingua"
 #: g2/actions/my.py:70 resources/settings.template.xml:7
 msgctxt "#30005"
 msgid "Downloads"
-msgstr "Scaricati"
+msgstr "Download"
 
 #: resources/settings.template.xml:9
 msgctxt "#30006"
 msgid "Accounts"
-msgstr "Accounts"
+msgstr "Account"
 
 #: resources/settings.template.xml:10
 msgctxt "#30007"
@@ -75,12 +74,12 @@ msgstr "IMDb"
 #: resources/settings.template.xml:16
 msgctxt "#30012"
 msgid "IMDB User"
-msgstr "Utente IMDB"
+msgstr "Utente IMDb"
 
 #: resources/settings.template.xml:17
 msgctxt "#30013"
 msgid "IMDB Nickname"
-msgstr "Nickname IMDB"
+msgstr "Nickname IMDb"
 
 #: resources/settings.template.xml:19
 msgctxt "#30014"
@@ -100,18 +99,18 @@ msgstr "Pushbullet email"
 #: resources/settings.template.xml:23
 msgctxt "#30017"
 msgid "TMDB"
-msgstr "TMDB"
+msgstr "TMDb"
 
 #: resources/settings.template.xml:24
 msgctxt "#30018"
 msgid "TMDB API key"
-msgstr "TMDB API key"
+msgstr "TMDb API key"
 
 #. User setting are generated for each package / module to enable/disable it
 #: resources/settings.template.xml:26
 msgctxt "#30019"
 msgid "Providers"
-msgstr "Providers"
+msgstr "Provider"
 
 #. User setting are generated for each package / module to enable/disable it
 #. For resolvers, if there is a single module in the package,
@@ -119,86 +118,86 @@ msgstr "Providers"
 #: resources/settings.template.xml:28
 msgctxt "#30020"
 msgid "Resolvers"
-msgstr "Resolvers"
+msgstr "Server"
 
 #: g2/actions/auth.py:35
 msgctxt "#30021"
 msgid "Trakt disabled"
-msgstr "Trakt disabled"
+msgstr "Trakt disabilitato"
 
 #: g2/actions/auth.py:41
 #, python-brace-format
 msgctxt "#30022"
 msgid "There is already an authorized account: {trakt_user}"
-msgstr "There is already an authorized account: {trakt_user}"
+msgstr "Esiste già un account autorizzato: {trakt_user}"
 
 #: g2/actions/auth.py:43
 msgctxt "#30023"
 msgid "Do you wanto to keep it?"
-msgstr "Do you wanto to keep it?"
+msgstr "Vuoi conservarlo?"
 
 #: g2/actions/auth.py:55
 #, python-brace-format
 msgctxt "#30024"
 msgid "Provide the code {code} at the site:"
-msgstr "Provide the code {code} at the site:"
+msgstr "Fornisci il codice {code} al sito:"
 
 #: g2/actions/auth.py:57
 #, python-brace-format
 msgctxt "#30025"
 msgid "You have {minutes:02d}:{seconds:02d} left"
-msgstr "You have {minutes:02d}:{seconds:02d} left"
+msgstr "Tempo rimasto: {minutes:02d}:{seconds:02d}"
 
 #: g2/actions/auth.py:67
 #, python-brace-format
 msgctxt "#30026"
 msgid "Authorized username: [COLOR orange]{trakt_user}[/COLOR]"
-msgstr "Authorized username: [COLOR orange]{trakt_user}[/COLOR]"
+msgstr "Nome utente autorizzato: [COLOR orange]{trakt_user}[/COLOR]"
 
 #: g2/actions/auth.py:85
 msgctxt "#30027"
 msgid "Pushbullet disabled"
-msgstr "Pushbullet disabled"
+msgstr "Pushbullet disabilitato"
 
 #: g2/actions/auth.py:98
 #, python-brace-format
 msgctxt "#30028"
 msgid "Authorized account email: [COLOR orange]{pushbullet_email}[/COLOR]"
-msgstr "Authorized account email: [COLOR orange]{pushbullet_email}[/COLOR]"
+msgstr "Account email autorizzato: [COLOR orange]{pushbullet_email}[/COLOR]"
 
 #: g2/actions/auth.py:116
 msgctxt "#30029"
 msgid "IMDb user disabled"
-msgstr "IMDb user disabled"
+msgstr "Utente IMDb disabilitato"
 
 #: g2/actions/auth.py:127
 #, python-brace-format
 msgctxt "#30030"
 msgid "IMDb user nickname: [COLOR orange]{imdb_nickname}[/COLOR]"
-msgstr "IMDb user nickname: [COLOR orange]{imdb_nickname}[/COLOR]"
+msgstr "Nickname utente IMDb: [COLOR orange]{imdb_nickname}[/COLOR]"
 
 #. Command to refresh the download directory listing
 #: g2/actions/download.py:37
 msgctxt "#30031"
 msgid "Refresh"
-msgstr "Refresh"
+msgstr "Aggiorna"
 
 #. (fixme) this has no effect for ongoing downloads
 #. Remove the specific entry from the download queue
 #: g2/actions/download.py:58
 msgctxt "#30032"
 msgid "Remove from queue"
-msgstr "Remove from queue"
+msgstr "Rimuovi dalla coda"
 
 #: g2/actions/lib/sourcesdialog.py:169
 msgctxt "#30033"
 msgid "Source not valid"
-msgstr "Source not valid"
+msgstr "Sorgente non valida"
 
 #: g2/actions/lib/sourcesdialog.py:191
 msgctxt "#30034"
 msgid "Play"
-msgstr "Play"
+msgstr "Riproduci"
 
 #: g2/actions/lib/sourcesdialog.py:194
 msgctxt "#30035"
@@ -208,63 +207,63 @@ msgstr "Download"
 #: g2/actions/lib/sourcesdialog.py:208
 msgctxt "#30036"
 msgid "SEARCHING SOURCES"
-msgstr "SEARCHING SOURCES"
+msgstr "RICERCO SORGENTI"
 
 #: g2/actions/lib/sourcesdialog.py:220
 msgctxt "#30037"
 msgid "NO SOURCES FOUND"
-msgstr "NO SOURCES FOUND"
+msgstr "NESSUNA SORGENTE TROVATA"
 
 #: g2/actions/lib/sourcesdialog.py:224
 msgctxt "#30038"
 msgid "CHECKING SOURCES"
-msgstr "CHECKING SOURCES"
+msgstr "CONTROLLO SORGENTI"
 
 #: g2/actions/lib/sourcesdialog.py:246
 msgctxt "#30039"
 msgid "SELECT SOURCE"
-msgstr "SELECT SOURCE"
+msgstr "SELEZIONA SORGENTE"
 
 #: g2/actions/lib/sourcesdialog.py:247
 msgctxt "#30040"
 msgid "CHECKING COMPLETE"
-msgstr "CHECKING COMPLETE"
+msgstr "CONTROLLO COMPLETATO"
 
 #: g2/actions/lib/sourcesdialog.py:250
 msgctxt "#30041"
 msgid "CHECKING STOPPED"
-msgstr "CHECKING STOPPED"
+msgstr "CONTROLLO INTERROTTO"
 
 #. Label for the button that stops the sources validation
 #: g2/actions/lib/sourcesdialog.py:363
 msgctxt "#30042"
 msgid "Stop"
-msgstr "Stop"
+msgstr "Interrompi"
 
 #. Label for the button that starts the sources validation
 #: g2/actions/lib/sourcesdialog.py:367
 msgctxt "#30043"
 msgid "Check"
-msgstr "Check"
+msgstr "Controlla"
 
 #. Label for the "Next Page" item when the max number of pages is known
 #: g2/actions/lib/ui.py:187
 #, python-brace-format
 msgctxt "#30044"
 msgid "[I]Next Page[/I]  [{page_of} of {max_pages}]"
-msgstr "[I]Next Page[/I]  [{page_of} of {max_pages}]"
+msgstr "[I]Prossima pagina[/I]  [{page_of} di {max_pages}]"
 
 #. Label for the "Next Page" item when only the current page number is known
 #: g2/actions/lib/ui.py:193
 #, python-brace-format
 msgctxt "#30045"
 msgid "[I]Next Page[/I]  [{page_of}}]"
-msgstr "[I]Next Page[/I]  [{page_of}}]"
+msgstr "[I]Prossima pagina[/I]  [{page_of}}]"
 
 #: g2/actions/lib/ui.py:197
 msgctxt "#30046"
 msgid "[I]Next Page[/I]"
-msgstr "[I]Next Page[/I]"
+msgstr "[I]Prossima pagina[/I]"
 
 #: g2/actions/main.py:34
 msgctxt "#30047"
@@ -274,12 +273,12 @@ msgstr "Film"
 #: g2/actions/main.py:35
 msgctxt "#30048"
 msgid "My Movies"
-msgstr "I miei Film"
+msgstr "I miei film"
 
 #: g2/actions/main.py:37 g2/actions/movies.py:40
 msgctxt "#30049"
 msgid "Latest Movies"
-msgstr "Ultimi Film"
+msgstr "Ultimi film"
 
 #: g2/actions/main.py:38
 msgctxt "#30050"
@@ -289,52 +288,52 @@ msgstr "Strumenti"
 #: g2/actions/main.py:40
 msgctxt "#30051"
 msgid "[COLOR red]Install providers and resolvers packages to find video sources[/COLOR]"
-msgstr "[COLOR red]Installa i pacchetti dei canali e server per trovare le fonti video[/COLOR]"
+msgstr "[COLOR red]Installa i pacchetti dei provider e dei server per trovare le fonti video[/COLOR]"
 
 #: g2/actions/movies.py:44
 msgctxt "#30052"
 msgid "Search by Title"
-msgstr "Search by Title"
+msgstr "Ricerca per titolo"
 
 #: g2/actions/movies.py:45
 msgctxt "#30053"
 msgid "Search by Person"
-msgstr "Search by Person"
+msgstr "Ricerca per persona"
 
 #: g2/actions/movies.py:46
 msgctxt "#30054"
 msgid "Search by Year"
-msgstr "Search by Year"
+msgstr "Ricerca per anno"
 
 #: g2/actions/movies.py:48
 msgctxt "#30055"
 msgid "Genres"
-msgstr "Genres"
+msgstr "Generi"
 
 #: g2/actions/movies.py:49
 msgctxt "#30056"
 msgid "Certificates"
-msgstr "Certificates"
+msgstr "Certificati"
 
 #: g2/actions/movies.py:52
 msgctxt "#30057"
 msgid "Featured"
-msgstr "Featured"
+msgstr "In primo piano"
 
 #: g2/actions/movies.py:55
 msgctxt "#30058"
 msgid "People Watching"
-msgstr "People Watching"
+msgstr "Guardati dalle persone"
 
 #: g2/actions/movies.py:58
 msgctxt "#30059"
 msgid "Most Popular"
-msgstr "Most Popular"
+msgstr "I più popolari"
 
 #: g2/actions/movies.py:61
 msgctxt "#30060"
 msgid "Most Voted"
-msgstr "Most Voted"
+msgstr "I più votati"
 
 #: g2/actions/movies.py:64
 msgctxt "#30061"
@@ -344,37 +343,37 @@ msgstr "Box Office"
 #: g2/actions/movies.py:67
 msgctxt "#30062"
 msgid "Oscar Winners"
-msgstr "Oscar Winners"
+msgstr "Vincitori di Oscar"
 
 #: g2/actions/movies.py:70
 msgctxt "#30063"
 msgid "In Theaters"
-msgstr "In Theaters"
+msgstr "Al cinema"
 
 #: g2/actions/movies.py:77
 msgctxt "#30064"
 msgid "Title to search"
-msgstr "Title to search"
+msgstr "Titolo da ricercare"
 
 #: g2/actions/movies.py:85
 msgctxt "#30065"
 msgid "Person to search"
-msgstr "Person to search"
+msgstr "Persona da ricercare"
 
 #: g2/actions/movies.py:93
 msgctxt "#30066"
 msgid "Year"
-msgstr "Year"
+msgstr "Anno da ricercare"
 
 #: g2/actions/movies.py:126 g2/actions/movies.py:138 g2/actions/movies.py:174
 msgctxt "#30067"
 msgid "No results"
-msgstr "No results"
+msgstr "Nessun risultato"
 
 #: g2/actions/movies.py:238 g2/actions/movies.py:240
 msgctxt "#30068"
 msgid "Movie information"
-msgstr "Movie information"
+msgstr "Informazioni"
 
 #: g2/actions/movies.py:242
 msgctxt "#30069"
@@ -384,22 +383,22 @@ msgstr "Trailer"
 #: g2/actions/movies.py:246
 msgctxt "#30070"
 msgid "Mark as unwatched"
-msgstr "Mark as unwatched"
+msgstr "Segna come non guardato"
 
 #: g2/actions/movies.py:248
 msgctxt "#30071"
 msgid "Mark as watched"
-msgstr "Mark as watched"
+msgstr "Segna come guardato"
 
 #: g2/actions/movies.py:250
 msgctxt "#30072"
 msgid "Clear sources cache"
-msgstr "Clear sources cache"
+msgstr "Pulisci la cache delle sorgenti"
 
 #: g2/actions/movies.py:306
 msgctxt "#30073"
 msgid "Person information"
-msgstr "Person information"
+msgstr "Informazioni sulla persona"
 
 #: g2/actions/my.py:35
 msgctxt "#30074"
@@ -435,7 +434,7 @@ msgstr "[B]TRAKT[/B] : Liste di {trakt_user}"
 #: g2/actions/my.py:61
 msgctxt "#30080"
 msgid "Configure your IMDB account"
-msgstr "Configura il tuo utente IMDB"
+msgstr "Configura il tuo account IMDb"
 
 #: g2/actions/my.py:65
 #, python-brace-format
@@ -446,7 +445,7 @@ msgstr "[B]IMDB[/B] : Liste di {imdb_nickname}"
 #: g2/actions/my.py:72
 msgctxt "#30082"
 msgid "Configure the download directory"
-msgstr "Configura il direttorio di scaricamento"
+msgstr "Configura la cartella download"
 
 #: g2/actions/packages.py:82
 msgctxt "#30083"
@@ -499,7 +498,7 @@ msgstr "Rimozione del pacchetto fallita"
 #, python-brace-format
 msgctxt "#30092"
 msgid "Playing {title}{dashes_if_url}{url}"
-msgstr "Playing {title}{dashes_if_url}{url}"
+msgstr "Riproducendo {title}{dashes_if_url}{url}"
 
 #: g2/actions/push.py:85
 #, python-brace-format
@@ -510,7 +509,7 @@ msgstr "L'addon {addon} non è presente"
 #: g2/actions/push.py:110
 msgctxt "#30094"
 msgid "URL not supported"
-msgstr "URL non supportata"
+msgstr "URL non supportato"
 
 #: g2/actions/push.py:123
 msgctxt "#30095"
@@ -521,74 +520,74 @@ msgstr "Interruzione forzata del video"
 #, python-brace-format
 msgctxt "#30096"
 msgid "{g2_name} service started"
-msgstr "{g2_name} service started"
+msgstr "servizio {g2_name} iniziato"
 
 #: g2/actions/sources.py:64 g2/actions/sources.py:72 g2/actions/sources.py:188
 msgctxt "#30097"
 msgid "Not a valid stream"
-msgstr "Lo stream non è valido"
+msgstr "Stream non valido"
 
 #: g2/actions/sources.py:78
 #, python-brace-format
 msgctxt "#30098"
 msgid "Cache cleared for {video}"
-msgstr "Cache cleared for {video}"
+msgstr "Cache pulita per {video}"
 
 #: g2/actions/sources.py:143
 msgctxt "#30099"
 msgid "No stream available"
-msgstr "No stream available"
+msgstr "Nessuno stream disponibile"
 
 #: g2/actions/sources.py:155
 #, python-brace-format
 msgctxt "#30100"
 msgid "Resume from {hours:02d}:{minutes:02d}:{seconds:02d}"
-msgstr "Resume from {hours:02d}:{minutes:02d}:{seconds:02d}"
+msgstr "Riprendi da {hours:02d}:{minutes:02d}:{seconds:02d}"
 
 #: g2/actions/sources.py:158
 msgctxt "#30101"
 msgid "Resume"
-msgstr "Resume"
+msgstr "Riprendi"
 
 #: g2/actions/sources.py:159
 msgctxt "#30102"
 msgid "Start from beginning"
-msgstr "Start from beginning"
+msgstr "Comincia dall'inizio"
 
 #: g2/actions/sources.py:174
 msgctxt "#30103"
 msgid "~*~ CREDITS ~*~"
-msgstr "~*~ CREDITS ~*~"
+msgstr "~*~ CREDITI ~*~"
 
 #: g2/actions/sources.py:175
 #, python-brace-format
 msgctxt "#30104"
 msgid "{video} loaded in {elapsed_time} seconds"
-msgstr "{video} loaded in {elapsed_time} seconds"
+msgstr "{video} caricato in {elapsed_time} secondi"
 
 #: g2/actions/sources.py:176
 #, python-brace-format
 msgctxt "#30105"
 msgid "Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]"
-msgstr "Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]"
+msgstr "Sorgente fornita da [UPPERCASE][B]{provider}[/B][/UPPERCASE]"
 
 #: g2/actions/sources.py:177
 #, python-brace-format
 msgctxt "#30106"
 msgid "Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]"
-msgstr "Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]"
+msgstr "Contenuto ospitato da [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]"
 
 #: g2/actions/sources.py:178
 #, python-brace-format
 msgctxt "#30107"
 msgid "Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]"
-msgstr "Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]"
+msgstr "Il formato del video è [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]"
 
 #: g2/actions/sources.py:218
 #, python-brace-format
 msgctxt "#30108"
 msgid "Complete file is {mega_bytes}MB {restartable_flag}"
-msgstr "Complete file is {mega_bytes}MB {restartable_flag}"
+msgstr "La grandezza del video è di {mega_bytes}MB {restartable_flag}"
 
 #. 'R' stand for Restartable download
 #: g2/actions/sources.py:221
@@ -600,22 +599,22 @@ msgstr "(R)"
 #, python-brace-format
 msgctxt "#30110"
 msgid "Media format is {media_format}"
-msgstr "Media format is {media_format}"
+msgstr "Il formato del video è {media_format}"
 
 #: g2/actions/sources.py:228
 msgctxt "#30111"
 msgid "Continue with the download?"
-msgstr "Continue with the download?"
+msgstr "Proseguire con il download?"
 
 #: g2/actions/sources.py:230
 msgctxt "#30112"
 msgid "Item added to your download queue"
-msgstr "Item added to your download queue"
+msgstr "Video aggiunto alla coda dei download"
 
 #: g2/actions/sources.py:232
 msgctxt "#30113"
 msgid "Item already in your download queue"
-msgstr "Item already in your download queue"
+msgstr "Video già nella coda dei download"
 
 #: g2/actions/tools.py:32
 msgctxt "#30114"
@@ -625,7 +624,7 @@ msgstr "[B]IMPOSTAZIONI[/B]"
 #: g2/actions/tools.py:34
 msgctxt "#30115"
 msgid "[B]SETTINGS[/B] : Providers"
-msgstr "[B]IMPOSTAZIONI[/B] : Canali"
+msgstr "[B]IMPOSTAZIONI[/B] : Provider"
 
 #: g2/actions/tools.py:36
 msgctxt "#30116"
@@ -640,72 +639,72 @@ msgstr "[B]G2[/B] : Pacchetti"
 #: g2/actions/tools.py:40
 msgctxt "#30118"
 msgid "[B]G2[/B] : Clear cache..."
-msgstr "[B]G2[/B] : Pulizia cache..."
+msgstr "[B]G2[/B] : Pulizia cache"
 
 #: g2/actions/tools.py:58
 msgctxt "#30119"
 msgid "Process Complete"
-msgstr "Processo Completo"
+msgstr "Processo completato"
 
 #: g2/dbs/trakt.py:330
 msgctxt "#30120"
 msgid "Code generation failed"
-msgstr "Code generation failed"
+msgstr "Generazione del codice fallita"
 
 #: g2/dbs/trakt.py:348
 msgctxt "#30121"
 msgid "Device authorization failed"
-msgstr "Device authorization failed"
+msgstr "Autorizzazione dispositivo fallita"
 
 #: g2/dbs/trakt.py:353
 msgctxt "#30122"
 msgid "User aborted authorization"
-msgstr "User aborted authorization"
+msgstr "Autorizzazione utente interrotta"
 
 #: g2/dbs/trakt.py:377
 msgctxt "#30123"
 msgid "Auhorization code expired"
-msgstr "Auhorization code expired"
+msgstr "Autorizzazione codice terminata"
 
 #: g2/pkg.py:52
 msgctxt "#30124"
 msgid "1st preferred source provider"
-msgstr "1a scelta canale"
+msgstr "1º provider preferito"
 
 #: g2/pkg.py:57
 msgctxt "#30125"
 msgid "2nd preferred source provider"
-msgstr "2nd preferred source provider"
+msgstr "2º provider preferito"
 
 #: g2/pkg.py:62
 msgctxt "#30126"
 msgid "3rd preferred source provider"
-msgstr "3rd preferred source provider"
+msgstr "3º provider preferito"
 
 #: g2/pkg.py:67
 msgctxt "#30127"
 msgid "4th preferred source provider"
-msgstr "4th preferred source provider"
+msgstr "4º provider preferito"
 
 #: g2/pkg.py:85
 msgctxt "#30128"
 msgid "1st preferred source host"
-msgstr "1a scelta server"
+msgstr "1º server preferito"
 
 #: g2/pkg.py:90
 msgctxt "#30129"
 msgid "2nd preferred source host"
-msgstr "2nd preferred source host"
+msgstr "2º server preferito"
 
 #: g2/pkg.py:95
 msgctxt "#30130"
 msgid "3rd preferred source host"
-msgstr "3rd preferred source host"
+msgstr "3º server preferito"
 
 #: g2/pkg.py:100
 msgctxt "#30131"
 msgid "4th preferred source host"
-msgstr "4th preferred source host"
+msgstr "4º server preferito"
 
 #: g2/pkg.py:564
 msgctxt "#30132"
