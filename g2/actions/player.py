@@ -38,6 +38,9 @@ _PLAYER = ui.Player()
 
 @action
 def notify():
+    if addon.freshsetting('player_notify') != 'true':
+        return
+
     if not _PLAYER.isPlaying():
         identifiers = addon.prop('player.notice.ids')
         log.debug('{m}.{f}: deleting notices with ids=%s...', identifiers)

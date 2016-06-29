@@ -41,11 +41,6 @@ msgctxt "#30005"
 msgid "Downloads"
 msgstr "Downloads"
 
-#: resources/settings.template.xml:9
-msgctxt "#30006"
-msgid "Accounts"
-msgstr "Accounts"
-
 #: resources/settings.template.xml:10
 msgctxt "#30007"
 msgid "Trakt"
@@ -710,3 +705,18 @@ msgstr "4th preferred source host"
 msgctxt "#30132"
 msgid "Priority"
 msgstr "Priority"
+
+#: resources/settings.template.xml:9
+msgctxt "#30133"
+msgid "Databases"
+msgstr "Databases"
+
+#: resources/settings.template.xml:22
+msgctxt "#30134"
+msgid "Notifiers"
+msgstr "Notifiers"
+
+#: resources/settings.template.xml:23
+msgctxt "#30135"
+msgid "Notify player events"
+msgstr "Notify player events"

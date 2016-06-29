@@ -6,7 +6,7 @@
 		<setting id="infoLang" type="select" label="30004" values="it|en" default="en" />
 		<setting id="downloads" type="folder" label="30005" default="" />
 	</category>
-	<category label="30006">
+	<category label="30133">
 		<setting type="lsep" label="30007" />
 		<setting id="trakt_enabled" type="bool" label="30008" default="false" />
 		<setting id="trakt_user" type="text" label="30009" default="" enable="false" visible="eq(-1,true)" />
@@ -16,12 +16,15 @@
 		<setting id="imdb_user" type="text" label="30012" default="" />
 		<setting id="imdb_nickname" type="text" label="30013" default="" enable="false" visible="!eq(-1,)" />
 		<setting type="lsep" label="[CR]" />
+		<setting type="lsep" label="30017" />
+		<setting id="tmdb_apikey" type="text" label="30018" default="" />
+	</category>
+	<category label="30134">
+		<setting id="player_notify" type="bool" label="30135" default="false" />
+		<setting type="lsep" label="[CR]" />
 		<setting type="lsep" label="30014" />
 		<setting id="pushbullet_apikey" type="text" label="30015" default="" />
 		<setting id="pushbullet_email" type="text" label="30016" default="" enable="false" visible="!eq(-1,)" />
-		<setting type="lsep" label="[CR]" />
-		<setting type="lsep" label="30017" />
-		<setting id="tmdb_apikey" type="text" label="30018" default="" />
 	</category>
 	<category label="30019">
 	</category>

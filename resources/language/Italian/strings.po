@@ -34,17 +34,12 @@ msgstr "Abilita Fanart"
 #: resources/settings.template.xml:6
 msgctxt "#30004"
 msgid "Info Language"
-msgstr "Lingua"
+msgstr "Lingua informazioni"
 
 #: g2/actions/my.py:70 resources/settings.template.xml:7
 msgctxt "#30005"
 msgid "Downloads"
 msgstr "Download"
-
-#: resources/settings.template.xml:9
-msgctxt "#30006"
-msgid "Accounts"
-msgstr "Account"
 
 #: resources/settings.template.xml:10
 msgctxt "#30007"
@@ -710,3 +705,18 @@ msgstr "4º server preferito"
 msgctxt "#30132"
 msgid "Priority"
 msgstr "Priorità"
+
+#: resources/settings.template.xml:9
+msgctxt "#30133"
+msgid "Databases"
+msgstr "Databases"
+
+#: resources/settings.template.xml:22
+msgctxt "#30134"
+msgid "Notifiers"
+msgstr "Notifiers"
+
+#: resources/settings.template.xml:23
+msgctxt "#30135"
+msgid "Notify player events"
+msgstr "Notifica la riproduzione video"
