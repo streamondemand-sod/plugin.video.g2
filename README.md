@@ -36,6 +36,7 @@ Attributions
 ---------------------
 - Original code by lambda | http://tvaddons.ag
 - Embossed theme by jokster | http://tvaddons.ag
+- Italian translation by Frep | https://twitter.com/frep90
 
 License
 -------
