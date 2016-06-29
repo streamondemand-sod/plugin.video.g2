@@ -29,11 +29,11 @@ from . import action
 
 @action
 def menu():
-    ui.addDirectoryItem(_('[B]SETTINGS[/B]'), 'tools.settings&category=0&setting=0',
+    ui.addDirectoryItem(_('[B]SETTINGS[/B]'), 'tools.settings&category=0',
                         'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
-    ui.addDirectoryItem(_('[B]SETTINGS[/B] : Providers'), 'tools.settings&category=2&setting=0',
+    ui.addDirectoryItem(_('[B]SETTINGS[/B] : Providers'), 'tools.settings&category=3',
                         'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
-    ui.addDirectoryItem(_('[B]SETTINGS[/B] : Resolvers'), 'tools.settings&category=3&setting=0',
+    ui.addDirectoryItem(_('[B]SETTINGS[/B] : Resolvers'), 'tools.settings&category=4',
                         'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]G2[/B] : Packages'), 'packages.dialog',
                         'tools.jpg', 'DefaultAddonProgram.png', isFolder=False)
@@ -43,11 +43,10 @@ def menu():
 
 
 @action
-def settings(category='0', setting='0'):
+def settings(category='0'):
     ui.idle()
     ui.execute('Addon.OpenSettings(%s)'%addon.addonInfo('id'))
     ui.execute('SetFocus(%i)' % (int(category) + 100))
-    # ui.execute('SetFocus(%i)' % (int(setting) + 200))
 
 
 @action
