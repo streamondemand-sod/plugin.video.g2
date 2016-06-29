@@ -36,7 +36,7 @@ def menu():
     if addon.setting('movie_widget') != '0':
         ui.addDirectoryItem(_('Latest Movies'), 'movies.widget', 'moviesAdded.jpg', 'DefaultRecentlyAddedMovies.png')
     ui.addDirectoryItem(_('Tools'), 'tools.menu', 'tools.jpg', 'DefaultAddonProgram.png')
-    if not len(providers.info()) or not len(resolvers.info()):
+    if not len(providers.info(force_refresh=None)) or not len(resolvers.info(force_refresh=None)):
         ui.addDirectoryItem(_('[COLOR red]Install providers and resolvers packages to find video sources[/COLOR]'),
                             'packages.dialog', 'tools.jpg', 'DefaultAddonProgram.png', isFolder=False)
 
