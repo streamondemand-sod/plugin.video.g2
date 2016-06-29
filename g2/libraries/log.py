@@ -125,7 +125,7 @@ def _log(msg, level, *args, **kwargs):
             if not ids:
                 ids = _fetch_ids()
             for tag in _SPECIAL_TAGS:
-                msg = msg.replace('{%s}'%tag, ids[tag])
+                msg = msg.replace('{%s}'%tag, ids[tag] or '---')
 
         if len(args):
             msg = msg % args
@@ -163,7 +163,7 @@ def _fetch_ids(ids_level=2):
     stack = None
     try:
         ids_level += 1
-        stack = inspect.stack()
+        stack = inspect.stack(0)
         if len(stack) <= ids_level:
             raise Exception()
         module = stack[ids_level][1]
