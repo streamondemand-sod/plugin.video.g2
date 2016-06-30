@@ -28,7 +28,7 @@ DEFAULT_PACKAGE_PRIORITY = 10
 METADATA_CACHE_LIFETIME = (30*24)
 """Cache lifetime in hours for the video metadata"""
 
-RESOLVER_TIMEOUT = 30
+RESOLVER_TIMEOUT = 10
 """Maximum time in seconds to wait for a resolver to provide a result"""
 
 MIN_STREAM_SIZE = 1024 * 1024

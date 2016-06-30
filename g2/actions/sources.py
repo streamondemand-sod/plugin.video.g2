@@ -207,9 +207,6 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
     elif player_status > 2:
         _add_bookmark(player.elapsed(), name, imdb)
 
-    else:
-        _del_bookmark(name, imdb)
-
     return False
 
 

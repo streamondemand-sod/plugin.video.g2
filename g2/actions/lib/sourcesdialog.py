@@ -101,7 +101,6 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
 
     def onInit(self):
         self.select_button_focused = False
-        self.check_button_flag = True
         self.dialog_closed = False
         self.start_time = None
         self.selected = None
@@ -131,9 +130,8 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         if not self.thread and self.sources_generator:
             self.thread = workers.Thread(self.sources_worker)
             self.thread.start()
-        if not self.thread:
-            self.check_button_flag = False
 
+        self.check_button_flag = self.thread is not None
         self.updateDialog(progress='')
 
     def onClick(self, controlID):
@@ -147,11 +145,12 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.close()
             return
         elif controlID == self.check_button_id:
-            if not self.thread:
+            if self.thread:
+                self.check_button_flag = False
+            else:
                 self.thread = workers.Thread(self.sources_worker)
                 self.thread.start()
-            else:
-                self.check_button_flag = False
+                self.check_button_flag = True
             return
         else:
             return
@@ -214,11 +213,10 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
                   len([i for i in self.items if not i.getProperty('source_url')]))
 
         if not len(self.items):
-            self.check_button_flag = False
+            self.thread = None
             self.updateDialog(title=_('NO SOURCES FOUND'), elapsed_time=False)
             return
 
-        self.check_button_flag = True
         self.updateDialog(title=_('CHECKING SOURCES'), elapsed_time=True)
 
         all_sources_resolved = False
@@ -244,7 +242,6 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.updateDialog()
             xbmc.sleep(500)
 
-        self.check_button_flag = False
         if all_sources_resolved:
             title = _('SELECT SOURCE')
             progress = _('CHECKING COMPLETE')
@@ -252,6 +249,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             title = None
             progress = _('CHECKING STOPPED')
 
+        self.thread = None
         self.updateDialog(title=title, progress=progress, elapsed_time=False)
 
         log.debug('sources.dialog: sources_worker stopped (%s): %d url listed, %d processed (OK/KO: %d/%d)',
@@ -260,8 +258,6 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
                   len([i for i in self.items if i.getProperty('url') or not i.getProperty('source_url')]),
                   len([i for i in self.items if i.getProperty('url')]),
                   len([i for i in self.items if not i.getProperty('source_url')]))
-
-        self.thread = None
 
     def resolver(self, item):
         if not self.source_resolve:
@@ -313,6 +309,16 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
 
                 item.setLabel(label_fmt%(media_label.upper(), label))
 
+                if hasattr(url, 'resolver'):
+                    # (fixme) need to use a more generic way to cleanup the resolver name
+                    url_resolver = url.resolver.replace('_by_j0rdyz65_at_github', '').replace('.adapter', '')
+                    source_info = (item.getProperty('source_info') + ' ' +
+                                   # Info about who resolved the source
+                                   _('[COLOR orange][{resolver} in {elapsed:.1f} secs][/COLOR]').format(
+                                       resolver=url_resolver,
+                                       elapsed=thd.elapsed()))
+                    item.setProperty('source_info', source_info)
+
             log.debug('{m}.{f}: %s: %s'%(label, 'OK' if item.getProperty('url') else 'KO'))
 
     def updateDialog(self, title=None, progress=None, elapsed_time=None):
@@ -361,7 +367,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.setFocus(self.select_button)
             self.select_button_focused = True
 
-        if self.check_button_flag:
+        if self.thread:
             # Label for the button that stops the sources validation
             self.check_button.setLabel(_('Stop'))
             self.check_button.setEnabled(True)
