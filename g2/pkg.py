@@ -115,25 +115,6 @@ _PACKAGES_KINDS = {
     },
 }
 
-# (fixme) change to explicit sentences to ease the translation
-# def _settings_category():
-#     def _ordinal(num):
-#         return "%d%s" % (num, "tsnrhtdd"[(num/10%10 != 1)*(num%10 < 4)*num%10::4])
-
-#     for kind, name in [('providers', 'provider'), ('resolvers', 'host')]:
-#         settings = _PACKAGES_KINDS[kind]['settings']
-#         for i in range(1, 5):
-#             msgcode = language.msgcode('%s preferred source %s'%(_ordinal(i), name))
-#             if not msgcode:
-#                 break
-#             settings['preferred_provider_%d'%i] = {
-#                 'template': 'type="select" label="%s" values="-|{modules_names}"'%msgcode,
-#                 'default': '-',
-#             }
-
-# # python2.6 doesn't support {} comprehensions
-# _settings_category()
-
 _RESOURCES_PATH = os.path.join(addon.PATH, 'resources')
 
 # NOTE: This is the path relative to the one present in sys.path.
@@ -530,12 +511,23 @@ def update_settings_skema():
                     continue
                 add_setting('enabled', kindesc.get('module_enabled_setting_default', 'true'), kind, name, sname)
 
+    themes = ['-']
+    themes_dir = os.path.join(_RESOURCES_PATH, 'media')
+    for theme in os.listdir(themes_dir):
+        if os.path.isdir(os.path.join(themes_dir, theme)):
+            themes.append(theme.capitalize())
+
     settings_skema_path = os.path.join(_RESOURCES_PATH, 'settings.xml')
+    old_settings_skema = ''
     new_settings_skema = ''
     with open(settings_skema_path) as fil:
         suppress_skema = False
         line = ''
         for line in fil:
+            old_settings_skema += line
+            # Update  <setting id="appearance" type="select" label="30002" values="-|Embossed" default="Embossed" />
+            if 'id="appearance"' in line:
+                line = re.sub(r' values="[^"]*?" ', ' values="'+'|'.join(themes)+'" ', line)
             if any('label="%s"'%d['settings_category'] in line for d in _PACKAGES_KINDS.itervalues()):
                 suppress_skema = True
             if '</settings>' in line:
@@ -601,10 +593,14 @@ def update_settings_skema():
         new_settings_skema += line
         for line in fil:
             new_settings_skema += line
+            old_settings_skema += line
 
-    if new_settings_skema != '':
+    if new_settings_skema == old_settings_skema:
+        return False
+    else:
         with open(settings_skema_path, 'w') as fil:
             fil.write(new_settings_skema)
+        return True
 
 
 def _remove(path, raise_notfound=True):

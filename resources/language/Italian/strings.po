@@ -723,5 +723,11 @@ msgstr "Notifica la riproduzione video"
 
 #: resources/settings.template.xml:7
 msgctxt "#30136"
-msgid "Auto Play"
-msgstr "Play automatico"
+msgid "Lazy mode"
+msgstr "Sono stanco"
+
+#: g2/actions/packages.py:93 g2/actions/service.py:184
+#, python-brace-format
+msgctxt "#30137"
+msgid "{g2_name} settings skema updated"
+msgstr "{g2_name} modello impostazioni aggiornato"

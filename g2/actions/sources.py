@@ -146,9 +146,10 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
 def _play_source(name, imdb, dummy_tvdb, meta, item):
     url = item.getProperty('url')
 
+    auto_play = addon.setting('auto_play') == 'true'
     try:
         offset = _get_bookmark(name, imdb)
-        if offset:
+        if offset and not auto_play:
             minutes, seconds = divmod(int(offset), 60)
             hours, minutes = divmod(minutes, 60)
             if not ui.yesnoDialog(
@@ -163,20 +164,23 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
         offset = 0
         log.debug('{m}.{f}: %s %s: %s', name, imdb, repr(ex))
 
-    credits_message = [
-        m.format(
-            video=name,
-            provider=item.getProperty('source_provider').split('.')[-1],
-            host=item.getProperty('source_host'),
-            media_format=item.getProperty('format') or '???',
-            elapsed_time='{elapsed_time}',
-        ) for m in [
-            _('~*~ CREDITS ~*~'),
-            _('{video} loaded in {elapsed_time} seconds'),
-            _('Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]'),
-            _('Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]'),
-            _('Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]'),
-        ]]
+    if auto_play:
+        credits_message = []
+    else:
+        credits_message = [
+            m.format(
+                video=name,
+                provider=item.getProperty('source_provider').split('.')[-1],
+                host=item.getProperty('source_host'),
+                media_format=item.getProperty('format') or '???',
+                elapsed_time='{elapsed_time}',
+            ) for m in [
+                _('~*~ CREDITS ~*~'),
+                _('{video} loaded in {elapsed_time} seconds'),
+                _('Source provided by [UPPERCASE][B]{provider}[/B][/UPPERCASE]'),
+                _('Content hosted by [UPPERCASE][COLOR orange]{host}[/COLOR][/UPPERCASE]'),
+                _('Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]'),
+            ]]
 
     player = ui.PlayerDialog()
     player_status = player.run(name, meta, url, offset=offset, info=credits_message)

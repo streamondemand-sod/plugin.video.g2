@@ -4,7 +4,7 @@
 		<setting id="appearance" type="select" label="Appearance" values="-|{themes}" default="Embossed" />
 		<setting id="fanart" type="bool" label="Enable Fanart" default="true" />
 		<setting id="infoLang" type="select" label="Info Language" values="bg|cs|da|de|el|en|es|fi|fr|he|hr|hu|it|ja|ko|nl|no|pl|pt|ru|sl|sv|tr|zh" default="en" />
-		<setting id="auto_play" type="bool" label="Auto Play" default="false" />
+		<setting id="auto_play" type="bool" label="Lazy mode" default="false" />
 		<setting id="downloads" type="folder" label="Downloads" default="" />
 	</category>
 	<category label="Databases">

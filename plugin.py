@@ -31,10 +31,7 @@ for addon_dir in os.listdir(ADDONS_PATH):
     importer.add_path(os.path.join(ADDONS_PATH, addon_dir))
 sys.path_hooks.append(importer.ImpImporterSandbox)
 
-from g2.libraries import addon
-
 from g2 import actions
-from g2 import pkg
 
 
 def main():
@@ -59,8 +56,7 @@ def main():
 
 
 def service_monitor_setup():
-    pkg.update_settings_skema()
-
+    from g2.libraries import addon
     from g2.actions import service
     service.monitor('trakt_enabled', 'setting', addon.runplugin, 'auth.trakt')
 

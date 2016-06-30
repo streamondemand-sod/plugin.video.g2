@@ -89,7 +89,9 @@ def dialog():
 
     del win
 
-    pkg.update_settings_skema()
+    if pkg.update_settings_skema():
+        ui.infoDialog(_('{g2_name} settings skema updated').format(g2_name=addon.addonInfo('name')))
+
     ui.refresh()
 
 
