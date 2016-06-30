@@ -28,9 +28,10 @@ except:
     from pysqlite2 import dbapi2 as database
 
 from g2.libraries import fs
+from g2.libraries import ui
 from g2.libraries import log
-from g2.libraries import workers
 from g2.libraries import addon
+from g2.libraries import workers
 from g2.libraries.language import _
 
 from g2 import pkg
@@ -39,9 +40,10 @@ from g2 import defs
 from g2 import providers
 from g2 import resolvers
 
-from .lib import ui
-from .lib import downloader
 from . import action
+from .lib import downloader
+from .lib.sourcesdialog import SourcesDialog
+from .lib.playerdialog import PlayerDialog
 
 
 @action
@@ -64,7 +66,7 @@ def playurl(name=None, url=None):
             return
 
         url = thd.result
-        ui.PlayerDialog().run(name, None, url)
+        PlayerDialog().run(name, None, url)
 
     except Exception as ex:
         log.error('{m}.{f}: %s: %s', url, repr(ex))
@@ -110,13 +112,13 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
             providers.content_sources(content, ui_update=ui_update,
                                       title=title, year=year, imdb=imdb, tvdb=tvdb, **kwargs)
 
-        win = ui.SourcesDialog('SourcesDialog.xml', addon.PATH, 'Default', '720p',
-                               sourceName=name,
-                               sourcesGenerator=sources_generator,
-                               sourcePriority=_source_priority,
-                               sourceResolve=_resolve,
-                               posterImage=poster,
-                               autoPlay=addon.setting('auto_play') == 'true')
+        win = SourcesDialog('SourcesDialog.xml', addon.PATH, 'Default', '720p',
+                            sourceName=name,
+                            sourcesGenerator=sources_generator,
+                            sourcePriority=_source_priority,
+                            sourceResolve=_resolve,
+                            posterImage=poster,
+                            autoPlay=addon.setting('auto_play') == 'true')
 
         ui.idle()
 
@@ -182,7 +184,7 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
                 _('Media format is [UPPERCASE][COLOR FF009933]{media_format}[/COLOR][/UPPERCASE]'),
             ]]
 
-    player = ui.PlayerDialog()
+    player = PlayerDialog()
     player_status = player.run(name, meta, url, offset=offset, info=credits_message)
 
     if player_status < 0:
@@ -262,21 +264,13 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
     - User preference for the source provider
     - User preference for the source host
     """
-    PRIORITY1 = 1000
-    PRIORITY2 = 100
-    PRIORITY3 = 10
-    PRIORITY4 = 1
+    def priority_weight(pri):
+        return 10**(4-pri) if pri in range(1, 5) else 0
 
     priority = 0
 
-    priority += resolution * PRIORITY1
+    priority += resolution * priority_weight(1)
 
-    # (fixme) [code]: define the labels as class constants in lib/sources/__init__.py:
-    # class SourceQuality:
-    #   res_8K = '8K',
-    #   res_4K = '4K',
-    # ...
-    # so that sources/providers modules can use SourceQuality.res_8K as tag
     _quality_priority = {
         '8K': 4,
         '4K': 3,
@@ -285,7 +279,7 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
         'SD': 0,
     }
 
-    priority += _quality_priority.get(quality_tag, 0) * PRIORITY2
+    priority += _quality_priority.get(quality_tag, 0) * priority_weight(2)
 
     if host:
         host = host.split('.')[-1].lower()
@@ -294,7 +288,7 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
             if not pref:
                 break
             if  pref.lower() == host:
-                priority += (10 - top) * PRIORITY3
+                priority += (10 - top) * priority_weight(3)
 
     if provider:
         provider = provider.split('.')[-1].lower()
@@ -303,7 +297,7 @@ def _source_priority(host, provider, quality_tag=None, resolution=0):
             if not pref:
                 break
             if pref.lower() == provider:
-                priority += (10 - top) * PRIORITY4
+                priority += (10 - top) * priority_weight(4)
 
     return priority
 

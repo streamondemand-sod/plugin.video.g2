@@ -21,10 +21,10 @@
 
 import urllib
 
+from g2.libraries import ui
 from g2.libraries import addon
 from g2.libraries.language import _
 
-from .lib import ui
 from .lib import downloader
 from . import action, busyaction
 

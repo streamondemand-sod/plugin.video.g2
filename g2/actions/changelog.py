@@ -20,10 +20,10 @@
 """
 
 
+from g2.libraries import ui
 from g2.libraries import cache
 from g2.libraries import addon
 
-from .lib import ui
 from . import action
 
 

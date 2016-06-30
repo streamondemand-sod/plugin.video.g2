@@ -19,8 +19,8 @@
 """
 
 
+from g2.libraries import ui
 from g2.libraries import addon
-from g2.actions.lib import ui
 
 
 info = {

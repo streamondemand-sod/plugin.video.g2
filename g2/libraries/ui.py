@@ -220,11 +220,3 @@ def endDirectory(next_item=None, content=None, sort_methods=None):
 
     if viewmode:
         xbmc.executebuiltin("Container.SetViewMode(%s)" % viewmode)
-
-
-try:
-    from .sourcesdialog import *
-    from .packagesdialog import *
-    from .playerdialog import *
-except Exception as ex:
-    log.error('{m}: %s', repr(ex), trace=True)

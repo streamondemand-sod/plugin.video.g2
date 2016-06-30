@@ -24,12 +24,12 @@ import os
 import json
 import urllib
 
+from g2.libraries import ui
 from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries.language import _
 from g2 import dbs
 
-from .lib import ui
 from . import action, busyaction
 
 

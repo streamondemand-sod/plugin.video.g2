@@ -19,12 +19,13 @@
 """
 
 
+from g2.libraries import ui
 from g2.libraries import log
 from g2.libraries import cache
 from g2.libraries import addon
+
 from .lib.pb import PushBullet
 
-from g2.actions.lib import ui
 
 info = {
     'methods': ['notices', 'events'],

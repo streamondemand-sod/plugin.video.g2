@@ -19,13 +19,13 @@
 """
 
 
+from g2.libraries import ui
 from g2.libraries import addon
 from g2.libraries.language import _
 
 from g2 import providers
 from g2 import resolvers
 
-from .lib import ui
 from . import action
 
 

@@ -22,6 +22,7 @@
 import re
 import json
 
+from g2.libraries import ui
 from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries.language import _
@@ -29,7 +30,6 @@ from g2.libraries.language import _
 from g2 import dbs
 from g2 import notifiers
 
-from .lib import ui
 from . import action
 
 

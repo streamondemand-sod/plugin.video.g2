@@ -24,9 +24,6 @@ import xbmcgui
 from g2.libraries import log
 
 
-__all__ = ['PackagesDialog']
-
-
 class PackagesDialog(xbmcgui.WindowXMLDialog):
     kinds_listid = 101
     packages_listid = 201

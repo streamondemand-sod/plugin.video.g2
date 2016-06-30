@@ -19,6 +19,7 @@
 """
 
 
+from g2.libraries import ui
 from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries import client
@@ -27,15 +28,15 @@ from g2.libraries.language import _
 from g2 import pkg
 from g2 import defs
 
-from .lib import ui
 from . import action
+from .lib.packagesdialog import PackagesDialog
 
 
 @action
 def dialog():
-    win = ui.PackagesDialog('PackagesDialog.xml', addon.PATH, 'Default', '720p',
-                            onPackageSelected=_manage_package,
-                            pkgInstalledStatus=pkg.is_installed)
+    win = PackagesDialog('PackagesDialog.xml', addon.PATH, 'Default', '720p',
+                         onPackageSelected=_manage_package,
+                         pkgInstalledStatus=pkg.is_installed)
 
     listed = {}
     kinds = {}

@@ -24,17 +24,13 @@ import datetime
 import xbmc
 import xbmcgui
 
+from g2.libraries import ui
 from g2.libraries import log
 from g2.libraries import workers
 from g2.libraries import addon
 from g2.libraries.language import _
 
 from g2 import defs
-
-from .ui import addon_icon, addon_poster
-
-
-__all__ = ['SourcesDialog']
 
 
 class SourcesDialog(xbmcgui.WindowXMLDialog):
@@ -129,7 +125,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.left_image.setImage(self.poster_image)
             self.left_label.setLabel('')
         else:
-            self.left_image.setImage(addon_poster())
+            self.left_image.setImage(ui.addon_poster())
             self.left_label.setLabel(self.source_name)
 
         if not self.thread and self.sources_generator:
@@ -169,7 +165,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
                 selected = self.sources_list.getListItem(0)
             else:
                 xbmcgui.Dialog().notification(addon.addonInfo('name'), _('Source not valid'),
-                                              addon_icon(), 3000, sound=False)
+                                              ui.addon_icon(), 3000, sound=False)
                 xbmc.executebuiltin('Dialog.Close(busydialog)')
                 return
         xbmc.executebuiltin('Dialog.Close(busydialog)')

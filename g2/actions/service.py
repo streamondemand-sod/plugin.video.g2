@@ -23,6 +23,7 @@ import threading
 
 import xbmc
 
+from g2.libraries import ui
 from g2.libraries import log
 from g2.libraries import workers
 from g2.libraries import addon
@@ -31,7 +32,6 @@ from g2.libraries.language import _
 from g2 import notifiers
 from g2 import pkg
 
-from .lib import ui
 from . import action
 
 

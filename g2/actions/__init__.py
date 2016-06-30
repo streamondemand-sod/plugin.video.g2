@@ -21,10 +21,15 @@
 
 import sys
 
-from g2 import pkg
+from g2.libraries import ui
 from g2.libraries import log
 
-from .lib import ui
+from g2 import pkg
+
+
+def action(func):
+    func.is_action = True
+    return func
 
 
 def busyaction(func):
@@ -36,25 +41,15 @@ def busyaction(func):
     return func_wrapper
 
 
-def action(func):
-    func.is_action = True
-    return func
-
-
 def execute(act, kwargs=None):
     """Execute the plugin actions"""
-    if '.' not in act:
-        log.error('{m}.{f}(%s, ...): malformed action identifier (it should be module.action)', act)
-        return
-
     if kwargs is None:
         kwargs = {}
 
     log.debug('{m}.{f}: tID:%s, ACTION:%s, ARGS:%.80s...', sys.argv[1], act, repr(kwargs))
 
-    module, act = act.split('.')
-
     try:
+        module, act = act.split('.')
         mod = __import__(module, globals(), locals(), [], -1)
         if not hasattr(mod, act):
             raise Exception('missing action function')

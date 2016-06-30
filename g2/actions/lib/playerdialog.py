@@ -26,12 +26,8 @@ import time
 import xbmc
 import xbmcgui
 
+from g2.libraries import ui
 from g2.libraries import addon
-
-from .ui import addon_poster
-
-
-__all__ = ['PlayerDialog']
 
 
 class PlayerDialog(xbmc.Player):
@@ -63,7 +59,7 @@ class PlayerDialog(xbmc.Player):
 
         poster = meta.get('poster', '0')
         if poster == '0':
-            poster = addon_poster()
+            poster = ui.addon_poster()
         thumb = meta.get('thumb', poster)
 
         addon.prop(addon='script.trakt', name='ids', value=json.dumps(ids))
