@@ -90,7 +90,7 @@ def request(url, debug=None, data=None, json=None, **kwargs):
 
 
 def get(url, debug=None, **kwargs):
-    # (fixme) also on other public methods... a decorator?!?
+    # (fixme) also on other public methods: request, post...
     logperf = log.perfactive()
     if logperf:
         started = time.time()

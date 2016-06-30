@@ -53,8 +53,6 @@ def menu():
                 status += ' '+completition_time
             status = '[COLOR FF00b8ff][%s][/COLOR] ' % status
         ui.addDirectoryItem(status+i['name'], i['url'], i['image'], None,
-                            # (fixme) this has no effect for ongoing downloads
-                            # Remove the specific entry from the download queue
                             context=(_('Remove from queue'), 'download.remove&url=%s'%urllib.quote_plus(i['url'])),
                             isAction=False, isFolder=False)
     ui.endDirectory()

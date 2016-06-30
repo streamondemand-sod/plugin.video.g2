@@ -34,6 +34,9 @@ RESOLVER_TIMEOUT = 10
 MIN_STREAM_SIZE = 1024 * 1024
 """Minimum stream size in bytes to consider it a valid video stream"""
 
+BOOKMARK_THRESHOLD = 2
+"""Minimum percentage to pass to save a bookmark"""
+
 WATCHED_THRESHOLD = 90
 """Minimum percentage to pass to update the video watched status"""
 

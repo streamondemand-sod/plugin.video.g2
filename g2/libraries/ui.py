@@ -208,8 +208,6 @@ def endDirectory(next_item=None, content=None, sort_methods=None):
             viewmode = repr(xbmcgui.Window(xbmcgui.getCurrentWindowId()).getFocusId())
 
     elif sort_methods:
-        # (fixme) it would be nice to sort also for paged directories, but, apparently, there is no way
-        # to mark a specific item as being nailed down at the bottom!
         for method in sort_methods:
             xbmcplugin.addSortMethod(int(sys.argv[1]), method)
 

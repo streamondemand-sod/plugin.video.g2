@@ -229,7 +229,7 @@ def install_or_update(site, ui_update=None):
         init_source = session.get(init_module[0]['download_url']).content
         log.debug('{m}.{f}: %s:\n%s', site, init_source)
         init_attributes = {}
-        # (fixme) should replace the exec pkg.__init__ with a safer alternative?
+        # (fixme) replace the exec pkg.__init__ with a safer alternative?
         exec init_source in init_attributes
         return init_attributes
 

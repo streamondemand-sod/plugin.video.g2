@@ -195,7 +195,7 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
         item.setProperty('source_url', '')
         item.setProperty('url', '')
 
-    elif player_status > defs.WATCHED_THRESHOLD:
+    elif player_status >= defs.WATCHED_THRESHOLD:
         _del_bookmark(name, imdb)
         watched = dbs.watched('movie{imdb_id}', imdb_id=imdb)
         if not watched:
@@ -204,7 +204,7 @@ def _play_source(name, imdb, dummy_tvdb, meta, item):
             ui.refresh()
         return True
 
-    elif player_status > 2:
+    elif player_status >= defs.BOOKMARK_THRESHOLD:
         _add_bookmark(player.elapsed(), name, imdb)
 
     return False
@@ -356,10 +356,6 @@ def _resolve(provider, url, ui_update=None):
                 ' '.join(['%02x%s'%(ord(b), ' (%s)'%b if b in string.printable else '') for b in rurl.meta['firstbytes']]))
 
     log.notice('{m}.{f}(%s, %s): %s %.3f secs%s'%(provider, url, what, thd.elapsed(), extrainfo))
-
-    # (fixme): [obs] caching and stats
-    # - cache successes and failures for 10mins
-    # - keep a statistics of the failed host/domains: total call/success
 
     return None if ui_cancelled else thd
 

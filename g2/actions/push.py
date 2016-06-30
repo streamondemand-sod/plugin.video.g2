@@ -46,7 +46,7 @@ def new(notifier, iden, title, body, url):
     notifiers.notices([], identifiers={notifier: iden})
 
     try:
-        # (fixme) make the sites list a configuration (xml) file
+        # (fixme) make the sites list a configuration file or download from a site like the packages...
         sites = {
             'imdb.com': {
                 'type': 'db',

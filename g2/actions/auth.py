@@ -83,9 +83,8 @@ def pushbullet():
     if not addon.setting('pushbullet_apikey'):
         addon.setSetting('pushbullet_email', '')
         ui.infoDialog(_('Pushbullet disabled'))
-        # (fixme) enabling/disabling the pb events handling requires,
-        #   for now, a complete restart of service thread.
-        #   This could be improved/changed in the future
+        # Enabling/disabling the pb events handling requires,
+        # for now, a complete restart of service thread.
         addon.prop('service', False)
         return
 
@@ -100,17 +99,15 @@ def pushbullet():
             ui.Dialog().ok('Pushbullet', _('Authorized account email: [COLOR orange]{pushbullet_email}[/COLOR]').format(
                 pushbullet_email=user['email']))
             if not pb_notifier.enabled():
-                # (fixme) enabling/disabling the pb events handling requires,
-                #   for now, a complete restart of service thread.
-                #   This could be improved/changed in the future
+                # Enabling/disabling the pb events handling requires,
+                # for now, a complete restart of service thread.
                 addon.prop('service', False)
             addon.setSetting('pushbullet_email', user['email'])
 
     except Exception as ex:
         if pb_notifier.enabled():
-            # (fixme) enabling/disabling the pb events handling requires,
-            #   for now, a complete restart of service thread.
-            #   This could be improved/changed in the future
+            # Enabling/disabling the pb events handling requires,
+            # for now, a complete restart of service thread.
             addon.prop('service', False)
         addon.setSetting('pushbullet_email', '')
         ui.infoDialog(str(ex), time=5000)
