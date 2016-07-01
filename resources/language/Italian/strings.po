@@ -177,8 +177,6 @@ msgctxt "#30031"
 msgid "Refresh"
 msgstr "Aggiorna"
 
-#. (fixme) this has no effect for ongoing downloads
-#. Remove the specific entry from the download queue
 #: g2/actions/download.py:58
 msgctxt "#30032"
 msgid "Remove from queue"
@@ -731,3 +729,10 @@ msgstr "Sono stanco"
 msgctxt "#30137"
 msgid "{g2_name} settings skema updated"
 msgstr "{g2_name} modello impostazioni aggiornato"
+
+#. Info about who resolved the source
+#: g2/actions/lib/sourcesdialog.py:317
+#, python-brace-format
+msgctxt "#30138"
+msgid "[COLOR orange][{resolver} in {elapsed:.1f} secs][/COLOR]"
+msgstr "[COLOR orange][{resolver} in {elapsed:.1f} secs][/COLOR]"

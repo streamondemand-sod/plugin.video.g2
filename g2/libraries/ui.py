@@ -79,18 +79,57 @@ def addon_next():
     return media('next', 'DefaultFolderBack.png')
 
 
+_RESOURCE_IMAGES = {
+    'exodus': {
+        '__addonid__': 'script.exodus.artwork',
+        'settings': 'tools.png',
+        'cache': 'tools.png',
+        'moviesTraktcollection': 'trakt.png',
+        'moviesTraktwatchlist': 'trakt.png',
+        'moviesTraktrated': 'trakt.png',
+        'moviesTraktrecommendations': 'trakt.png',
+        'movieUserlists': 'userlists.png',
+        'mygenesis': 'userlists.png',
+        'moviesAdded': 'latest-movies.png',
+        'movieSearch': 'search.png',
+        'moviePerson': 'people-search.png',
+        'movieYears': 'years.png',
+        'movieGenres': 'genres.png',
+        'movieCertificates': 'certificates.png',
+        'moviesTrending': 'people-watching.png',
+        'moviesPopular': 'most-popular.png',
+        'moviesViews': 'most-voted.png',
+        'moviesBoxoffice': 'box-office.png',
+        'moviesOscars': 'oscar-winners.png',
+        'moviesTheaters': 'in-theaters.png',
+    },
+}
+
+
 def media(icon, icon_default=None):
     if '://' in icon:
         return icon
 
     appearance = addon.setting('appearance').lower()
-    if appearance not in ['-', '']:
-        icon, ext = os.path.splitext(icon)
-        exts = [ext] if ext else ['.png', '.jpg']
-        for ext in exts:
-            icon_path = os.path.join(addon.ARTPATH, appearance, icon+ext)
-            if os.path.isfile(icon_path):
-                return icon_path
+    if appearance in ['-', '']:
+        return icon_default or 'DefaultFolder.png'
+
+    if ':' not in appearance:
+        artpath = addon.ARTPATH
+    else:
+        resource, appearance = appearance.split(':')
+        artpath = os.path.join(addon.addonInfo2(_RESOURCE_IMAGES[resource]['__addonid__'], 'path'), 'resources', 'media')
+        icon = _RESOURCE_IMAGES[resource].get(icon, icon)
+
+    icon_path = os.path.join(artpath, appearance, icon)
+    icon, ext = os.path.splitext(icon)
+    if ext and os.path.isfile(icon_path):
+        return icon_path
+
+    for ext in ['.png', '.jpg']:
+        icon_path = os.path.join(artpath, appearance, icon+ext)
+        if os.path.isfile(icon_path):
+            return icon_path
 
     return icon_default or 'DefaultFolder.png'
 

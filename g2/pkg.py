@@ -511,11 +511,18 @@ def update_settings_skema():
                     continue
                 add_setting('enabled', kindesc.get('module_enabled_setting_default', 'true'), kind, name, sname)
 
+    # (fixme) for Jarvis use also the resources.images addons
+    media_dirs = [os.path.join(_RESOURCES_PATH, 'media')]
+    if addon.condition('System.HasAddon(script.exodus.artwork)'):
+        media_dirs.append(os.path.join(addon.addonInfo2('script.exodus.artwork', 'path'), 'resources', 'media'))
+
     themes = ['-']
-    themes_dir = os.path.join(_RESOURCES_PATH, 'media')
-    for theme in os.listdir(themes_dir):
-        if os.path.isdir(os.path.join(themes_dir, theme)):
-            themes.append(theme.capitalize())
+    for media in media_dirs:
+        for theme in os.listdir(media):
+            if os.path.isdir(os.path.join(media, theme)):
+                if 'script.exodus.artwork' in media:
+                    theme = 'Exodus:'+theme
+                themes.append(theme.capitalize())
 
     settings_skema_path = os.path.join(_RESOURCES_PATH, 'settings.xml')
     old_settings_skema = ''
