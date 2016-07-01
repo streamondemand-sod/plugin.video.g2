@@ -20,7 +20,6 @@
 """
 
 
-import os
 import json
 import urllib
 
@@ -39,36 +38,36 @@ def menu():
         db_provider = dbs.resolve('movies_recently_added{}', return_db_provider=True)
         ui.addDirectoryItem(_('Latest Movies')+' ['+db_provider.upper()+']',
                             'movies.movielist&url='+dbs.resolve('movies_recently_added{}', quote_plus=True),
-                            'moviesAdded.jpg', 'DefaultRecentlyAddedMovies.png')
+                            'moviesAdded', 'DefaultRecentlyAddedMovies.png')
 
-    ui.addDirectoryItem(_('Search by Title'), 'movies.searchbytitle', 'movieSearch.jpg', 'DefaultMovies.png', isFolder=False)
-    ui.addDirectoryItem(_('Search by Person'), 'movies.searchbyperson', 'moviePerson.jpg', 'DefaultMovies.png', isFolder=False)
-    ui.addDirectoryItem(_('Search by Year'), 'movies.searchbyyear', 'movieYears.jpg', 'DefaultMovies.png', isFolder=False)
+    ui.addDirectoryItem(_('Search by Title'), 'movies.searchbytitle', 'movieSearch', 'DefaultMovies.png', isFolder=False)
+    ui.addDirectoryItem(_('Search by Person'), 'movies.searchbyperson', 'moviePerson', 'DefaultMovies.png', isFolder=False)
+    ui.addDirectoryItem(_('Search by Year'), 'movies.searchbyyear', 'movieYears', 'DefaultYear.png', isFolder=False)
 
-    ui.addDirectoryItem(_('Genres'), 'movies.genres', 'movieGenres.jpg', 'DefaultMovies.png')
-    ui.addDirectoryItem(_('Certificates'), 'movies.certifications', 'movieCertificates.jpg', 'DefaultMovies.png')
+    ui.addDirectoryItem(_('Genres'), 'movies.genres', 'movieGenres', 'DefaultGenre.png')
+    ui.addDirectoryItem(_('Certificates'), 'movies.certifications', 'movieCertificates', 'DefaultMovies.png')
 
     if dbs.resolve('movies_featured{}'):
         ui.addDirectoryItem(_('Featured'), 'movies.movielist&url='+dbs.resolve('movies_featured{}', quote_plus=True),
-                            'movies.jpg', 'DefaultRecentlyAddedMovies.png')
+                            'movies', 'DefaultRecentlyAddedMovies.png')
     if dbs.resolve('movies_trending{}'):
         ui.addDirectoryItem(_('People Watching'), 'movies.movielist&url='+dbs.resolve('movies_trending{}', quote_plus=True),
-                            'moviesTrending.jpg', 'DefaultRecentlyAddedMovies.png')
+                            'moviesTrending', 'DefaultRecentlyAddedMovies.png')
     if dbs.resolve('movies_popular{}'):
         ui.addDirectoryItem(_('Most Popular'), 'movies.movielist&url='+dbs.resolve('movies_popular{}', quote_plus=True),
-                            'moviesPopular.jpg', 'DefaultMovies.png')
+                            'moviesPopular', 'DefaultMovies.png')
     if dbs.resolve('movies_toprated{}'):
         ui.addDirectoryItem(_('Most Voted'), 'movies.movielist&url='+dbs.resolve('movies_toprated{}', quote_plus=True),
-                            'moviesViews.jpg', 'DefaultMovies.png')
+                            'moviesViews', 'DefaultMovies.png')
     if dbs.resolve('movies_boxoffice{}'):
         ui.addDirectoryItem(_('Box Office'), 'movies.movielist&url='+dbs.resolve('movies_boxoffice{}', quote_plus=True),
-                            'moviesBoxoffice.jpg', 'DefaultMovies.png')
+                            'moviesBoxoffice', 'DefaultMovies.png')
     if dbs.resolve('movies_oscar{}'):
         ui.addDirectoryItem(_('Oscar Winners'), 'movies.movielist&url='+dbs.resolve('movies_oscar{}', quote_plus=True),
-                            'moviesOscars.jpg', 'DefaultMovies.png')
+                            'moviesOscars', 'DefaultMovies.png')
     if dbs.resolve('movies_theaters{}'):
         ui.addDirectoryItem(_('In Theaters'), 'movies.movielist&url='+dbs.resolve('movies_theaters{}', quote_plus=True),
-                            'moviesTheaters.jpg', 'DefaultRecentlyAddedMovies.png')
+                            'moviesTheaters', 'DefaultRecentlyAddedMovies.png')
     ui.endDirectory()
 
 
@@ -100,9 +99,14 @@ def searchbyyear():
 def genres():
     items = dbs.genres()
     for i in items:
+        image = i.get('image', '0')
+        if image == '0':
+            # (fixme) Need a table mapping genre 'id' to different icons
+            image = 'DefaultGenre.png'
         i.update({
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{genre_id}', genre_id=i['id']),
+            'image': image,
         })
     _add_directory(items)
 
@@ -111,10 +115,26 @@ def genres():
 def certifications():
     items = dbs.certifications()
     items = sorted(items, key=lambda c: c['order'])
+
+    # These are confluence icons. It would be nice to use the skin icons, if available, but,
+    # AFAIK, there is no naming standard for such icons, so it is very difficult to build generic
+    # code valid for all skins.
+    icons = {
+        'G': 'mpaa_general.png',
+        'NC-17': 'mpaa_nc17.png',
+        'NR': 'mpaa_notrated.png',
+        'PG-13': 'mpaa_pg13.png',
+        'PG': 'mpaa_pg.png',
+        'R': 'mpaa_restricted.png',
+    }
+
+    confluence_skin_ratings_path = 'special://xbmc/addons/skin.confluence/media/flagging/ratings'
+
     for i in items:
         i.update({
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{certification}', certification=i['name']),
+            'image': confluence_skin_ratings_path + '/' + icons.get(i.get('name', ''), 'mpaa_notrated.png'),
         })
     _add_directory(items)
 
@@ -164,11 +184,20 @@ def lists(kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', user_id=''
     items = dbs.lists('lists{%s}'%kind_user_id, **args)
     if not items:
         items = []
+    addon_userlists = ui.media('movieUserlists', 'DefaultVideoPlaylists.png')
     for i in items:
         args[kind_list_id] = i[kind_list_id]
+        image = i.get('image', '0')
+        if image == '0':
+            image = addon_userlists
+        poster = i.get('poster')
+        if poster == '0':
+            poster = addon_userlists
         i.update({
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{%s}{%s}'%(kind_user_id, kind_list_id), **args),
+            'image': image,
+            'poster': poster,
         })
     if not items:
         ui.infoDialog(_('No results'))
@@ -208,11 +237,11 @@ def _add_movie_directory(items):
             if poster == '0':
                 poster = addon_poster
             banner = i.get('banner', '0')
+            if banner == '0':
+                banner = addon_banner if poster == '0' else poster
             fanart = i.get('fanart', '0')
-            if banner == '0' and poster == '0':
-                banner = addon_banner
-            elif banner == '0':
-                banner = poster
+            if fanart == '0':
+                fanart = addon_fanart
 
             meta = dict((k, v) for k, v in i.iteritems() if not v == '0')
             try:
@@ -256,10 +285,7 @@ def _add_movie_directory(items):
                 pass
 
             if fanart_enabled:
-                if fanart != '0':
-                    item.setProperty('Fanart_Image', fanart)
-                elif addon_fanart:
-                    item.setProperty('Fanart_Image', addon_fanart)
+                item.setProperty('Fanart_Image', fanart)
 
             item.setInfo(type='Video', infoLabels=meta)
             item.setProperty('Video', 'true')
@@ -279,10 +305,7 @@ def _add_directory(items, show_genre_as=False, is_person=False):
     if not items:
         items = []
 
-    addon_poster = ui.addon_poster()
     addon_fanart = ui.addon_fanart()
-    addon_thumb = ui.addon_thumb()
-    art_path = ui.artpath()
 
     for i in items:
         try:
@@ -291,13 +314,6 @@ def _add_directory(items, show_genre_as=False, is_person=False):
             except Exception:
                 name = i['name']
 
-            if i['image'].startswith('http://'):
-                thumb = i['image']
-            elif art_path:
-                thumb = os.path.join(art_path, i['image'])
-            else:
-                thumb = addon_thumb
-
             url = addon.itemaction(i['action'], url=urllib.quote_plus(i['url']))
 
             cmds = []
@@ -305,6 +321,7 @@ def _add_directory(items, show_genre_as=False, is_person=False):
                 cmds.append((_('Person information')+' (extendedinfo)',
                              addon.scriptaction('script.extendedinfo', info='extendedactorinfo', id=i['id'])))
 
+            thumb = ui.media(i['image'])
             item = ui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
 
             if show_genre_as:
@@ -313,12 +330,7 @@ def _add_directory(items, show_genre_as=False, is_person=False):
                     item.setProperty('Video', 'true')
 
             if 'poster' in i:
-                if i['poster'].startswith('http://'):
-                    poster = i['poster']
-                elif art_path:
-                    poster = os.path.join(art_path, i['poster'])
-                else:
-                    poster = addon_poster
+                poster = ui.media(i['poster'])
                 item.setArt({'poster': poster, 'banner': poster})
 
             item.addContextMenuItems(cmds, replaceItems=False)

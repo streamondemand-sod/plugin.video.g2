@@ -39,10 +39,10 @@ def menu():
         pass
     elif downloader.status():
         ui.addDirectoryItem('[COLOR red]Stop Downloads[/COLOR]', 'download.stop',
-                            'movies.jpg', None, context=cmd, isFolder=False)
+                            'movies', 'DefaultVideo.png', context=cmd, isFolder=False)
     else:
         ui.addDirectoryItem('[COLOR FF00b8ff]Start Downloads[/COLOR]', 'download.start',
-                            'movies.jpg', None, context=cmd, isFolder=False)
+                            'movies', 'DefaultVideo.png', context=cmd, isFolder=False)
 
     for i in items:
         percentage, completition_time = downloader.statusItem(i)
@@ -52,7 +52,7 @@ def menu():
             if completition_time:
                 status += ' '+completition_time
             status = '[COLOR FF00b8ff][%s][/COLOR] ' % status
-        ui.addDirectoryItem(status+i['name'], i['url'], i['image'], None,
+        ui.addDirectoryItem(status+i['name'], i['url'], i['image'], 'DefaultVideo.png',
                             context=(_('Remove from queue'), 'download.remove&url=%s'%urllib.quote_plus(i['url'])),
                             isAction=False, isFolder=False)
     ui.endDirectory()

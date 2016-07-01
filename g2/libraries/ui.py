@@ -56,41 +56,44 @@ finishDirectory = xbmcplugin.endOfDirectory
 
 
 def addon_icon():
-    return _media('icon.png', addon.addonInfo('icon'))
+    return media('icon', addon.addonInfo('icon'))
 
 
 def addon_poster():
-    return _media('poster.png', 'DefaultVideo.png')
+    return media('poster', 'DefaultVideo.png')
 
 
 def addon_banner():
-    return _media('banner.png', 'DefaultVideo.png')
+    return media('banner', 'DefaultVideo.png')
 
 
 def addon_thumb():
-    return _media('icon.png', 'DefaultFolder.png', addon.addonInfo('icon'))
+    return media('icon', addon.addonInfo('icon'))
 
 
 def addon_fanart():
-    return _media('fanart.jpg', None, addon.addonInfo('fanart'))
+    return media('fanart', addon.addonInfo('fanart'))
 
 
 def addon_next():
-    return _media('next.jpg', 'DefaultFolderBack.png', 'DefaultFolderBack.png')
+    return media('next', 'DefaultFolderBack.png')
 
 
-def artpath():
-    return _media('', None, None)
+def media(icon, icon_default=None):
+    if '://' in icon:
+        return icon
 
-
-def _media(icon, icon_default, icon_default2=None):
     appearance = addon.setting('appearance').lower()
-    if appearance == '-':
-        return icon_default
-    elif appearance == '':
-        return icon_default2
-    else:
-        return os.path.join(addon.PATH, 'resources', 'media', appearance, icon)
+    if appearance not in ['-', '']:
+        icon, ext = os.path.splitext(icon)
+        exts = [ext] if ext else ['.png', '.jpg']
+        for ext in exts:
+            icon_path = os.path.join(addon.ARTPATH, appearance, icon+ext)
+            if os.path.isfile(icon_path):
+                return icon_path
+
+    return icon_default or 'DefaultFolder.png'
+
 
 def isfolderaction():
     try:
@@ -145,34 +148,32 @@ def refresh(action=None, **kwargs):
         return xbmc.executebuiltin('Container.Update(%s)'%addon.itemaction(action, **kwargs))
 
 
-def addItem(url, listitem, isFolder=False, totalItems=None):
-    try:
-        thread = int(sys.argv[1])
-    except Exception:
-        raise
+def addItem(url, item, isFolder=False, totalItems=None):
     if totalItems is None:
-        xbmcplugin.addDirectoryItem(thread, url, listitem, isFolder=isFolder)
+        xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=isFolder)
     else:
-        xbmcplugin.addDirectoryItem(thread, url, listitem, isFolder=isFolder, totalItems=totalItems)
+        xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=isFolder, totalItems=totalItems)
 
 
-def addDirectoryItem(name, query, thumb, icon, context=None, isAction=True, isFolder=True):
-    try:
-        name = _(name)
-    except Exception:
-        pass
-    url = addon.itemaction(query) if isAction else query
-    thumb = thumb if thumb.startswith('http://') else os.path.join(artpath(), thumb) if artpath() is not None else icon
+_FANART = addon_fanart()
+_ICON_NEXT = addon_next()
+
+
+def addDirectoryItem(name, query, thumb, icon, context=None, isAction=True, isFolder=True, totalItems=None):
+    thumb = media(thumb, icon)
+    item = xbmcgui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
+
     cmds = []
     if context:
-        cmds.append((context[0] if isinstance(context[0], basestring) else _(context[0]),
-                     context[1][1:] if context[1][0] == ':' else addon.pluginaction(context[1])))
-    item = xbmcgui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
+        cmds.append((context[0], context[1][1:] if context[1][0] == ':' else addon.pluginaction(context[1])))
     item.addContextMenuItems(cmds, replaceItems=False)
-    fanart = addon_fanart()
-    if fanart:
-        item.setProperty('Fanart_Image', fanart)
-    xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=isFolder)
+
+    if _FANART:
+        item.setProperty('Fanart_Image', _FANART)
+
+    url = addon.itemaction(query) if isAction else query
+
+    addItem(url, item, isFolder=isFolder, totalItems=totalItems)
 
 
 def endDirectory(next_item=None, content=None, sort_methods=None):
@@ -197,17 +198,20 @@ def endDirectory(next_item=None, content=None, sort_methods=None):
         else:
             next_page_label = _('[I]Next Page[/I]')
 
-        item = xbmcgui.ListItem(label=next_page_label, iconImage=addon_next(), thumbnailImage=addon_next())
+        item = xbmcgui.ListItem(label=next_page_label, iconImage=_ICON_NEXT, thumbnailImage=_ICON_NEXT)
         item.addContextMenuItems([], replaceItems=False)
-        fanart = addon_fanart()
-        if fanart:
-            item.setProperty('Fanart_Image', fanart)
-        xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=True)
+
+        if _FANART:
+            item.setProperty('Fanart_Image', _FANART)
+
+        addItem(url, item, isFolder=True)
+
         # On paged directories, replicate the current viewmode when displaying the pages after the first
         if next_item.get('next_page') > 2:
             viewmode = repr(xbmcgui.Window(xbmcgui.getCurrentWindowId()).getFocusId())
 
     elif sort_methods:
+        # For non-paged directories, add the sorting methods, if provided
         for method in sort_methods:
             xbmcplugin.addSortMethod(int(sys.argv[1]), method)
 

@@ -31,13 +31,13 @@ from . import action
 
 @action
 def menu():
-    ui.addDirectoryItem(_('Movies'), 'movies.menu', 'movies.jpg', 'DefaultMovies.png')
-    ui.addDirectoryItem(_('My Movies'), 'my.menu', 'mygenesis.jpg', 'DefaultVideoPlaylists.png')
+    ui.addDirectoryItem(_('Movies'), 'movies.menu', 'movies', 'DefaultMovies.png')
+    ui.addDirectoryItem(_('My Movies'), 'my.menu', 'mygenesis', 'DefaultVideoPlaylists.png')
     if addon.setting('movie_widget') != '0':
-        ui.addDirectoryItem(_('Latest Movies'), 'movies.widget', 'moviesAdded.jpg', 'DefaultRecentlyAddedMovies.png')
-    ui.addDirectoryItem(_('Tools'), 'tools.menu', 'tools.jpg', 'DefaultAddonProgram.png')
+        ui.addDirectoryItem(_('Latest Movies'), 'movies.widget', 'moviesAdded', 'DefaultRecentlyAddedMovies.png')
+    ui.addDirectoryItem(_('Tools'), 'tools.menu', 'tools', 'DefaultAddonProgram.png')
     if not len(providers.info(force_refresh=None)) or not len(resolvers.info(force_refresh=None)):
         ui.addDirectoryItem(_('[COLOR red]Install providers and resolvers packages to find video sources[/COLOR]'),
-                            'packages.dialog', 'tools.jpg', 'DefaultAddonProgram.png', isFolder=False)
+                            'packages.dialog', 'tools', 'DefaultAddonProgram.png', isFolder=False)
 
     ui.endDirectory()

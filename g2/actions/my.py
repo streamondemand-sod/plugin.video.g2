@@ -33,43 +33,43 @@ def menu():
     imdb_user = addon.setting('imdb_user')
     if not trakt_user or addon.setting('trakt_enabled') != 'true':
         ui.addDirectoryItem(_('Configure your Trakt account'), 'tools.settings&category=1',
-                            'moviesTraktcollection.jpg', 'DefaultMovies.png', isFolder=False)
+                            'moviesTraktcollection', 'DefaultMovies.png', isFolder=False)
     else:
         url = dbs.resolve('movies_collection{trakt_user_id}', trakt_user_id=trakt_user, quote_plus=True)
         if url:
             ui.addDirectoryItem(_('[B]TRAKT[/B] : Collection'), 'movies.movielist&url='+url,
-                                'moviesTraktcollection.jpg', 'DefaultMovies.png')
+                                'moviesTraktcollection', 'DefaultMovies.png')
         url = dbs.resolve('movies_watchlist{trakt_user_id}', trakt_user_id=trakt_user, quote_plus=True)
         if url:
             ui.addDirectoryItem(_('[B]TRAKT[/B] : Watchlist'), 'movies.movielist&url='+url,
-                                'moviesTraktwatchlist.jpg', 'DefaultMovies.png')
+                                'moviesTraktwatchlist', 'DefaultMovies.png')
         url = dbs.resolve('movies_ratings{trakt_user_id}', trakt_user_id=trakt_user, quote_plus=True)
         if url:
             ui.addDirectoryItem(_('[B]TRAKT[/B] : Ratings'), 'movies.movielist&url='+url,
-                                'movies.jpg', 'DefaultMovies.png')
+                                'moviesTraktrated', 'DefaultMovies.png')
 
         url = dbs.resolve('movies_recommendations{}', quote_plus=True)
         if url:
             ui.addDirectoryItem(_('[B]TRAKT[/B] : Recommendations'), 'movies.movielist&url='+url,
-                                'movies.jpg', 'DefaultMovies.png')
+                                'moviesTraktrecommendations', 'DefaultMovies.png')
 
         ui.addDirectoryItem(_('[B]TRAKT[/B] : Lists by {trakt_user}').format(trakt_user=trakt_user),
                             'movies.lists&kind_user_id=trakt_user_id&kind_list_id=trakt_list_id&user_id=%s'%trakt_user,
-                            'movieUserlists.jpg', 'DefaultMovies.png')
+                            'movieUserlists', 'DefaultMovies.png')
 
     if not imdb_user:
         ui.addDirectoryItem(_('Configure your IMDB account'), 'tools.settings&category=1',
-                            'movieUserlists.jpg', 'DefaultMovies.png', isFolder=False)
+                            'movieUserlists', 'DefaultMovies.png', isFolder=False)
     else:
         imdb_nickname = addon.setting('imdb_nickname') or imdb_user
         ui.addDirectoryItem(_('[B]IMDB[/B] : Lists by {imdb_nickname}').format(imdb_nickname=imdb_nickname),
                             'movies.lists&kind_user_id=imdb_user_id&kind_list_id=imdb_list_id&user_id=%s'%imdb_user,
-                            'movieUserlists.jpg', 'DefaultMovies.png')
+                            'movieUserlists', 'DefaultMovies.png')
 
     if addon.setting('downloads'):
-        ui.addDirectoryItem(_('Downloads'), 'download.menu', 'downloads.jpg', 'DefaultFolder.png')
+        ui.addDirectoryItem(_('Downloads'), 'download.menu', 'downloads', 'DefaultFolder.png')
     else:
         ui.addDirectoryItem(_('Configure the download directory'), 'tools.settings&category=0',
-                            'downloads.jpg', 'DefaultFolder.png', isFolder=False)
+                            'downloads', 'DefaultFolder.png', isFolder=False)
 
     ui.endDirectory()

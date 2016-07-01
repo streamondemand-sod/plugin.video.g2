@@ -19,6 +19,7 @@
 """
 
 
+import os
 import ast
 import sys
 
@@ -116,3 +117,4 @@ def _action(action, args_sep='&', **kwargs):
 
 
 PATH = xbmc.translatePath(addonInfo('path')).decode('utf-8')
+ARTPATH = os.path.join(PATH, 'resources', 'media')

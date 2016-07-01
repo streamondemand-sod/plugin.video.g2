@@ -30,15 +30,15 @@ from . import action
 @action
 def menu():
     ui.addDirectoryItem(_('[B]SETTINGS[/B]'), 'tools.settings&category=0',
-                        'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
+                        'settings', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]SETTINGS[/B] : Providers'), 'tools.settings&category=3',
-                        'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
+                        'settings', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]SETTINGS[/B] : Resolvers'), 'tools.settings&category=4',
-                        'settings.jpg', 'DefaultAddonProgram.png', isFolder=False)
+                        'settings', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]G2[/B] : Packages'), 'packages.dialog',
-                        'tools.jpg', 'DefaultAddonProgram.png', isFolder=False)
+                        'tools', 'DefaultAddonProgram.png', isFolder=False)
     ui.addDirectoryItem(_('[B]G2[/B] : Clear cache...'), 'tools.clearcache',
-                        'cache.jpg', 'DefaultAddonProgram.png', isFolder=False)
+                        'cache', 'DefaultAddonProgram.png', isFolder=False)
     ui.endDirectory()
 
 

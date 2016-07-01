@@ -464,8 +464,6 @@ def _tmdb_next_item(url, timeout, result):
 
 def genres(url):
     url = url.split('|')[0]
-    # For some reason, Finnish, Croatians and Norvegians doesn't like the traslated genre names
-    url = re.sub('language=(fi|hr|no)', '', url)
     result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1)).json()
     results = result['genres']
 
@@ -483,8 +481,6 @@ def genres(url):
             items.append({
                 'name': name,
                 'id': genre_id,
-                # (fixme) it would be nice to have an icon per genre
-                'image': 'movieGenres.jpg',
             })
         except Exception as ex:
             log.error('{m}.{f}: %s: %s', item, repr(ex))
@@ -514,8 +510,6 @@ def certifications(url, country):
                 'name': name,
                 'meaning': meaning,
                 'order': order,
-                # (fixme) it would be nice to have an icon per certification type:
-                'image': 'movieCertificates.jpg',
             })
         except Exception as ex:
             log.error('{m}.{f}: %s: %s', item, repr(ex))

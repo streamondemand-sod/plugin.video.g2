@@ -287,7 +287,6 @@ def lists(url):
                 'name': name,
                 'imdb_list_id': listid,
                 'genre': meta,
-                'poster': 'movieUserlists.jpg',
             })
             if image:
                 items[-1].update({

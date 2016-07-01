@@ -289,7 +289,6 @@ def lists(url):
             items.append({
                 'name': name,
                 'trakt_list_id': listid,
-                'image': 'movieUserlists.jpg',
             })
         except Exception:
             pass
