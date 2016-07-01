@@ -24,7 +24,7 @@ import re
 import xbmc
 import xbmcaddon
 
-from g2.libraries import log
+from . import log
 
 
 _addon = xbmcaddon.Addon()
@@ -33,19 +33,20 @@ _msgs_codes = {}
 
 def _read_msgs():
     pofile = os.path.join(_addon.getAddonInfo('path'), 'resources', 'language', 'English', 'strings.po')
-    with open(pofile, 'r') as po:
+    with open(pofile, 'r') as pof:
         msgctxt = None
-        for s in po:
+        for i in pof:
             try:
                 # msgctxt "#30006"
-                msgctxt = int(re.match(r'msgctxt\s*"#(\d+)"', s).group(1))
+                msgctxt = int(re.match(r'msgctxt\s*"#(\d+)"', i).group(1))
                 continue
             except Exception:
                 pass
             try:
                 # msgid "Latest Episodes"
-                msgid = re.match(r'msgid\s*"([^"]+)"', s).group(1)
-                if not msgid: raise
+                msgid = re.match(r'msgid\s*"([^"]+)"', i).group(1)
+                if not msgid:
+                    raise
                 if msgctxt:
                     if msgid not in _msgs_codes:
                         _msgs_codes[msgid] = []
@@ -53,7 +54,7 @@ def _read_msgs():
                 continue
             except Exception:
                 pass
-            if re.match(r'\s*$', s):
+            if re.match(r'\s*$', i):
                 msgctxt = None
 
     for msgid, codes in _msgs_codes.iteritems():
@@ -61,7 +62,8 @@ def _read_msgs():
             log.debug('lang: "%s": multiple codes: %s'%(msgid, ', '.join(map(lambda x: str(x), codes))))
 
 
-if not len(_msgs_codes): _read_msgs()
+if not len(_msgs_codes):
+    _read_msgs()
 
 
 def _(msgid):

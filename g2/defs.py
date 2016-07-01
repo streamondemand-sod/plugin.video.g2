@@ -50,7 +50,7 @@ TRAKT_CLIENT_ID = 'c67fa3018aa2867c183261f4b2bb12ebb606c2b3fbb1449e24f2fbdbc3a8f
 TRAKT_MAX_RECOMMENDATIONS = 60
 """Trakt maximum number of recommendations (the maximum value is 100)"""
 
-TMDB_INCLUDE_ADULT = 'false'
+TMDB_INCLUDE_ADULT = False
 """Self explaining, isn't? :)"""
 
 TMDB_APIKEY = 'f7f51775877e0bb6703520952b3c7840'

@@ -38,7 +38,7 @@ from g2 import pkg
 from g2 import defs
 
 
-_INFO_LANG = addon.setting('infoLang') or 'en'
+_INFO_LANG = addon.language('infoLang')
 
 
 def info(force_refresh=False):

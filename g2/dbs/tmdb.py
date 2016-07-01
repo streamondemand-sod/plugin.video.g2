@@ -23,9 +23,9 @@ import urllib
 import datetime
 
 from g2.libraries import log
+from g2.libraries import addon
 from g2.libraries import client
 from g2.libraries import workers
-from g2.libraries import addon
 
 from g2 import defs
 
@@ -35,31 +35,32 @@ info = {
     'methods': ['resolve', 'movies', 'meta', 'persons', 'genres', 'certifications'],
 }
 
-_INFO_LANG = addon.setting('infoLang') or 'en'
+_INFO_LANG = addon.language('infoLang')
+_KODI_LANG = addon.language(None)
 _TMDB_APIKEY = addon.setting('tmdb_apikey') or defs.TMDB_APIKEY
 _TMDB_IMAGE = 'http://image.tmdb.org/t/p/original/'
 _TMDB_POSTER = 'http://image.tmdb.org/t/p/w500/'
 
 _BASE_URL = 'http://api.themoviedb.org/3'
-_COMMON_PARAMS = '&api_key=@APIKEY@&language={info_lang}&include_adult={include_adult}'
+_COMMON_PARAMS = '&api_key=@APIKEY@&include_adult={include_adult}'
 _URLS = {
-    'movies{title}': '/search/movie?query={title}|168',
-    'movies{year}': '/discover/movie?year={year}|168',
-    'movies{person_id}': '/discover/movie?sort_by=primary_release_date.desc&with_people={person_id}|168',
-    'movies{genre_id}': '/discover/movie?with_genres={genre_id}|168',
-    'movies{certification}': '/discover/movie?certification={certification}&certification_country=US|168',
-    'movies{title}{year}': '/search/movie?query={title}&year={year}|24',
-    'movie_meta{tmdb_id}': '/movie/{tmdb_id}?append_to_response=credits,releases|168',
-    'movie_meta{imdb_id}': '/movie/{imdb_id}?append_to_response=credits,releases|168',
-    'persons{name}': '/search/person?query={name}|720',
+    'movies{title}': '/search/movie?query={title}&language={info_lang}|168',
+    'movies{year}': '/discover/movie?year={year}&language={info_lang}|168',
+    'movies{person_id}': '/discover/movie?sort_by=primary_release_date.desc&with_people={person_id}&language={info_lang}|168',
+    'movies{genre_id}': '/discover/movie?with_genres={genre_id}&language={info_lang}|168',
+    'movies{certification}': '/discover/movie?certification={certification}&certification_country=US&language={info_lang}|168',
+    'movies{title}{year}': '/search/movie?query={title}&year={year}&language={info_lang}|24',
+    'movie_meta{tmdb_id}': '/movie/{tmdb_id}?append_to_response=credits,releases&language={info_lang}|168',
+    'movie_meta{imdb_id}': '/movie/{imdb_id}?append_to_response=credits,releases&language={info_lang}|168',
+    'persons{name}': '/search/person?query={name}&language={info_lang}|720',
     'movies_featured{}': ('/discover/movie?'
                           'primary_release_date.gte={one_year_ago}&primary_release_date.lte={two_months_ago}&'
-                          'sort_by=primary_release_date.desc|720'),
-    'movies_popular{}': '/movie/popular?|168',
-    'movies_toprated{}': '/movie/top_rated?|168',
-    'movies_theaters{}': '/movie/now_playing?|168',
-    'genres{}': '/genre/movie/list?|720',
-    'certifications{}': '/certification/movie/list?|720',
+                          'sort_by=primary_release_date.desc&language={info_lang}|720'),
+    'movies_popular{}': '/movie/popular?language={info_lang}|168',
+    'movies_toprated{}': '/movie/top_rated?language={info_lang}|168',
+    'movies_theaters{}': '/movie/now_playing?language={info_lang}|168',
+    'genres{}': '/genre/movie/list?language={kodi_lang}|720',
+    'certifications{}': '/certification/movie/list?language={kodi_lang}|720',
 }
 
 
@@ -71,7 +72,8 @@ def resolve(kind=None, **kwargs):
 
     for key, val in {
             'info_lang': _INFO_LANG,
-            'include_adult': defs.TMDB_INCLUDE_ADULT,
+            'kodi_lang': _KODI_LANG,
+            'include_adult': 'true' if defs.TMDB_INCLUDE_ADULT else 'false',
             'one_year_ago': (datetime.datetime.now() - datetime.timedelta(days=365)).strftime('%Y-%m-%d'),
             'two_months_ago': (datetime.datetime.now() - datetime.timedelta(days=60)).strftime('%Y-%m-%d'),
         }.iteritems():

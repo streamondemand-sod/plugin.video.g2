@@ -3,7 +3,7 @@
 	<category label="General">
 		<setting id="appearance" type="select" label="Appearance" values="-|{themes}" default="-" />
 		<setting id="fanart" type="bool" label="Enable Fanart" default="true" />
-		<setting id="infoLang" type="select" label="Info Language" values="bg|cs|da|de|el|en|es|fi|fr|he|hr|hu|it|ja|ko|nl|no|pl|pt|ru|sl|sv|tr|zh" default="en" />
+		<setting id="infoLang" type="select" label="Info Language" values="AUTO|bg|cs|da|de|el|en|es|fi|fr|he|hr|hu|it|ja|ko|nl|no|pl|pt|ru|sl|sv|tr|zh" default="Auto" />
 		<setting id="auto_play" type="bool" label="Lazy mode" default="false" />
 		<setting id="downloads" type="folder" label="Downloads" default="" />
 	</category>
