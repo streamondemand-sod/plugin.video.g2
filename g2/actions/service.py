@@ -19,14 +19,15 @@
 """
 
 
+import time
 import threading
 
 import xbmc
 
 from g2.libraries import ui
 from g2.libraries import log
-from g2.libraries import workers
 from g2.libraries import addon
+from g2.libraries import workers
 from g2.libraries.language import _
 
 from g2 import notifiers
@@ -49,7 +50,7 @@ _PLAYER = ui.Player()
 
 
 def monitor(monitorid, kind, callback, *args, **kwargs):
-    if kind not in ['setting', 'property', 'player', 'service']:
+    if kind not in ['setting', 'property', 'player', 'service', 'cron']:
         log.error('{m}.{f}(%s): monitor object %s not implemented!', monitorid, kind)
         return
 
@@ -60,7 +61,7 @@ def monitor(monitorid, kind, callback, *args, **kwargs):
     _MONITOR_OBJECTS[monitorid] = {
         'id': monitorid,
         'kind': kind,
-        'value': _get_objectvalue(monitorid, kind),
+        'value': None,
         'callback': callback,
         'args': args,
         'kwargs': kwargs,
@@ -70,9 +71,16 @@ def monitor(monitorid, kind, callback, *args, **kwargs):
 
     if kind == 'service':
         _MONITOR_OBJECTS[monitorid].update({
-            'init_arg_name': kwargs.get('init_arg_name')
+            'init_arg_name': kwargs.get('init_arg_name'),
         })
         del _MONITOR_OBJECTS[monitorid]['kwargs']['init_arg_name']
+    elif kind == 'cron':
+        _MONITOR_OBJECTS[monitorid].update({
+            'frequency': max(1, kwargs.get('frequency', 1)),
+        })
+        del _MONITOR_OBJECTS[monitorid]['kwargs']['frequency']
+
+    _MONITOR_OBJECTS[monitorid]['value'] = _get_objectvalue(monitorid, kind)
 
     log.debug('{m}.{f}: %s: %s', monitorid, _MONITOR_OBJECTS[monitorid])
 
@@ -91,6 +99,8 @@ def _get_objectvalue(monitorid, kind):
             value = 1
         addon.prop(monitorid, value)
         return value
+    elif kind == 'cron':
+        return int(time.time() / (_MONITOR_OBJECTS[monitorid]['frequency'] * 60))
 
 
 def _player_state(monitorid):
@@ -194,6 +204,7 @@ def thread(name):
         while not ui.abortRequested(1) and addon.prop('service', name=name):
             _check_changes('property')
             _check_changes('player')
+            _check_changes('cron')
 
             notices = []
             for thd in list(_THREADS.values()):
