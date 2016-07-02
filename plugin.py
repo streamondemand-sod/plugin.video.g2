@@ -75,6 +75,10 @@ def service_monitor_setup():
     service.monitor('notifiers.events', 'service', notifiers.events,
                     init_arg_name='start', on_push=push.new, on_push_delete=push.delete)
 
+    # Beta3
+    # from g2.actions import packages
+    # service.monitor('check-packages-upgrades', 'cron', packages.check_upgrades, frequency=1)
+
 
 if __name__ == '__main__':
     main()
