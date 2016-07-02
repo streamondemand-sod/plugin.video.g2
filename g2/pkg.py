@@ -207,7 +207,7 @@ def is_installed(kind, name):
     if not os.path.exists(os.path.join(_path(kind, name), '')):
         return 0
 
-    nfos = kindinfo(kind)
+    nfos = kindinfo(kind, refresh=None)
     modules = [m for m in nfos.itervalues() if m.get('package') == name]
     return len(modules) or -1
 
