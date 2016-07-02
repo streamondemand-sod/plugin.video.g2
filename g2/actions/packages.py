@@ -70,6 +70,11 @@ def dialog():
                 for html_code, kodi_code in html_trans.iteritems():
                     desc = desc.replace(html_code, kodi_code)
 
+                # (fixme) - identify packages to be upgraded and signal them on the GUI.
+                # - if a package installed w/ an upgrade is selected, a dialog with:
+                #   upgrade - uninstall - cancel is shown
+                # - on the dialog place an upgrade all button and a cancel button
+
                 win.addPackage(kind, name, desc, site)
 
                 listed[kind+'.'+name] = True
@@ -94,6 +99,19 @@ def dialog():
         ui.infoDialog(_('{g2_name} settings skema updated').format(g2_name=addon.addonInfo('name')))
 
     ui.refresh()
+
+
+def check_upgrades():
+    log.debug('{m}.{f}: called')
+
+    # (fixme) excludive lock with the main thread:
+    # - actions threads locks in read mode (multiple)
+    # - this thread locks in write mode (only one and no active read)
+    # - if the OS doesn't support read/write locks, the auto-upgrade is aborted.
+
+    # for all installed packages,
+    # - if the package auto-upgrade setting is enabled, do an _install_package
+    #   - If the new version requires additional addons not installed, do not auto-upgrade!
 
 
 def _manage_package(kind, name, site):
