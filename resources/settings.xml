@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
 	<category label="30001">
-		<setting id="appearance" type="select" label="30002" values="-|Embossed" default="-" />
+		<setting id="appearance.upd" type="action" label="30139" option="close" action="RunPlugin(plugin://plugin.video.g2/?action=packages.updatemedia)" />
+		<setting id="appearance" type="select" label="30002" values="-|Embossed|Scure|Chiare" default="-" />
 		<setting id="fanart" type="bool" label="30003" default="true" />
 		<setting id="infoLang" type="select" label="30004" values="AUTO|bg|cs|da|de|el|en|es|fi|fr|he|hr|hu|it|ja|ko|nl|no|pl|pt|ru|sl|sv|tr|zh" default="Auto" />
 		<setting id="auto_play" type="bool" label="30136" default="false" />

@@ -122,4 +122,4 @@ def _action(action, args_sep='&', **kwargs):
 
 
 PATH = xbmc.translatePath(addonInfo('path')).decode('utf-8')
-ARTPATH = os.path.join(PATH, 'resources', 'media')
+PROFILE_PATH = xbmc.translatePath(addonInfo('profile')).decode('utf-8')

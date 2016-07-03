@@ -724,15 +724,20 @@ msgctxt "#30136"
 msgid "Lazy mode"
 msgstr "Sono stanco"
 
-#: g2/actions/packages.py:93 g2/actions/service.py:184
-#, python-brace-format
-msgctxt "#30137"
-msgid "{g2_name} settings skema updated"
-msgstr "{g2_name} modello impostazioni aggiornato"
-
 #. Info about who resolved the source
 #: g2/actions/lib/sourcesdialog.py:317
 #, python-brace-format
 msgctxt "#30138"
 msgid "[COLOR orange][{resolver} in {elapsed:.1f} secs][/COLOR]"
 msgstr "[COLOR orange][{resolver} in {elapsed:.1f} secs][/COLOR]"
+
+#: resources/settings.template.xml:4
+msgctxt "#30139"
+msgid "Search for new appearances..."
+msgstr "Aggiorna i temi disponibili..."
+
+#: g2/actions/packages.py:107
+#, python-brace-format
+msgctxt "#30140"
+msgid "{g2_name} media setting skema updated"
+msgstr "{g2_name} elenco dei temi disponibili aggiornato"

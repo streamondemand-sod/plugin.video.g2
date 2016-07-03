@@ -29,6 +29,8 @@ from g2 import pkg
 from g2 import defs
 
 from . import action
+from . import tools
+
 from .lib.packagesdialog import PackagesDialog
 
 
@@ -95,10 +97,23 @@ def dialog():
 
     del win
 
-    if pkg.update_settings_skema():
-        ui.infoDialog(_('{g2_name} settings skema updated').format(g2_name=addon.addonInfo('name')))
+    pkg.update_settings_skema()
 
     ui.refresh()
+
+
+@action
+def updatemedia():
+    appearance = addon.setting('appearance')
+    themes = ui.resource_themes()
+    if appearance.lower() not in themes:
+        appearance = '-'
+        addon.setSetting('appearance', appearance)
+
+    if pkg.update_appearance_setting_skema(themes):
+        ui.infoDialog(_('{g2_name} media setting skema updated').format(g2_name=addon.addonInfo('name')))
+
+    tools.settings()
 
 
 def check_upgrades():

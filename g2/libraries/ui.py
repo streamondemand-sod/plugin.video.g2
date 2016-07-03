@@ -20,7 +20,9 @@
 
 
 import os
+import ast
 import sys
+import errno
 import urllib
 
 import xbmc
@@ -31,6 +33,8 @@ import xbmcaddon
 from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries.language import _
+
+from g2 import pkg
 
 
 _ADDON = xbmcaddon.Addon()
@@ -79,31 +83,65 @@ def addon_next():
     return media('next', 'DefaultFolderBack.png')
 
 
-_RESOURCE_IMAGES = {
-    'exodus': {
-        '__addonid__': 'script.exodus.artwork',
-        'settings': 'tools.png',
-        'cache': 'tools.png',
-        'moviesTraktcollection': 'trakt.png',
-        'moviesTraktwatchlist': 'trakt.png',
-        'moviesTraktrated': 'trakt.png',
-        'moviesTraktrecommendations': 'trakt.png',
-        'movieUserlists': 'userlists.png',
-        'mygenesis': 'userlists.png',
-        'moviesAdded': 'latest-movies.png',
-        'movieSearch': 'search.png',
-        'moviePerson': 'people-search.png',
-        'movieYears': 'years.png',
-        'movieGenres': 'genres.png',
-        'movieCertificates': 'certificates.png',
-        'moviesTrending': 'people-watching.png',
-        'moviesPopular': 'most-popular.png',
-        'moviesViews': 'most-voted.png',
-        'moviesBoxoffice': 'box-office.png',
-        'moviesOscars': 'oscar-winners.png',
-        'moviesTheaters': 'in-theaters.png',
-    },
-}
+def resource_themes():
+    media_desc = {}
+    for media_filepath in [os.path.join(addon.PATH, 'resources', 'media.py'),
+                           os.path.join(addon.PROFILE_PATH, 'media.py')]:
+        try:
+            with open(media_filepath) as fil:
+                media_desc.update(ast.literal_eval(fil.read()))
+        except IOError as ex:
+            if ex.errno != errno.ENOENT:
+                raise Exception(ex)
+        except Exception as ex:
+            log.notice('{m}.{f}: %s: %s', media_filepath, repr(ex))
+
+    if '' not in media_desc:
+        # default entry for the g2 resources/media folder
+        media_desc[''] = {
+            'themes': 'folder',
+        }
+
+    themes = {'-': None}
+    default_media_path = ['resources', 'media']
+    for res, med in media_desc.iteritems():
+        if res == '':
+            media_path = os.path.join(addon.PATH, *default_media_path)
+        else:
+            try:
+                addon_id = med['addon_id']
+                if not addon.condition('System.HasAddon(%s)'%addon_id):
+                    continue
+                media_path = os.path.join(addon.addonInfo2(addon_id, 'path'), *med.get('media_path', default_media_path))
+            except Exception as ex:
+                log.notice('{m}.{f}: %s %s: %s', res, med, repr(ex))
+                continue
+
+        if med.get('themes') != 'folder':
+            # Single theme
+            theme_name = res.lower()
+            themes[theme_name] = {
+                'path': media_path,
+                'mappings': med.get('mappings', {}),
+            }
+            log.debug('{m}.{f}: %s: %s: %s', res, theme_name, themes[res])
+        else:
+            # Multiple themes
+            for theme in os.listdir(media_path):
+                theme_path = os.path.join(media_path, theme)
+                if os.path.isdir(theme_path):
+                    theme_name = theme if res == '' else '%s:%s'%(res, theme)
+                    theme_name = theme_name.lower()
+                    themes[theme_name] = {
+                        'path': theme_path,
+                        'mappings': med.get('mappings', {}),
+                    }
+                    log.debug('{m}.{f}: %s: %s, %s', res, theme_name, themes[theme_name])
+
+    return themes
+
+
+_RESOURCE_THEMES = resource_themes()
 
 
 def media(icon, icon_default=None):
@@ -114,20 +152,17 @@ def media(icon, icon_default=None):
     if appearance in ['-', '']:
         return icon_default or 'DefaultFolder.png'
 
-    if ':' not in appearance:
-        artpath = addon.ARTPATH
-    else:
-        resource, appearance = appearance.split(':')
-        artpath = os.path.join(addon.addonInfo2(_RESOURCE_IMAGES[resource]['__addonid__'], 'path'), 'resources', 'media')
-        icon = _RESOURCE_IMAGES[resource].get(icon, icon)
+    theme = _RESOURCE_THEMES[appearance]
+    theme_path = theme['path']
+    icon = theme['mappings'].get(icon, icon)
 
-    icon_path = os.path.join(artpath, appearance, icon)
+    icon_path = os.path.join(theme_path, icon)
     icon, ext = os.path.splitext(icon)
     if ext and os.path.isfile(icon_path):
         return icon_path
 
     for ext in ['.png', '.jpg']:
-        icon_path = os.path.join(artpath, appearance, icon+ext)
+        icon_path = os.path.join(theme_path, icon+ext)
         if os.path.isfile(icon_path):
             return icon_path
 

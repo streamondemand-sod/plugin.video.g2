@@ -34,7 +34,6 @@ from g2.libraries import addon
 from g2.libraries import cache
 from g2.libraries import client
 from g2.libraries import language
-from g2.libraries.language import _
 
 from g2 import defs
 
@@ -465,6 +464,29 @@ def _info_get_module(infofunc, infos, kind, module, package='', paths=None):
             })
 
 
+def update_appearance_setting_skema(themes):
+    themes = sorted([t.capitalize() for t in themes.keys()], key=lambda t: t if ':' in t else ' :'+t)
+
+    settings_skema_path = os.path.join(_RESOURCES_PATH, 'settings.xml')
+    old_settings_skema = ''
+    new_settings_skema = ''
+    with open(settings_skema_path) as fil:
+        for line in fil:
+            old_settings_skema += line
+            # Update  <setting id="appearance" type="select" label="30002" values="-|Embossed" default="Embossed" />
+            if 'id="appearance"' not in line:
+                new_settings_skema += line
+            else:
+                new_settings_skema += re.sub(r' values="[^"]*?" ', ' values="'+'|'.join(themes)+'" ', line)
+
+    if new_settings_skema == old_settings_skema:
+        return False
+    else:
+        with open(settings_skema_path, 'w') as fil:
+            fil.write(new_settings_skema)
+        return True
+
+
 def update_settings_skema():
     settings = {}
     templates = {}
@@ -511,18 +533,6 @@ def update_settings_skema():
                     continue
                 add_setting('enabled', kindesc.get('module_enabled_setting_default', 'true'), kind, name, sname)
 
-    # (fixme) for Jarvis use also the resources.images addons
-    media_dirs = [os.path.join(_RESOURCES_PATH, 'media')]
-    if addon.condition('System.HasAddon(script.exodus.artwork)'):
-        media_dirs.append(os.path.join(addon.addonInfo2('script.exodus.artwork', 'path'), 'resources', 'media'))
-
-    themes = ['-']
-    for media in media_dirs:
-        for theme in os.listdir(media):
-            if os.path.isdir(os.path.join(media, theme)):
-                if 'script.exodus.artwork' in media:
-                    theme = 'Exodus:'+theme
-                themes.append(theme.capitalize())
 
     settings_skema_path = os.path.join(_RESOURCES_PATH, 'settings.xml')
     old_settings_skema = ''
@@ -532,9 +542,6 @@ def update_settings_skema():
         line = ''
         for line in fil:
             old_settings_skema += line
-            # Update  <setting id="appearance" type="select" label="30002" values="-|Embossed" default="Embossed" />
-            if 'id="appearance"' in line:
-                line = re.sub(r' values="[^"]*?" ', ' values="'+'|'.join(themes)+'" ', line)
             if any('label="%s"'%d['settings_category'] in line for d in _PACKAGES_KINDS.itervalues()):
                 suppress_skema = True
             if '</settings>' in line:

@@ -191,9 +191,7 @@ def _service_thread_cleanup(monitorid):
 def thread(name):
     log.notice('service thread[%s] started ({t})', name)
 
-    g2message = _('{g2_name} settings skema updated') if pkg.update_settings_skema() else _('{g2_name} service started')
-    g2message = g2message.format(g2_name=addon.addonInfo('name'))
-
+    g2message = _('{g2_name} service started').format(g2_name=addon.addonInfo('name'))
     notifiers.notices(g2message, playing=_player_state('playing'), targets='ui')
 
     try:
