@@ -116,25 +116,15 @@ def certifications():
     items = dbs.certifications()
     items = sorted(items, key=lambda c: c['order'])
 
-    # These are confluence icons. It would be nice to use the skin icons, if available, but,
-    # AFAIK, there is no naming standard for such icons, so it is very difficult to build generic
-    # code valid for all skins.
-    icons = {
-        'G': 'mpaa_general.png',
-        'NC-17': 'mpaa_nc17.png',
-        'NR': 'mpaa_notrated.png',
-        'PG-13': 'mpaa_pg13.png',
-        'PG': 'mpaa_pg.png',
-        'R': 'mpaa_restricted.png',
-    }
-
-    confluence_skin_ratings_path = 'special://xbmc/addons/skin.confluence/media/flagging/ratings'
-
     for i in items:
+        image = i.get('image', '0')
+        if image == '0':
+            # (fixme) Need a table mapping certification 'name' to different icons
+            image = 'movieCertificates.jpg'
         i.update({
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{certification}', certification=i['name']),
-            'image': confluence_skin_ratings_path + '/' + icons.get(i.get('name', ''), 'mpaa_notrated.png'),
+            'image': image,
         })
     _add_directory(items)
 
@@ -164,18 +154,6 @@ def personlist(url):
             'next_action': 'movies.personlist',
         })
     _add_directory(items, is_person=True)
-
-
-@action
-def widget():
-    setting = addon.setting('movie_widget')
-    if setting == '2':
-        url = dbs.resolve('movies_featured{}')
-    elif setting == '3':
-        url = dbs.resolve('movies_trending{}')
-    else:
-        url = dbs.resolve('movies_recently_added{}')
-    movielist(url)
 
 
 @action
