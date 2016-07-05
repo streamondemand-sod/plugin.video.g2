@@ -37,6 +37,7 @@ def get(function, timeout, *args, **kwargs):
     table = kwargs.get('table', 'rel_list')
     response_info = kwargs.get('response_info', {})
     hash_args = kwargs.get('hash_args', -1)
+    delete_if_none = kwargs.get('delete_if_none', False)
 
     try:
         fname = re.sub(r'.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', repr(function))
@@ -104,7 +105,8 @@ def get(function, timeout, *args, **kwargs):
                               " timestamp TEXT,"
                               " UNIQUE(func, args));"%table)
                 dbcon.execute("DELETE FROM %s WHERE func = ? AND args = ?"%table, (fname, hashargs,))
-                dbcon.execute("INSERT INTO %s VALUES (?, ?, ?, ?)"%table, (fname, hashargs, repr(res), t_now,))
+                if res is not None or not delete_if_none:
+                    dbcon.execute("INSERT INTO %s VALUES (?, ?, ?, ?)"%table, (fname, hashargs, repr(res), t_now,))
         except Exception as ex:
             log.notice('{m}.{f}: %s%s: storing new cache entry %s: %s', fname, args, res, repr(ex))
 

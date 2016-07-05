@@ -131,7 +131,7 @@ class Context:
         if package:
             self.fullname += '.' + package
         self.modules = modules
-        self.search_paths = search_paths
+        self.search_paths = list(search_paths)
         self.ignore_exc = ignore_exc
         self.stdout = None
         self.stderr = None
@@ -335,7 +335,10 @@ def info(kind, infofunc, force_refresh=False):
         else:
             timeout = -1 if force_refresh is None else 60
             response_infos = {}
-            infos_paths, infos_modules = cache.get(_info_get, timeout, kind, infofunc, hash_args=1, response_info=response_infos)
+            infos_paths, infos_modules = cache.get(_info_get, timeout, kind, infofunc,
+                                                   hash_args=1,
+                                                   response_info=response_infos,
+                                                   delete_if_none=True)
             update_needed = False
             if timeout > 0 and 'cached' in response_infos:
                 log.debug('{m}.{f}: %s packages: cached=%s, paths=%s', kind, response_infos['cached'], infos_paths)
@@ -352,7 +355,9 @@ def info(kind, infofunc, force_refresh=False):
                         break
 
         if update_needed:
-            infos_paths, infos_modules = cache.get(_info_get, 0, kind, infofunc, hash_args=1)
+            infos_paths, infos_modules = cache.get(_info_get, 0, kind, infofunc,
+                                                   hash_args=1,
+                                                   delete_if_none=True)
     except Exception as ex:
         log.error('{m}.{f}: %s: %s', kind, ex, trace=True)
         return {}
@@ -369,7 +374,7 @@ def _info_get(kind, infofunc):
 
     if not os.path.isdir(_PACKAGES_ABSOLUTE_PATH):
         log.error('_info_get: %s: packages directory not found', _PACKAGES_ABSOLUTE_PATH)
-        return ([], [])
+        return None
 
     infos_paths = set()
     infos_paths.add(addonSettingsFile())
