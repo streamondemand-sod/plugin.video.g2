@@ -25,16 +25,29 @@ import pkgutil
 import xbmc
 
 
-_LOG_LEVEL = False # xbmc.LOGNOTICE # set different from None to get logging in kodi
-_LOG_MODULE = '' # 'script.module.requests' # if specified will log only imports under this sandboxed path
+_LOG_DEBUG = False
+"""Set to True to enable this module logging"""
+
+_LOG_MODULES = ['script.module.urlresolver', 'plugin.video.streamondemand']
+"""List of sandboxed modules (e.g. addons) for which to activate the debug logging.
+If [], the debug logging, if enabled, is active for all modules.
+"""
 
 _HANDLED_PATHS = {}
 _SANDBOX_NAMESPACE_SEP = '@'
 
 
+def _normalize_sandbox_name(name):
+    return name.replace('.', '_')
+
+
+for i in range(len(_LOG_MODULES)):
+    _LOG_MODULES[i] = _normalize_sandbox_name(_LOG_MODULES[i])
+
+
 def _log(sandbox, msg):
-    if _LOG_LEVEL and (not _LOG_MODULE or sandbox == _normalize_sandbox_name(_LOG_MODULE)):
-        xbmc.log('[%s%s] %s'%(sys.argv[0], '' if len(sys.argv) <= 1 else ':'+sys.argv[1], msg), level=_LOG_LEVEL)
+    if _LOG_DEBUG and (not _LOG_MODULES or sandbox in _LOG_MODULES):
+        xbmc.log('[%s%s] %s'%(sys.argv[0], '' if len(sys.argv) <= 1 else ':'+sys.argv[1], msg))
 
 
 def _name_is_sandboxed(fullname):
@@ -54,10 +67,6 @@ def _name_get_sandbox(fullname):
 
 def _name_desandbox(fullname):
     return fullname if not _name_is_sandboxed(fullname) else fullname.split(_SANDBOX_NAMESPACE_SEP, 1)[1]
-
-
-def _normalize_sandbox_name(name):
-    return name.replace('.', '_')
 
 
 def add_path(path):
@@ -135,27 +144,29 @@ class ImpImporterSandbox(pkgutil.ImpImporter):
 
 
 class ImpLoaderSandbox(pkgutil.ImpLoader):
-    def __init__(self, fullname, file, filename, etc):
+    def __init__(self, fullname, fil, filename, etc):
         self.sandbox = _name_get_sandbox(fullname)
 
-        self._log('ImpLoaderSandbox(%s, %s, %s, %s, %s)'%(self, fullname, file, filename, etc))
+        self._log('ImpLoaderSandbox(%s, %s, %s, %s, %s)'%(self, fullname, fil, filename, etc))
 
-        pkgutil.ImpLoader.__init__(self, fullname, file, filename, etc)
+        pkgutil.ImpLoader.__init__(self, fullname, fil, filename, etc)
 
     def load_module(self, fullname):
         self._log('load_module(%s, %s)'%(self, fullname))
 
         sandboxfullname = _name_sandbox(self.sandbox, fullname)
 
+        #
         # NOTE: Kodi, before running an addon, seems to load the top level packages found in the
         #   required section of the addon itself (e.g. for the dependency script.module.requests,
         #   Kodi loads the "requests" package found in "addons/script.module.requests/lib/" directory).
         #   This is done before the importer machinery is hooked up by the addon, so the required
         #   top level packages are inserted in sys.modules not sandboxed (e.g. as "requests" not as
         #   "script_module_requests@requests"). This is not a problem from a conflict point of
-        #   view as these packages should not conflict at all and, if they are, the importer module
-        #   can change the import statement. However, subsequently, this impoter fails to find them.
+        #   view as these packages should not conflict at all and, if they are, the module that imports it
+        #   can change the import statement. However, subsequently, this importer module fails to find them.
         #   The check below is performed to verify this scenario and eventually patch the sys.modules.
+        #
         cleanfullname = _name_desandbox(sandboxfullname)
         grandparent = cleanfullname.split('.')[0]
         if grandparent != cleanfullname:
@@ -169,8 +180,10 @@ class ImpLoaderSandbox(pkgutil.ImpLoader):
                 # The top level module is already loaded in sys.modules not sandboxed
                 sys.modules[sandboxgrandparent] = sys.modules[grandparent]
 
+        #
         # NOTE: This breaks the module reload semantic because of the sys.modules check!
         #   Hopefully, not many addons are going to use the reload mechanism.
+        #
         if sandboxfullname in sys.modules:
             mod = sys.modules[sandboxfullname]
 
