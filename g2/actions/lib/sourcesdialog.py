@@ -148,9 +148,9 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             if self.thread:
                 self.check_button_flag = False
             else:
+                self.check_button_flag = True
                 self.thread = workers.Thread(self.sources_worker)
                 self.thread.start()
-                self.check_button_flag = True
             return
         else:
             return
@@ -205,6 +205,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
             self.updateDialog(title=_('SEARCHING SOURCES'), elapsed_time=True)
             self.sources_generator(self)
             self.sources_generator = None
+            self.check_button_flag = True
 
         log.debug('sources.dialog: sources_worker: %d url listed, %d already processed (OK/KO: %d/%d)',
                   len(self.items),
