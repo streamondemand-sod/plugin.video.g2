@@ -266,7 +266,7 @@ msgstr "Film"
 #: g2/actions/main.py:35
 msgctxt "#30048"
 msgid "My Movies"
-msgstr "I miei film"
+msgstr "Miei film"
 
 #: g2/actions/main.py:37 g2/actions/movies.py:40
 msgctxt "#30049"
@@ -281,7 +281,7 @@ msgstr "Strumenti"
 #: g2/actions/main.py:40
 msgctxt "#30051"
 msgid "[COLOR red]Install providers and resolvers packages to find video sources[/COLOR]"
-msgstr "[COLOR red]Installa i pacchetti dei provider e dei server per trovare le fonti video[/COLOR]"
+msgstr "[COLOR red]Installa i pacchetti dei provider e dei server[/COLOR]"
 
 #: g2/actions/movies.py:44
 msgctxt "#30052"
@@ -316,17 +316,17 @@ msgstr "In primo piano"
 #: g2/actions/movies.py:55
 msgctxt "#30058"
 msgid "People Watching"
-msgstr "Guardati dalle persone"
+msgstr "Guardati dagli altri"
 
 #: g2/actions/movies.py:58
 msgctxt "#30059"
 msgid "Most Popular"
-msgstr "I più popolari"
+msgstr "Più popolari"
 
 #: g2/actions/movies.py:61
 msgctxt "#30060"
 msgid "Most Voted"
-msgstr "I più votati"
+msgstr "Più votati"
 
 #: g2/actions/movies.py:64
 msgctxt "#30061"
@@ -707,12 +707,12 @@ msgstr "Priorità"
 #: resources/settings.template.xml:9
 msgctxt "#30133"
 msgid "Databases"
-msgstr "Databases"
+msgstr "Database"
 
 #: resources/settings.template.xml:22
 msgctxt "#30134"
 msgid "Notifiers"
-msgstr "Notifiers"
+msgstr "Notifier"
 
 #: resources/settings.template.xml:23
 msgctxt "#30135"
@@ -734,7 +734,7 @@ msgstr "[COLOR orange][{resolver} in {elapsed:.1f} secs][/COLOR]"
 #: resources/settings.template.xml:4
 msgctxt "#30139"
 msgid "Search for new appearances..."
-msgstr "Aggiorna i temi disponibili..."
+msgstr "Aggiorna i temi disponibili"
 
 #: g2/actions/packages.py:107
 #, python-brace-format
