@@ -149,7 +149,7 @@ def media(icon, icon_default=None):
         return icon
 
     appearance = addon.setting('appearance').lower()
-    if appearance in ['-', '']:
+    if appearance in ['-', ''] or appearance not in _RESOURCE_THEMES:
         return icon_default or 'DefaultFolder.png'
 
     theme = _RESOURCE_THEMES[appearance]

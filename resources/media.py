@@ -45,7 +45,7 @@
             'movieYears': 'years.png',
             'movieGenres': 'genres.png',
             'movieCertificates': 'certificates.png',
-            'moviesTrending': 'people-watching.png',
+            'moviesTrending': 'featured.png',
             'moviesPopular': 'most-popular.png',
             'moviesViews': 'most-voted.png',
             'moviesBoxoffice': 'box-office.png',
