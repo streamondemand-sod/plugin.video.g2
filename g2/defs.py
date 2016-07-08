@@ -55,8 +55,11 @@ TMDB_INCLUDE_ADULT = False
 
 TMDB_APIKEY = 'f7f51775877e0bb6703520952b3c7840'
 """This is the TMDB API key stolen from other addons.
-In reality each user should configure his own key.
+Actually each user should configure his own key.
 This policy might be enforced in the official releases."""
+
+TVDB_APIKEY = 'FA1E453AC1E9754C'
+"""TVDB API key"""
 
 MAX_CONCURRENT_THREADS = 10
 """All the modules forking parallel threads to speedup their activity should respect
