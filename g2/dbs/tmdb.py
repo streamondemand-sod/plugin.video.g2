@@ -18,6 +18,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 import re
 import urllib
 import datetime
@@ -37,6 +38,7 @@ info = {
 
 _INFO_LANG = addon.language('infoLang')
 _KODI_LANG = addon.language(None)
+
 _TMDB_APIKEY = addon.setting('tmdb_apikey') or defs.TMDB_APIKEY
 _TMDB_IMAGE = 'http://image.tmdb.org/t/p/original/'
 _TMDB_POSTER = 'http://image.tmdb.org/t/p/w500/'
