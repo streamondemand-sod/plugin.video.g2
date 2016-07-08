@@ -33,6 +33,7 @@ from g2.libraries import fs
 from g2.libraries import log
 from g2.libraries import cache
 from g2.libraries import addon
+from g2.libraries import client
 
 from g2 import pkg
 from g2 import defs
@@ -69,7 +70,12 @@ def movies(url, **kwargs):
     return _alldbs_method('movies', url, url)
 
 
-def meta(items, lang=_INFO_LANG):
+def series(url, **kwargs):
+    url = resolve(url, **kwargs) or url
+    return _alldbs_method('series', url, url)
+
+
+def meta(items, content='movie', lang=_INFO_LANG):
     metas = _fetch_meta(items, lang)
 
     work_items = []
@@ -77,18 +83,23 @@ def meta(items, lang=_INFO_LANG):
         if met['item']:
             continue
         if met.get('tmdb', '0') != '0':
-            met['url'] = resolve('movie_meta{tmdb_id}', tmdb_id=met['tmdb'])
+            # (fixme) add {lang} like tvshows
+            met['url'] = resolve('%s_meta{tmdb_id}'%content, tmdb_id=met['tmdb'])
+        elif met.get('tvdb', '0') != '0':
+            met['url'] = resolve('%s_meta{tvdb_id}{lang}'%content, tvdb_id=met['tvdb'], lang=lang)
         elif met.get('imdb', '0') != '0':
-            met['url'] = resolve('movie_meta{imdb_id}', imdb_id=met['imdb'])
+            # (fixme) add {lang} like tvshows
+            met['url'] = resolve('%s_meta{imdb_id}'%content, imdb_id=met['imdb'])
         if met.get('url'):
             work_items.append(met)
 
     started = time.time()
-    for dbp in sorted([d for d in info().itervalues() if 'meta' in d['methods']], key=lambda d: d['priority']):
+    dbmods = sorted([d for d in info().itervalues() if 'meta' in d.get('methods', [])], key=lambda d: d['priority'])
+    for dbm in dbmods:
         package_work_items = [w for w in work_items
-                              if not w['item'] and urlparse.urlparse(w['url']).netloc.lower() in dbp['domains']]
+                              if not w['item'] and urlparse.urlparse(w['url']).netloc.lower() in dbm['domains']]
         if package_work_items:
-            _db_method(dbp, 'meta', package_work_items)
+            _db_method(dbm, 'meta', package_work_items)
 
     log.notice('{m}.{f}: %d submitted, %d scheduled, %d completed in %.2f seconds',
                len(items), len(work_items), len([w for w in work_items if w['item']]), time.time()-started)
@@ -128,35 +139,36 @@ def watched(kind, seen=None, **kwargs):
 
 def _alldbs_method(method, url, urlarg, *args, **kwargs):
     netloc = urlparse.urlparse(url).netloc.lower() if url else None
-    for dbp in sorted([d for d in info().itervalues() if method in d['methods'] and (not netloc or netloc in d['domains'])],
-                      key=lambda d: d['priority']):
+    dbmods = sorted([d for d in info().itervalues() if method in d.get('methods', []) and (not netloc or netloc in d['domains'])],
+                    key=lambda d: d['priority'])
+    for dbm in dbmods:
         if not url or '|' not in urlarg:
-            result = _db_method(dbp, method, urlarg, *args, **kwargs)
-            log.debug('{m}.%s.%s: %s %s %s: %s'%(dbp['name'], method, urlarg, args, kwargs, result))
+            result = _db_method(dbm, method, urlarg, *args, **kwargs)
+            log.debug('{m}.%s.%s: %s %s %s: %s'%(dbm['name'], method, urlarg, args, kwargs, result))
         else:
             timeout = urlarg.split('|')[1]
             response_info = {}
-            result = cache.get(_db_method, int(timeout)*60, dbp, method, urlarg, *args, response_info=response_info)
+            result = cache.get(_db_method, int(timeout)*60, dbm, method, urlarg, *args, response_info=response_info)
             log.debug('{m}.%s.%s: %s %s (timeout=%s): %s%s',
-                      dbp['name'], method, urlarg, args, timeout,
+                      dbm['name'], method, urlarg, args, timeout,
                       '' if 'cached' not in response_info else '[cached] ', result)
         if result is not None:
-            return result if not kwargs.get('return_db_provider') else dbp['module']
+            return result if not kwargs.get('return_db_provider') else dbm['module']
 
     return None
 
 
-def _db_method(dbp, method, *args, **kwargs):
+def _db_method(dbm, method, *args, **kwargs):
     result = None
     try:
-        if 'package' in dbp:
-            with pkg.Context('dbs', dbp['package'], [dbp['module']], dbp['search_paths']) as mod:
+        if 'package' in dbm:
+            with pkg.Context('dbs', dbm['package'], [dbm['module']], dbm['search_paths']) as mod:
                 result = getattr(mod[0], method)(*args, **kwargs)
         else:
-            with pkg.Context('dbs', dbp['module'], [], []) as mod:
+            with pkg.Context('dbs', dbm['module'], [], []) as mod:
                 result = getattr(mod, method)(*args, **kwargs)
     except Exception as ex:
-        log.error('{m}.%s.%s: %s'%(dbp['name'], method, repr(ex)))
+        log.error('{m}.%s.%s: %s'%(dbm['name'], method, repr(ex)))
 
     return result
 
@@ -237,3 +249,39 @@ def _save_meta(metas):
                                   (i['lang'], i['imdb'], i['tmdb'], i['tvdb'], repr(i['item']), now,))
                 except Exception as ex:
                     log.error('{m}.{f}: %s: %s', i, repr(ex))
+
+
+def fields_mapping_xml(src, mappings_desc):
+    item = {}
+    for desc in mappings_desc:
+        name = desc['name']
+        value = ''
+        if 'tag' in desc:
+            values = client.parseDOM(src, desc['tag'])
+            if values:
+                value = values[0]
+                if value is None:
+                    value = ''
+                value = client.replaceHTMLCodes(value)
+        if callable(desc.get('map')):
+            try:
+                value = desc['map'](item, value)
+            except Exception:
+                if not desc.get('optional'):
+                    raise
+                value = desc.get('default', '')
+        if not value:
+            value = desc.get('default', '' if isinstance(value, basestring) else [])
+        if value:
+            if isinstance(value, basestring):
+                try:
+                    value = value.encode('utf-8', 'ignore')
+                except Exception:
+                    pass
+            item[name] = value
+        elif not desc.get('optional'):
+            raise Exception('mandatory %s field missing'%name)
+        elif value is []:
+            item[name] = value
+
+    return item

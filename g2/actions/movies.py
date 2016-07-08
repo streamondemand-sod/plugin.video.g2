@@ -24,11 +24,12 @@ import json
 import urllib
 
 from g2.libraries import ui
-from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries.language import _
+
 from g2 import dbs
 
+from .lib import uid
 from . import action, busyaction
 
 
@@ -36,39 +37,39 @@ from . import action, busyaction
 def menu():
     if dbs.resolve('movies_recently_added{}'):
         db_provider = dbs.resolve('movies_recently_added{}', return_db_provider=True)
-        ui.addDirectoryItem(_('Latest Movies')+' ['+db_provider.upper()+']',
-                            'movies.movielist&url='+dbs.resolve('movies_recently_added{}', quote_plus=True),
-                            'moviesAdded', 'DefaultRecentlyAddedMovies.png')
+        uid.additem(_('Latest Movies')+' ['+db_provider.upper()+']',
+                    'movies.movielist&url='+dbs.resolve('movies_recently_added{}', quote_plus=True),
+                    'moviesAdded', 'DefaultRecentlyAddedMovies.png')
 
-    ui.addDirectoryItem(_('Search by Title'), 'movies.searchbytitle', 'movieSearch', 'DefaultMovies.png', isFolder=False)
-    ui.addDirectoryItem(_('Search by Person'), 'movies.searchbyperson', 'moviePerson', 'DefaultMovies.png', isFolder=False)
-    ui.addDirectoryItem(_('Search by Year'), 'movies.searchbyyear', 'movieYears', 'DefaultYear.png', isFolder=False)
+    uid.additem(_('Search by Title'), 'movies.searchbytitle', 'movieSearch', 'DefaultMovies.png', isFolder=False)
+    uid.additem(_('Search by Person'), 'movies.searchbyperson', 'moviePerson', 'DefaultMovies.png', isFolder=False)
+    uid.additem(_('Search by Year'), 'movies.searchbyyear', 'movieYears', 'DefaultYear.png', isFolder=False)
 
-    ui.addDirectoryItem(_('Genres'), 'movies.genres', 'movieGenres', 'DefaultGenre.png')
-    ui.addDirectoryItem(_('Certificates'), 'movies.certifications', 'movieCertificates', 'DefaultMovies.png')
+    uid.additem(_('Genres'), 'movies.genres', 'movieGenres', 'DefaultGenre.png')
+    uid.additem(_('Certificates'), 'movies.certifications', 'movieCertificates', 'DefaultMovies.png')
 
     if dbs.resolve('movies_featured{}'):
-        ui.addDirectoryItem(_('Featured'), 'movies.movielist&url='+dbs.resolve('movies_featured{}', quote_plus=True),
-                            'movies', 'DefaultRecentlyAddedMovies.png')
+        uid.additem(_('Featured'), 'movies.movielist&url='+dbs.resolve('movies_featured{}', quote_plus=True),
+                    'movies', 'DefaultRecentlyAddedMovies.png')
     if dbs.resolve('movies_trending{}'):
-        ui.addDirectoryItem(_('People Watching'), 'movies.movielist&url='+dbs.resolve('movies_trending{}', quote_plus=True),
-                            'moviesTrending', 'DefaultRecentlyAddedMovies.png')
+        uid.additem(_('People Watching'), 'movies.movielist&url='+dbs.resolve('movies_trending{}', quote_plus=True),
+                    'moviesTrending', 'DefaultRecentlyAddedMovies.png')
     if dbs.resolve('movies_popular{}'):
-        ui.addDirectoryItem(_('Most Popular'), 'movies.movielist&url='+dbs.resolve('movies_popular{}', quote_plus=True),
-                            'moviesPopular', 'DefaultMovies.png')
+        uid.additem(_('Most Popular'), 'movies.movielist&url='+dbs.resolve('movies_popular{}', quote_plus=True),
+                    'moviesPopular', 'DefaultMovies.png')
     if dbs.resolve('movies_toprated{}'):
-        ui.addDirectoryItem(_('Most Voted'), 'movies.movielist&url='+dbs.resolve('movies_toprated{}', quote_plus=True),
-                            'moviesViews', 'DefaultMovies.png')
+        uid.additem(_('Most Voted'), 'movies.movielist&url='+dbs.resolve('movies_toprated{}', quote_plus=True),
+                    'moviesViews', 'DefaultMovies.png')
     if dbs.resolve('movies_boxoffice{}'):
-        ui.addDirectoryItem(_('Box Office'), 'movies.movielist&url='+dbs.resolve('movies_boxoffice{}', quote_plus=True),
-                            'moviesBoxoffice', 'DefaultMovies.png')
+        uid.additem(_('Box Office'), 'movies.movielist&url='+dbs.resolve('movies_boxoffice{}', quote_plus=True),
+                    'moviesBoxoffice', 'DefaultMovies.png')
     if dbs.resolve('movies_oscar{}'):
-        ui.addDirectoryItem(_('Oscar Winners'), 'movies.movielist&url='+dbs.resolve('movies_oscar{}', quote_plus=True),
-                            'moviesOscars', 'DefaultMovies.png')
+        uid.additem(_('Oscar Winners'), 'movies.movielist&url='+dbs.resolve('movies_oscar{}', quote_plus=True),
+                    'moviesOscars', 'DefaultMovies.png')
     if dbs.resolve('movies_theaters{}'):
-        ui.addDirectoryItem(_('In Theaters'), 'movies.movielist&url='+dbs.resolve('movies_theaters{}', quote_plus=True),
-                            'moviesTheaters', 'DefaultRecentlyAddedMovies.png')
-    ui.endDirectory()
+        uid.additem(_('In Theaters'), 'movies.movielist&url='+dbs.resolve('movies_theaters{}', quote_plus=True),
+                    'moviesTheaters', 'DefaultRecentlyAddedMovies.png')
+    uid.finish()
 
 
 @action
@@ -104,11 +105,13 @@ def genres():
             # (fixme) Need a table mapping genre 'id' to different icons
             image = 'DefaultGenre.png'
         i.update({
+            # (fixme) define the name here not in the dbs!
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{genre_id}', genre_id=i['id']),
             'image': image,
         })
-    _add_directory(items)
+    # (fixme) Use addcontentitems(..., content='genres')
+    uid.additems(items)
 
 
 @action
@@ -122,11 +125,12 @@ def certifications():
             # (fixme) Need a table mapping certification 'name' to different icons
             image = 'movieCertificates.jpg'
         i.update({
+            # (fixme) define the name here not in the dbs!
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{certification}', certification=i['name']),
             'image': image,
         })
-    _add_directory(items)
+    uid.additems(items)
 
 
 @action
@@ -134,11 +138,19 @@ def movielist(url):
     items = dbs.movies(url)
     if not items:
         ui.infoDialog(_('No results'))
-        return
-    for i in items:
-        i['next_action'] = 'movies.movielist'
-    dbs.meta(items)
-    _add_movie_directory(items)
+    else:
+        for i in items:
+            meta = dict((k, v) for k, v in i.iteritems() if not v == '0')
+            # (fixme) define the name here not in the dbs!
+            i['name'] = '%s (%s)'%(i['title'], i['year'])
+            i['action'] = addon.itemaction('sources.dialog',
+                                           name=urllib.quote_plus(i['name']),
+                                           content='movie',
+                                           imdb=i['imdb'],
+                                           meta=urllib.quote_plus(json.dumps(meta)))
+            i['next_action'] = 'movies.movielist'
+        dbs.meta(items)
+    uid.addcontentitems(items, content='movies')
 
 
 @action
@@ -146,14 +158,15 @@ def personlist(url):
     items = dbs.persons(url)
     if not items:
         ui.infoDialog(_('No results'))
-        return
-    for i in items:
-        i.update({
-            'action': 'movies.movielist',
-            'url': dbs.resolve('movies{person_id}', person_id=i['id']),
-            'next_action': 'movies.personlist',
-        })
-    _add_directory(items, is_person=True)
+    else:
+        for i in items:
+            i.update({
+                # (fixme) define the name here not in the dbs!
+                'action': 'movies.movielist',
+                'url': dbs.resolve('movies{person_id}', person_id=i['id']),
+                'next_action': 'movies.personlist',
+            })
+    uid.additems(items, is_person=True)
 
 
 @action
@@ -172,6 +185,7 @@ def lists(kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', user_id=''
         if poster == '0':
             poster = addon_userlists
         i.update({
+            # (fixme) define the name here not in the dbs!
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{%s}{%s}'%(kind_user_id, kind_list_id), **args),
             'image': image,
@@ -179,9 +193,8 @@ def lists(kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', user_id=''
         })
     if not items:
         ui.infoDialog(_('No results'))
-        return
     # (fixme) in lists{} put the meta in 'meta', not 'genre'...
-    _add_directory(items, show_genre_as='genre')
+    uid.additems(items, show_genre_as='genre')
 
 
 @busyaction
@@ -194,132 +207,3 @@ def watched(imdb):
 def unwatched(imdb):
     dbs.watched('movie{imdb_id}', False, imdb_id=imdb)
     ui.refresh()
-
-
-def _add_movie_directory(items):
-    if not items:
-        return
-
-    addon_poster = ui.addon_poster()
-    addon_banner = ui.addon_banner()
-    addon_fanart = ui.addon_fanart()
-    fanart_enabled = addon.setting('fanart') == 'true'
-
-    for i in items:
-        try:
-            label = i['name']
-            systitle = urllib.quote_plus(i['title'])
-            imdb, tmdb, year = i['imdb'], i['tmdb'], i['year']
-
-            poster = i.get('poster', '0')
-            if poster == '0':
-                poster = addon_poster
-            banner = i.get('banner', '0')
-            if banner == '0':
-                banner = addon_banner if poster == '0' else poster
-            fanart = i.get('fanart', '0')
-            if fanart == '0':
-                fanart = addon_fanart
-
-            meta = dict((k, v) for k, v in i.iteritems() if not v == '0')
-            try:
-                meta.update({
-                    'duration': str(int(meta['duration']) * 60),
-                })
-            except Exception:
-                pass
-            sysmeta = urllib.quote_plus(json.dumps(meta))
-
-            url = addon.itemaction('sources.dialog', title=systitle, year=year, imdb=imdb, tmdb=tmdb, meta=sysmeta)
-
-            is_watched = dbs.watched('movie{imdb_id}', imdb_id=imdb)
-            if is_watched:
-                meta.update({
-                    'playcount': 1,
-                    'overlay': 7
-                })
-
-            cmds = []
-            cmds.append((_('Movie information'), 'Action(Info)'))
-            if addon.condition('System.HasAddon(script.extendedinfo)'):
-                cmds.append((_('Movie information')+' (extendedinfo)',
-                             addon.scriptaction('script.extendedinfo', info='extendedinfo', id=tmdb)))
-                cmds.append((_('Trailer')+' (extendedinfo)',
-                             addon.scriptaction('script.extendedinfo', info='playtrailer', id=tmdb)))
-
-            if is_watched:
-                cmds.append((_('Mark as unwatched'), addon.pluginaction('movies.unwatched', imdb=imdb)))
-            else:
-                cmds.append((_('Mark as watched'), addon.pluginaction('movies.watched', imdb=imdb)))
-
-            cmds.append((_('Clear sources cache'),
-                         addon.pluginaction('sources.clearsourcescache', name=urllib.quote_plus(label), imdb=imdb)))
-
-            item = ui.ListItem(label=label, iconImage=poster, thumbnailImage=poster)
-
-            try:
-                item.setArt({'poster': poster, 'banner': banner})
-            except Exception:
-                pass
-
-            if fanart_enabled:
-                item.setProperty('Fanart_Image', fanart)
-
-            item.setInfo(type='Video', infoLabels=meta)
-            item.setProperty('Video', 'true')
-            item.addContextMenuItems(cmds, replaceItems=False)
-            ui.addItem(url, item, isFolder=True, totalItems=len(items))
-        except Exception:
-            import traceback
-            log.notice(traceback.format_exc())
-
-    if len(items) and 'next_action' in items[0]:
-        ui.endDirectory(content='movies', next_item=items[0], sort_methods=[17, 18, 23])
-    else:
-        ui.endDirectory(content='movies', sort_methods=[17, 18, 23])
-
-
-def _add_directory(items, show_genre_as=False, is_person=False):
-    if not items:
-        items = []
-
-    addon_fanart = ui.addon_fanart()
-
-    for i in items:
-        try:
-            try:
-                name = _(i['name'])
-            except Exception:
-                name = i['name']
-
-            url = addon.itemaction(i['action'], url=urllib.quote_plus(i['url']))
-
-            cmds = []
-            if is_person and i.get('id') and addon.condition('System.HasAddon(script.extendedinfo)'):
-                cmds.append((_('Person information')+' (extendedinfo)',
-                             addon.scriptaction('script.extendedinfo', info='extendedactorinfo', id=i['id'])))
-
-            thumb = ui.media(i['image'])
-            item = ui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
-
-            if show_genre_as:
-                if show_genre_as in i:
-                    item.setInfo(type='Video', infoLabels={'genre': i[show_genre_as]})
-                    item.setProperty('Video', 'true')
-
-            if 'poster' in i:
-                poster = ui.media(i['poster'])
-                item.setArt({'poster': poster, 'banner': poster})
-
-            item.addContextMenuItems(cmds, replaceItems=False)
-            if addon_fanart:
-                item.setProperty('Fanart_Image', addon_fanart)
-            ui.addItem(url, item, isFolder=True, totalItems=len(items))
-        except Exception as ex:
-            log.error('{m}.{f}: %s: %s', i, repr(ex))
-
-    content = 'movies' if show_genre_as else None
-    if len(items) and 'next_action' in items[0]:
-        ui.endDirectory(content=content, next_item=items[0])
-    else:
-        ui.endDirectory(content=content)

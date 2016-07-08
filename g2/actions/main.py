@@ -19,22 +19,23 @@
 """
 
 
-from g2.libraries import ui
 from g2.libraries.language import _
 
 from g2 import providers
 from g2 import resolvers
 
+from .lib import uid
 from . import action
 
 
 @action
 def menu():
-    ui.addDirectoryItem(_('Movies'), 'movies.menu', 'movies', 'DefaultMovies.png')
-    ui.addDirectoryItem(_('My Movies'), 'my.menu', 'mygenesis', 'DefaultVideoPlaylists.png')
-    ui.addDirectoryItem(_('Tools'), 'tools.menu', 'tools', 'DefaultAddonProgram.png')
+    uid.additem(_('Movies'), 'movies.menu', 'movies', 'DefaultMovies.png')
+    uid.additem(_('TV Series'), 'tvshows.menu', 'tvshows', 'DefaultTVShows.png')
+    uid.additem(_('My Movies'), 'my.menu', 'mygenesis', 'DefaultVideoPlaylists.png')
+    uid.additem(_('Tools'), 'tools.menu', 'tools', 'DefaultAddonProgram.png')
     if not len(providers.info(force_refresh=None)) or not len(resolvers.info(force_refresh=None)):
-        ui.addDirectoryItem(_('[COLOR red]Install providers and resolvers packages to find video sources[/COLOR]'),
-                            'packages.dialog', 'tools', 'DefaultAddonProgram.png', isFolder=False)
+        uid.additem(_('[COLOR red]Install providers and resolvers packages to find video sources[/COLOR]'),
+                    'packages.dialog', 'tools', 'DefaultAddonProgram.png', isFolder=False)
 
-    ui.endDirectory()
+    uid.finish()

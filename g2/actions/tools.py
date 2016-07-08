@@ -24,22 +24,23 @@ from g2.libraries import cache
 from g2.libraries import addon
 from g2.libraries.language import _
 
+from .lib import uid
 from . import action
 
 
 @action
 def menu():
-    ui.addDirectoryItem(_('[B]SETTINGS[/B]'), 'tools.settings&category=0',
-                        'settings', 'DefaultAddonProgram.png', isFolder=False)
-    ui.addDirectoryItem(_('[B]SETTINGS[/B] : Providers'), 'tools.settings&category=3',
-                        'settings', 'DefaultAddonProgram.png', isFolder=False)
-    ui.addDirectoryItem(_('[B]SETTINGS[/B] : Resolvers'), 'tools.settings&category=4',
-                        'settings', 'DefaultAddonProgram.png', isFolder=False)
-    ui.addDirectoryItem(_('[B]G2[/B] : Packages'), 'packages.dialog',
-                        'tools', 'DefaultAddonProgram.png', isFolder=False)
-    ui.addDirectoryItem(_('[B]G2[/B] : Clear cache...'), 'tools.clearcache',
-                        'cache', 'DefaultAddonProgram.png', isFolder=False)
-    ui.endDirectory()
+    uid.additem(_('[B]SETTINGS[/B]'), 'tools.settings&category=0',
+                'settings', 'DefaultAddonProgram.png', isFolder=False)
+    uid.additem(_('[B]SETTINGS[/B] : Providers'), 'tools.settings&category=3',
+                'settings', 'DefaultAddonProgram.png', isFolder=False)
+    uid.additem(_('[B]SETTINGS[/B] : Resolvers'), 'tools.settings&category=4',
+                'settings', 'DefaultAddonProgram.png', isFolder=False)
+    uid.additem(_('[B]G2[/B] : Packages'), 'packages.dialog',
+                'tools', 'DefaultAddonProgram.png', isFolder=False)
+    uid.additem(_('[B]G2[/B] : Clear cache...'), 'tools.clearcache',
+                'cache', 'DefaultAddonProgram.png', isFolder=False)
+    uid.finish()
 
 
 @action

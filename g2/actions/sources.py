@@ -80,7 +80,7 @@ def clearsourcescache(name, **kwargs):
 
 
 @action
-def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
+def dialog(name, content, imdb, meta):
     try:
         meta = {} if not meta else json.loads(meta)
 
@@ -91,9 +91,8 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
             ui.resolvedPlugin()
             ui.execute('Action(Back,10025)')
 
+        # Move this into the dbs modules!!!
         imdb = 'tt%07d'%int(str(imdb).translate(None, 't'))
-        name = '%s (%s)'%(title, year)
-        content = 'movie'
 
         poster = meta.get('poster', '0')
         if poster == '0':
@@ -109,8 +108,7 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
                     ui.sleep(1000)
                 return not self.userStopped()
 
-            providers.content_sources(content, ui_update=ui_update,
-                                      title=title, year=year, imdb=imdb, tvdb=tvdb, **kwargs)
+            providers.content_sources(content, meta=meta, ui_update=ui_update)
 
         win = SourcesDialog('SourcesDialog.xml', addon.PATH, 'Default', '720p',
                             sourceName=name,
@@ -130,7 +128,7 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
                 break
 
             if win.action == 'play':
-                if _play_source(name, imdb, tvdb, meta, item):
+                if _play_source(name, imdb, meta, item):
                     break
 
             elif win.action == 'download':
@@ -145,7 +143,7 @@ def dialog(title=None, year=None, imdb='0', tvdb='0', meta=None, **kwargs):
         ui.infoDialog(_('No stream available'))
 
 
-def _play_source(name, imdb, dummy_tvdb, meta, item):
+def _play_source(name, imdb, meta, item):
     url = item.getProperty('url')
 
     auto_play = addon.setting('auto_play') == 'true'

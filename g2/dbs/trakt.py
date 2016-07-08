@@ -36,7 +36,7 @@ from g2 import defs
 
 info = {
     'domains': ['api-v2launch.trakt.tv'],
-    'methods': ['resolve', 'movies', 'lists', 'watched'],
+    'methods': ['resolve', 'movies', 'series', 'lists', 'watched'],
 }
 
 
@@ -56,13 +56,17 @@ _COMMON_HEADERS = {
 
 _BASE_URL = 'https://api-v2launch.trakt.tv'
 _URLS = {
+    # Public query
     'movies_trending{}': '/movies/trending?limit=20|168',
+    # 'series{title}': '/search?type=show&query={title}&limit=20', # -- tv series query is implemented using tvdb
+
     # For the below urls trakt must be enabled and with a valid user id
     'lists{trakt_user_id}': '/users/{trakt_user_id}/lists -- {trakt_enabled}',
     'movies{trakt_user_id}{trakt_list_id}': '/users/{trakt_user_id}/lists/{trakt_list_id}/items -- {trakt_enabled}',
     'movies_collection{trakt_user_id}': '/users/{trakt_user_id}/collection/movies -- {trakt_enabled}',
     'movies_watchlist{trakt_user_id}': '/users/{trakt_user_id}/watchlist/movies -- {trakt_enabled}',
     'movies_ratings{trakt_user_id}': '/users/{trakt_user_id}/ratings/movies -- {trakt_enabled}',
+
     # For the below urls trakt must be enabled and with a valid token
     'movies_recommendations{}': ('/recommendations/movies?limit=%d -- {trakt_enabled}{trakt_token}'%
                                  defs.TRAKT_MAX_RECOMMENDATIONS),
@@ -95,6 +99,14 @@ def resolve(kind=None, **kwargs):
 
 
 def movies(url):
+    return _content(url, 'movie')
+
+
+def series(url):
+    return _content(url, 'show')
+
+
+def _content(url, content='movie'):
     if '|' not in url:
         timeout = 0
     else:
@@ -131,16 +143,16 @@ def movies(url):
     res = res.json()
     results = []
     for i in res:
-        if 'movie' in i:
-            item = i['movie']
-            # NOTE: if you have rated this movie, report your rating instead of the community rating
+        if content in i:
+            item = i[content]
+            # NOTE: if you have rated this content, report your rating instead of the community rating
             if 'rating' in i:
                 item['rating'] = i['rating']
             results.append(item)
     if not results:
         results = res
 
-    log.debug('{m}.{f}: %s: %d movies', query_url.replace(_BASE_URL, ''), len(results))
+    log.debug('{m}.{f}: %s: %d %ss', query_url.replace(_BASE_URL, ''), len(results), content)
 
     items = []
     for item in results:
@@ -153,20 +165,42 @@ def movies(url):
             year = re.sub('[^0-9]', '', str(year))
             year = year.encode('utf-8')
 
-            # (fixme) so ugly and repetitive code...
-            name = '%s (%s)' % (title, year)
-            try: name = name.encode('utf-8')
-            except: pass
+            # (fixme) list of field processing descriptors, for example:
+            #
+            #   'poster' : {
+            #       'field': 'images.poster.medium',
+            #       'transform: lambda x: ('0' if x is None or not '/posters/' in x else x).rsplit('?', 1)[0],
+            #   }
+            #
+            name = '%s (%s)' % (title, year) if year else title
+            name = name.encode('utf-8', 'ignore')
 
-            tmdb = item['ids']['tmdb']
-            if tmdb == None or tmdb == '': tmdb = '0'
+            tmdb = item['ids'].get('tmdb')
+            if tmdb == None or tmdb == '':
+                tmdb = '0'
             tmdb = re.sub('[^0-9]', '', str(tmdb))
             tmdb = tmdb.encode('utf-8')
 
-            imdb = item['ids']['imdb']
-            if imdb == None or imdb == '': raise Exception()
+            imdb = item['ids'].get('imdb')
+            if imdb == None or imdb == '':
+                imdb = '0'
             imdb = 'tt' + re.sub('[^0-9]', '', str(imdb))
             imdb = imdb.encode('utf-8')
+
+            tvdb = item['ids'].get('tvdb')
+            if tvdb == None or tvdb == '':
+                tvdb = '0'
+            tvdb = re.sub('[^0-9]', '', str(tvdb))
+            tvdb = tvdb.encode('utf-8')
+
+            tvrage = item['ids'].get('tvrage')
+            if tvrage == None or tvrage == '':
+                tvrage = '0'
+            tvrage = re.sub('[^0-9]', '', str(tvrage))
+            tvrage = tvrage.encode('utf-8')
+
+            if imdb == '0' and tvdb == '0':
+                raise Exception('Missing both imdb and tvdb ids')
 
             poster = '0'
             try: poster = item['images']['poster']['medium']
@@ -189,14 +223,15 @@ def movies(url):
             fanart = fanart.rsplit('?', 1)[0]
             fanart = fanart.encode('utf-8')
 
-            premiered = item['released']
+            premiered = item.get('released')
             try: premiered = re.compile('(\d{4}-\d{2}-\d{2})').findall(premiered)[0]
             except: premiered = '0'
             premiered = premiered.encode('utf-8')
 
-            genre = item['genres']
+            genre = item.get('genres', [])
             genre = [i.title() for i in genre]
-            if genre == []: genre = '0'
+            if genre == []:
+                genre = '0'
             genre = ' / '.join(genre)
             genre = genre.encode('utf-8')
 
@@ -217,12 +252,14 @@ def movies(url):
             if votes == None: votes = '0'
             votes = votes.encode('utf-8')
 
-            mpaa = item['certification']
-            if mpaa == None: mpaa = '0'
+            mpaa = item.get('certification')
+            if mpaa == None:
+                mpaa = '0'
             mpaa = mpaa.encode('utf-8')
 
-            plot = item['overview']
-            if plot == None: plot = '0'
+            plot = item.get('overview')
+            if plot == None:
+                plot = '0'
             plot = client.replaceHTMLCodes(plot)
             plot = plot.encode('utf-8')
 
@@ -254,8 +291,8 @@ def movies(url):
                 'code': imdb,
                 'imdb': imdb,
                 'tmdb': tmdb,
-                'tvdb': '0',
-                'tvrage': '0',
+                'tvdb': tvdb,
+                'tvrage': tvrage,
                 'poster': poster,
                 'banner': banner,
                 'fanart': fanart,
@@ -263,8 +300,8 @@ def movies(url):
                 'next_page': next_page,
                 'max_pages': max_pages,
             })
-        except Exception:
-            pass
+        except Exception as ex:
+            log.debug('{m}.{f}: %s: %s', item, repr(ex))
 
     return items
 

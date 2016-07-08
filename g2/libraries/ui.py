@@ -23,7 +23,6 @@ import os
 import ast
 import sys
 import errno
-import urllib
 
 import xbmc
 import xbmcgui
@@ -32,9 +31,6 @@ import xbmcaddon
 
 from g2.libraries import log
 from g2.libraries import addon
-from g2.libraries.language import _
-
-from g2 import pkg
 
 
 _ADDON = xbmcaddon.Addon()
@@ -54,9 +50,6 @@ infoLabel = xbmc.getInfoLabel
 sleep = xbmc.sleep
 condition = xbmc.getCondVisibility
 execute = xbmc.executebuiltin
-
-setContent = xbmcplugin.setContent
-finishDirectory = xbmcplugin.endOfDirectory
 
 
 def addon_icon():
@@ -145,6 +138,9 @@ _RESOURCE_THEMES = resource_themes()
 
 
 def media(icon, icon_default=None):
+    if not icon:
+        return icon_default or 'DefaultFolder.png'
+
     if '://' in icon:
         return icon
 
@@ -222,77 +218,28 @@ def refresh(action=None, **kwargs):
         return xbmc.executebuiltin('Container.Update(%s)'%addon.itemaction(action, **kwargs))
 
 
-def addItem(url, item, isFolder=False, totalItems=None):
+def viewmode():
+    return repr(xbmcgui.Window(xbmcgui.getCurrentWindowId()).getFocusId())
+
+
+def setcontent(content):
+    if content:
+        xbmcplugin.setContent(int(sys.argv[1]), content)
+
+
+def addsortmethods(methods):
+    if methods:
+        for method in methods:
+            # (fixme) map methods name to numbers
+            xbmcplugin.addSortMethod(int(sys.argv[1]), method)
+
+
+def finish():
+    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+
+def additem(url, item, isFolder=False, totalItems=None):
     if totalItems is None:
         xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=isFolder)
     else:
         xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=item, isFolder=isFolder, totalItems=totalItems)
-
-
-_FANART = addon_fanart()
-_ICON_NEXT = addon_next()
-
-
-def addDirectoryItem(name, query, thumb, icon, context=None, isAction=True, isFolder=True, totalItems=None):
-    thumb = media(thumb, icon)
-    item = xbmcgui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
-
-    cmds = []
-    if context:
-        cmds.append((context[0], context[1][1:] if context[1][0] == ':' else addon.pluginaction(context[1])))
-    item.addContextMenuItems(cmds, replaceItems=False)
-
-    if _FANART:
-        item.setProperty('Fanart_Image', _FANART)
-
-    url = addon.itemaction(query) if isAction else query
-
-    addItem(url, item, isFolder=isFolder, totalItems=totalItems)
-
-
-def endDirectory(next_item=None, content=None, sort_methods=None):
-    viewmode = None
-    if type(next_item) == dict and next_item.get('next_action') and next_item.get('next_url'):
-        log.debug('{m}.{f}: next_action:%s, next_url:%s, next_page:%s, max_pages:%s',
-                  next_item.get('next_action'), next_item.get('next_url'), next_item.get('next_page'), next_item.get('max_pages'))
-
-        url = addon.itemaction(next_item['next_action'], url=urllib.quote_plus(next_item['next_url']))
-
-        if next_item.get('max_pages') and next_item.get('next_page'):
-            # Label for the "Next Page" item when the max number of pages is known
-            next_page_label = _('[I]Next Page[/I]  [{page_of} of {max_pages}]').format(
-                page_of=next_item['next_page'],
-                max_pages=next_item['max_pages']
-            )
-        elif next_item.get('next_page'):
-            # Label for the "Next Page" item when only the current page number is known
-            next_page_label = _('[I]Next Page[/I]  [{page_of}}]').format(
-                page_of=next_item['next_page'],
-            )
-        else:
-            next_page_label = _('[I]Next Page[/I]')
-
-        item = xbmcgui.ListItem(label=next_page_label, iconImage=_ICON_NEXT, thumbnailImage=_ICON_NEXT)
-        item.addContextMenuItems([], replaceItems=False)
-
-        if _FANART:
-            item.setProperty('Fanart_Image', _FANART)
-
-        addItem(url, item, isFolder=True)
-
-        # On paged directories, replicate the current viewmode when displaying the pages after the first
-        if next_item.get('next_page') > 2:
-            viewmode = repr(xbmcgui.Window(xbmcgui.getCurrentWindowId()).getFocusId())
-
-    elif sort_methods:
-        # For non-paged directories, add the sorting methods, if provided
-        for method in sort_methods:
-            xbmcplugin.addSortMethod(int(sys.argv[1]), method)
-
-    if content:
-        xbmcplugin.setContent(int(sys.argv[1]), content)
-
-    xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-    if viewmode:
-        xbmc.executebuiltin("Container.SetViewMode(%s)" % viewmode)

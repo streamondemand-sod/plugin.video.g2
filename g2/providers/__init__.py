@@ -67,13 +67,11 @@ def info(force_refresh=False):
     return pkg.info(__name__, source_info, force_refresh)
 
 
-def content_sources(content, ui_update=None, **kwargs):
+def content_sources(content, meta, ui_update=None):
     providers = {}
     for dummy_kind, package in pkg.packages([__name__]):
         providers[package] = [mi for mi in info().itervalues() if mi['package'] == package and content in mi['content']]
     all_providers = sum([len(providers[mi]) for mi in providers])
-    if not all_providers:
-        return []
 
     sources = {}
     all_completed_providers = 0
@@ -85,11 +83,12 @@ def content_sources(content, ui_update=None, **kwargs):
         with pkg.Context(__name__, package, modules, modulesinfo[0]['search_paths'], ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mods:
             if not mods:
                 continue
+
             threads = []
             channel = []
             for mod, module in zip(mods, modules):
                 sub_modules = [mi['name'] for mi in modulesinfo if mi['module'] == module]
-                threads.extend([workers.Thread(_sources_worker, channel, mod, smodule, content, **kwargs)
+                threads.extend([workers.Thread(_sources_worker, channel, mod, smodule, content, meta)
                                 for smodule in sub_modules])
 
             dummy = [t.start() for t in threads]
@@ -121,11 +120,11 @@ def content_sources(content, ui_update=None, **kwargs):
     return sources.values()
 
 
-def _sources_worker(channel, m, provider, content, **kwargs):
-    key_video = '/'.join([kwargs.get(k) or '-' for k in ['imdb', 'season', 'episode']])
+def _sources_worker(channel, mod, provider, content, meta):
+    key_video = '/'.join([meta.get(k) or '-' for k in ['imdb', 'season', 'episode']])
 
     log.notice('{m}.{f}(%s, %s, title=%s, year=%s): key_video=%s',
-               provider, content, kwargs.get('title'), kwargs.get('year'), key_video)
+               provider, content, meta.get('title'), meta.get('year'), key_video)
 
     video_ref = None
     if key_video == '-/-/-':
@@ -159,7 +158,7 @@ def _sources_worker(channel, m, provider, content, **kwargs):
             pass
 
         try:
-            # Check if the video url is already cached (TOREVIEW: no expiration?)
+            # Check if the video url is already cached [fixme) no expiration?]
             dbcur = dbcon.execute("SELECT * FROM rel_url WHERE provider = ? AND key_video = ?",
                                   (provider, key_video))
             sqlrow = dbcur.fetchone()
@@ -174,7 +173,8 @@ def _sources_worker(channel, m, provider, content, **kwargs):
             return []
 
         try:
-            video_matches = getattr(m, get_function_name)(provider.split('.'), **kwargs)
+            # (fixme) replace **meta w/ meta or explicit meta[] args (API change)
+            video_matches = getattr(mod, get_function_name)(provider.split('.'), **meta)
         except Exception as ex:
             # get functions might fail because of no title/episode found
             log.notice('{m}.{f}.%s.%s(...): %s', provider, get_function_name, ex, trace=True)
@@ -189,7 +189,7 @@ def _sources_worker(channel, m, provider, content, **kwargs):
                     title = re.sub(r'\[.*\]', '', title) # Anything within []
                 return title
 
-            title = kwargs['title']
+            title = meta['title']
             video_best_match = max(video_matches, key=lambda m: fuzz.token_sort_ratio(cleantitle(m[1]), title))
             confidence = fuzz.token_sort_ratio(cleantitle(video_best_match[1]), title)
             if confidence >= _MIN_FUZZINESS_VALUE:
@@ -215,7 +215,7 @@ def _sources_worker(channel, m, provider, content, **kwargs):
     if video_ref:
         log.notice('{m}.{f}(%s).video_ref(%s)', provider, video_ref)
         try:
-            sources = m.get_sources(provider.split('.'), video_ref)
+            sources = mod.get_sources(provider.split('.'), video_ref)
         except Exception as ex:
             log.debug('{m}.{f}: %s(%s): %s', provider, video_ref, repr(ex))
 
