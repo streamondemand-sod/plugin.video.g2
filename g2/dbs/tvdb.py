@@ -298,6 +298,8 @@ def _meta_worker(met):
     for i in results:
         episode = fields_mapping_xml(i, _EPISODE_MAPPINGS_XML_DESC)
 
+        episode['tvshowtitle'] = serie['title']
+
         if int(episode['episode']) == 1:
             try:
                 season_poster = _TVDB_IMAGE + season_banners[episode['season']][0]['path']

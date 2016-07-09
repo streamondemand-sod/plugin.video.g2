@@ -343,21 +343,6 @@ msgctxt "#30063"
 msgid "In Theaters"
 msgstr "In Theaters"
 
-#: g2/actions/movies.py:77
-msgctxt "#30064"
-msgid "Title to search"
-msgstr "Title to search"
-
-#: g2/actions/movies.py:85
-msgctxt "#30065"
-msgid "Person to search"
-msgstr "Person to search"
-
-#: g2/actions/movies.py:93
-msgctxt "#30066"
-msgid "Year"
-msgstr "Year"
-
 #: g2/actions/movies.py:126 g2/actions/movies.py:138 g2/actions/movies.py:174
 msgctxt "#30067"
 msgid "No results"
@@ -741,3 +726,87 @@ msgstr "Search for new appearances..."
 msgctxt "#30140"
 msgid "{g2_name} media setting skema updated"
 msgstr "{g2_name} media setting skema updated"
+
+#: g2/actions/lib/uid.py:131
+msgctxt "#30141"
+msgid "TV Show information"
+msgstr "TV Show information"
+
+#: g2/actions/lib/uid.py:132
+msgctxt "#30142"
+msgid "Season information"
+msgstr "Season information"
+
+#: g2/actions/lib/uid.py:133
+msgctxt "#30143"
+msgid "Episode information"
+msgstr "Episode information"
+
+#: g2/actions/main.py:34
+msgctxt "#30144"
+msgid "TV Series"
+msgstr "TV Series"
+
+#: g2/actions/movies.py:77
+msgctxt "#30145"
+msgid "Movie search"
+msgstr "Movie search"
+
+#: g2/actions/movies.py:85
+msgctxt "#30146"
+msgid "Person search"
+msgstr "Person search"
+
+#: g2/actions/movies.py:93
+msgctxt "#30147"
+msgid "Year search"
+msgstr "Year search"
+
+#. Movie directory item label when the year is kwnon
+#. Movie label in case the year is known
+#. TV show directory item label when the year is kwnon
+#: g2/actions/movies.py:142 g2/actions/player.py:80 g2/actions/tvshows.py:60
+#, python-brace-format
+msgctxt "#30148"
+msgid "{title} ({year})"
+msgstr "{title} ({year})"
+
+#: g2/actions/tvshows.py:44
+msgctxt "#30149"
+msgid "TV series search"
+msgstr "TV series search"
+
+#: g2/actions/tvshows.py:83
+msgctxt "#30150"
+msgid "No seasons"
+msgstr "No seasons"
+
+#. Season directory item label
+#: g2/actions/tvshows.py:87
+#, python-brace-format
+msgctxt "#30151"
+msgid "Season {season} ({year})"
+msgstr "Season {season} ({year})"
+
+#: g2/actions/tvshows.py:105
+msgctxt "#30152"
+msgid "No episodes"
+msgstr "No episodes"
+
+#: g2/actions/tvshows.py:110
+#, python-brace-format
+msgctxt "#30153"
+msgid "{season:2d}x{episode:02d} . {title}"
+msgstr "{season:2d}x{episode:02d} . {title}"
+
+#~ msgctxt ""
+#~ msgid "Year"
+#~ msgstr "Year"
+
+#~ msgctxt ""
+#~ msgid "Person to search"
+#~ msgstr "Person to search"
+
+#~ msgctxt ""
+#~ msgid "Title to search"
+#~ msgstr "Title to search"

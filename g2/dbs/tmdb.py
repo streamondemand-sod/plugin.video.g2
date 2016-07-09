@@ -109,12 +109,6 @@ def movies(url):
             year = re.compile(r'(\d{4})').findall(year)[-1]
             year = year.encode('utf-8')
 
-            name = '%s (%s)' % (title, year)
-            try:
-                name = name.encode('utf-8')
-            except Exception:
-                pass
-
             tmdb = item['id']
             tmdb = re.sub('[^0-9]', '', str(tmdb))
             tmdb = tmdb.encode('utf-8')
@@ -180,7 +174,6 @@ def movies(url):
                 'cast': '0',
                 'plot': plot,
                 'tagline': tagline,
-                'name': name,
                 'code': '0',
                 'imdb': '0',
                 'tmdb': tmdb,

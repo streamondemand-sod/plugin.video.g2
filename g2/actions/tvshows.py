@@ -41,7 +41,7 @@ def menu():
 
 @action
 def searchbytitle():
-    query = ui.keyboard(_('Title to search'))
+    query = ui.keyboard(_('TV series search'))
     if query:
         url = dbs.resolve('series{title}', title=query, quote_plus=True)
         ui.refresh('tvshows.serieslist', url=url)
@@ -56,15 +56,15 @@ def serieslist(url):
     else:
         dbs.meta(items, content='serie')
         for i in items:
-            i['name'] = '%s (%s)'%(i['title'], i['year']) if i.get('year') else i['title']
+            # TV show directory item label when the year is kwnon
+            i['name'] = _('{title} ({year})').format(
+                title=i['title'],
+                year=i['year']) if i.get('year') else i['title']
             i['action'] = addon.itemaction('tvshows.seasons', tvdb=i['tvdb'], imdb=i['imdb'])
             i['next_action'] = 'tvshows.serieslist'
             # Deleting all this info otherwise the Kodi listitem chokes! :)
             for info in ['seasons', 'episodes']:
-                try:
-                    del i[info]
-                except Exception:
-                    pass
+                del i[info]
 
     uid.addcontentitems(items, content='tvshows')
 
@@ -82,7 +82,10 @@ def seasons(tvdb, imdb):
         ui.infoDialog(_('No seasons'))
     else:
         for i in items:
-            i['name'] = _('Season {season} ({year})').format(season=i['season'], year=i['premiered'][0:4])
+            # Season directory item label 
+            i['name'] = _('Season {season} ({year})').format(
+                season=i['season'],
+                year=i['premiered'][0:4])
             i['action'] = addon.itemaction('tvshows.episodes', tvdb=i['tvdb'], imdb=i['imdb'], season=i['season'])
 
     uid.addcontentitems(items, content='seasons')
@@ -101,10 +104,13 @@ def episodes(tvdb, imdb, season):
         ui.infoDialog(_('No episodes'))
     else:
         for i in items:
-            meta = dict((k, v) for k, v in i.iteritems() if not v == '0')
-            i['name'] = i['title']
+            meta = dict((k, v) for k, v in i.iteritems() if v and v != '0')
+            i['name'] = _('{season:2d}x{episode:02d} . {title}').format(
+                season=int(i['season']),
+                episode=int(i['episode']),
+                title=i['title'])
             i['action'] = addon.itemaction('sources.dialog',
-                                           name='season . episode . title', # xxx
+                                           name=i['name'],
                                            content='episode',
                                            imdb=i['imdb'],
                                            meta=urllib.quote_plus(json.dumps(meta)))

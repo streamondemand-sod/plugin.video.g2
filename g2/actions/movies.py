@@ -74,7 +74,7 @@ def menu():
 
 @action
 def searchbytitle():
-    query = ui.keyboard(_('Title to search'))
+    query = ui.keyboard(_('Movie search'))
     if query:
         url = dbs.resolve('movies{title}', title=query, quote_plus=True)
         ui.refresh('movies.movielist', url=url)
@@ -82,7 +82,7 @@ def searchbytitle():
 
 @action
 def searchbyperson():
-    query = ui.keyboard(_('Person to search'))
+    query = ui.keyboard(_('Person search'))
     if query:
         url = dbs.resolve('persons{name}', name=query, quote_plus=True)
         ui.refresh('movies.personlist', url=url)
@@ -90,7 +90,7 @@ def searchbyperson():
 
 @action
 def searchbyyear():
-    query = ui.keyboard(_('Year'))
+    query = ui.keyboard(_('Year search'))
     if query:
         url = dbs.resolve('movies{year}', year=query, quote_plus=True)
         ui.refresh('movies.movielist', url=url)
@@ -105,7 +105,6 @@ def genres():
             # (fixme) Need a table mapping genre 'id' to different icons
             image = 'DefaultGenre.png'
         i.update({
-            # (fixme) define the name here not in the dbs!
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{genre_id}', genre_id=i['id']),
             'image': image,
@@ -122,10 +121,8 @@ def certifications():
     for i in items:
         image = i.get('image', '0')
         if image == '0':
-            # (fixme) Need a table mapping certification 'name' to different icons
             image = 'movieCertificates.jpg'
         i.update({
-            # (fixme) define the name here not in the dbs!
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{certification}', certification=i['name']),
             'image': image,
@@ -140,9 +137,11 @@ def movielist(url):
         ui.infoDialog(_('No results'))
     else:
         for i in items:
-            meta = dict((k, v) for k, v in i.iteritems() if not v == '0')
-            # (fixme) define the name here not in the dbs!
-            i['name'] = '%s (%s)'%(i['title'], i['year'])
+            meta = dict((k, v) for k, v in i.iteritems() if v and v != '0')
+            # Movie directory item label when the year is kwnon
+            i['name'] = _('{title} ({year})').format(
+                title=i['title'],
+                year=i['year']) if i.get('year') else i['title']
             i['action'] = addon.itemaction('sources.dialog',
                                            name=urllib.quote_plus(i['name']),
                                            content='movie',
@@ -161,7 +160,6 @@ def personlist(url):
     else:
         for i in items:
             i.update({
-                # (fixme) define the name here not in the dbs!
                 'action': 'movies.movielist',
                 'url': dbs.resolve('movies{person_id}', person_id=i['id']),
                 'next_action': 'movies.personlist',
@@ -185,7 +183,6 @@ def lists(kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', user_id=''
         if poster == '0':
             poster = addon_userlists
         i.update({
-            # (fixme) define the name here not in the dbs!
             'action': 'movies.movielist',
             'url': dbs.resolve('movies{%s}{%s}'%(kind_user_id, kind_list_id), **args),
             'image': image,
@@ -193,7 +190,6 @@ def lists(kind_user_id='trakt_user_id', kind_list_id='trakt_list_id', user_id=''
         })
     if not items:
         ui.infoDialog(_('No results'))
-    # (fixme) in lists{} put the meta in 'meta', not 'genre'...
     uid.additems(items, show_genre_as='genre')
 
 

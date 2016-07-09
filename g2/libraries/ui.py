@@ -187,9 +187,14 @@ def abortRequested(timeout=None):
 
 
 def keyboard(heading):
-    k = xbmc.Keyboard('', heading)
+    default = addon.prop('ui', name=heading)
+    k = xbmc.Keyboard(default or '', heading)
     k.doModal()
-    return k.getText() if k.isConfirmed() else None
+    if not k.isConfirmed():
+        return None
+    default = k.getText()
+    addon.prop('ui', default, name=heading)
+    return default
 
 
 def infoDialog(message, heading=_ADDON.getAddonInfo('name'), icon=addon_icon(), time=3000):

@@ -165,16 +165,6 @@ def _content(url, content='movie'):
             year = re.sub('[^0-9]', '', str(year))
             year = year.encode('utf-8')
 
-            # (fixme) list of field processing descriptors, for example:
-            #
-            #   'poster' : {
-            #       'field': 'images.poster.medium',
-            #       'transform: lambda x: ('0' if x is None or not '/posters/' in x else x).rsplit('?', 1)[0],
-            #   }
-            #
-            name = '%s (%s)' % (title, year) if year else title
-            name = name.encode('utf-8', 'ignore')
-
             tmdb = item['ids'].get('tmdb')
             if tmdb == None or tmdb == '':
                 tmdb = '0'
@@ -287,7 +277,6 @@ def _content(url, content='movie'):
                 'cast': '0',
                 'plot': plot,
                 'tagline': tagline,
-                'name': name,
                 'code': imdb,
                 'imdb': imdb,
                 'tmdb': tmdb,

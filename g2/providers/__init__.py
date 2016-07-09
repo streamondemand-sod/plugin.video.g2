@@ -123,9 +123,6 @@ def _sources_worker(channel, mod, provider, content, meta):
     imdb = meta['imdb']
     key_video = '/'.join([imdb] + [meta.get(k) or '-' for k in ['season', 'episode']])
 
-    log.debug('{m}.{f}(%s, %s, title=%s, year=%s): key_video=%s',
-              provider, content, meta.get('title'), meta.get('year'), key_video)
-
     video_ref = None
     if key_video == '-/-/-':
         dbcon = None
@@ -189,7 +186,7 @@ def _sources_worker(channel, mod, provider, content, meta):
                     title = re.sub(r'\[.*\]', '', title) # Anything within []
                 return title
 
-            title = meta['title']
+            title = meta['tvshowtitle'] if 'tvshowtitle' in meta else meta['title']
             video_best_match = max(video_matches, key=lambda m: fuzz.token_sort_ratio(cleantitle(m[1]), title))
             confidence = fuzz.token_sort_ratio(cleantitle(video_best_match[1]), title)
             if confidence >= _MIN_FUZZINESS_VALUE:

@@ -76,7 +76,9 @@ def notify():
             imdb = db_item['imdb']
             mpaa = db_item.get('mpaa')
 
-        title = title + ('' if not year else ' (%s)'%year) + ('' if not mpaa or mpaa == '0' else ' [%s]'%mpaa)
+        # Movie label in case the year is known
+        title = ((_('{title} ({year})').format(title=title, year=year) if year else title) +
+                 ('' if not mpaa or mpaa == '0' else ' [%s]'%mpaa))
         if not title:
             title = '???'
         url = '' if not imdb else 'http://www.imdb.com/title/' + imdb
