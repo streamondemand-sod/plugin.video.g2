@@ -95,10 +95,11 @@ def new(notifier, iden, title, body, url):
 
             log.debug('{m}.{f}: meta=%s', meta)
 
+            name = '%s (%s)'%(meta['title'], meta['year']) if meta.get('year') else meta['title']
             addon.runplugin('sources.dialog',
-                            title=urllib.quote_plus(meta['title']),
-                            year=urllib.quote_plus(meta['year']),
-                            imdb=urllib.quote_plus(meta['imdb']),
+                            name=urllib.quote_plus(name),
+                            content='movie',
+                            imdb=meta['imdb'],
                             meta=urllib.quote_plus(json.dumps(meta)))
         else:
             raise Exception('unknown site type: %s'%sites[netloc])
