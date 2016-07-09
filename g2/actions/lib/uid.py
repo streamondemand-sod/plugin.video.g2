@@ -113,11 +113,18 @@ def addcontentitems(items, content='movies'):
                 pass
 
             if imdb == '0':
-                is_watched = None
+                is_watched = False
             elif content == 'movies':
-                is_watched = dbs.watched('movie{imdb_id}', imdb_id=imdb)
+                is_watched = dbs.watched('movie{imdb_id}',
+                                         imdb_id=imdb)
+            elif content == 'episodes' and i.get('season') and i.get('episode'):
+                is_watched = dbs.watched('episode{imdb_id}{season}{episode}',
+                                         imdb_id=imdb,
+                                         season=i['season'],
+                                         episode=i['episode'])
             else:
-                is_watched = dbs.watched('tvshow{imdb_id}', imdb_id=imdb)
+                is_watched = False
+
             if is_watched:
                 meta.update({
                     'playcount': 1,
@@ -165,13 +172,25 @@ def addcontentitems(items, content='movies'):
                                      addon.scriptaction('script.extendedinfo', info='extendedepisodeinfo',
                                                         tvshow=i.get('title'), season=i.get('season'), episode=i.get('episode'))))
 
-            if is_watched is None:
+            if is_watched is False:
                 pass
-            elif is_watched:
-                cmds.append((_('Mark as unwatched'), addon.pluginaction('%s.unwatched'%content, imdb=imdb)))
             else:
-                cmds.append((_('Mark as watched'), addon.pluginaction('%s.watched'%content, imdb=imdb)))
+                if is_watched:
+                    watch_command_label = _('Mark as unwatched')
+                    watch_command = 'unwatched'
+                else:
+                    watch_command_label = _('Mark as watched')
+                    watch_command = 'watched'
+                if content == 'movies':
+                    cmds.append((watch_command_label, addon.pluginaction('movies.%s'%watch_command,
+                                                                         imdb=imdb)))
+                elif content == 'episodes':
+                    cmds.append((watch_command_label, addon.pluginaction('tvshows.%s'%watch_command,
+                                                                         imdb=imdb,
+                                                                         season=i['season'],
+                                                                         episode=i['episode'])))
 
+            # (fixme) episode
             cmds.append((_('Clear sources cache'),
                          addon.pluginaction('sources.clearsourcescache', name=urllib.quote_plus(label), imdb=imdb)))
 

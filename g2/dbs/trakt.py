@@ -71,6 +71,7 @@ _URLS = {
     'movies_recommendations{}': ('/recommendations/movies?limit=%d -- {trakt_enabled}{trakt_token}'%
                                  defs.TRAKT_MAX_RECOMMENDATIONS),
     'watched.movie{imdb_id}': 'movie.imdb.{imdb_id} -- {trakt_enabled}{trakt_token}',
+    'watched.episode{imdb_id}{season}{episode}': 'show.imdb.{imdb_id}.{season}.{episode} -- {trakt_enabled}{trakt_token}',
 }
 
 
@@ -327,36 +328,72 @@ def watched(kind, seen=None, **kwargs):
     if not url:
         return None
 
-    content, id_type, id_value = url.split('.')
+    content_idxs = url.split('.')
+    if content_idxs[0] == 'movie':
+        content, id_type, id_value = content_idxs
+    elif content_idxs[0] == 'show':
+        content, id_type, id_value, season, episode = content_idxs
+    else:
+        return None
+
     if seen is None:
-        indicators = _sync_movies(timeout=10)
-        status = True if len([i for i in indicators if str(i[content]['ids'][id_type]) == id_value]) else None
-        if status:
-            log.debug('{m}.{f}: %s watched', url)
+        indicators = _sync(content, timeout=10)
+        indicators = [i for i in indicators if content in i and str(i[content]['ids'][id_type]) == id_value]
+
+        log.debug('{m}.{f}: %s: %s', content_idxs, indicators)
+
+        if content == 'movie':
+            status = True if len(indicators) else None
+        elif content == 'show':
+            seasons = [s for i in indicators if 'seasons' in i for s in i['seasons'] if str(s['number']) == season]
+            episodes = [e for s in seasons if 'episodes' in s for e in s['episodes'] if str(e['number']) == episode]
+            status = True if len(episodes) else None
+
+        log.debug('{m}.{f}: %s: %s', content_idxs, status)
+
         return status
     else:
-        res = _traktreq('/sync/history' if seen else '/sync/history/remove', {content+'s': [{'ids': {id_type: id_value}}]})
+        post = {
+            content+'s': [{
+                'ids': {
+                    id_type: id_value
+                }
+            }]
+        }
+        if content == 'show':
+            post[content+'s'][0].update({
+                'seasons': [{
+                    'number': int(season),
+                    'episodes': [{
+                        'number': int(episode),
+                    }]
+                }]
+            })
+
+        log.debug('{m}.{f}: %s: %s', seen, post)
+
+        res = _traktreq('/sync/history' if seen else '/sync/history/remove', post)
         if res.status_code in [client.codes.ok, client.codes.created, client.codes.no_content]:
-            _sync_movies()
+            _sync(content)
         # Give a change to the other backends to store the flag too!
         return None
 
 
-def _sync_movies(timeout=0):
+def _sync(content, timeout=0):
     def traktreq(url):
         return _traktreq(url).content
 
     try:
-        if time.time() - _sync_movies.cache_time > timeout * 60:
+        if time.time() - _sync.cache_time > timeout * 60:
             raise Exception('in memory cache expired')
     except Exception as ex:
         log.debug('{m}.{f}: timeout=%d: %s', timeout, repr(ex))
 
-        movies_history = cache.get(traktreq, timeout, '/users/%s/watched/movies'%_TRAKT_USER, table='rel_trakt')
-        _sync_movies.cache = json.loads(movies_history)
-        _sync_movies.cache_time = time.time()
+        movies_history = cache.get(traktreq, timeout, '/users/%s/watched/%ss'%(_TRAKT_USER, content), table='rel_trakt')
+        _sync.cache = json.loads(movies_history)
+        _sync.cache_time = time.time()
 
-    return _sync_movies.cache
+    return _sync.cache
 
 
 def authDevice(ui_update):

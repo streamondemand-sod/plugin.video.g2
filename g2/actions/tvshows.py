@@ -30,7 +30,7 @@ from g2.libraries.language import _
 from g2 import dbs
 
 from .lib import uid
-from . import action
+from . import action, busyaction
 
 
 @action
@@ -63,8 +63,9 @@ def serieslist(url):
             i['action'] = addon.itemaction('tvshows.seasons', tvdb=i['tvdb'], imdb=i['imdb'])
             i['next_action'] = 'tvshows.serieslist'
             # Deleting all this info otherwise the Kodi listitem chokes! :)
-            for info in ['seasons', 'episodes']:
-                del i[info]
+            for nfo in ['seasons', 'episodes']:
+                if nfo in i:
+                    del i[nfo]
 
     uid.addcontentitems(items, content='tvshows')
 
@@ -116,3 +117,17 @@ def episodes(tvdb, imdb, season):
                                            meta=urllib.quote_plus(json.dumps(meta)))
 
     uid.addcontentitems(items, content='episodes')
+
+
+@busyaction
+def watched(imdb, season, episode):
+    dbs.watched('episode{imdb_id}{season}{episode}', True,
+                imdb_id=imdb, season=season, episode=episode)
+    ui.refresh()
+
+
+@busyaction
+def unwatched(imdb, season, episode):
+    dbs.watched('episode{imdb_id}{season}{episode}', False,
+                imdb_id=imdb, season=season, episode=episode)
+    ui.refresh()
