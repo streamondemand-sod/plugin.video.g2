@@ -96,7 +96,6 @@ def content_sources(content, meta, ui_update=None):
             completed_threads = []
             while len(completed_threads) < len(threads):
                 completed_threads = sorted([t for t in threads if not t.is_alive()], key=lambda t: t.elapsed)
-                # completed_threads = [t for t in threads if not t.is_alive()]
                 new_sources = []
                 for thd in completed_threads:
                     if thd.result is not None:
@@ -121,10 +120,11 @@ def content_sources(content, meta, ui_update=None):
 
 
 def _sources_worker(channel, mod, provider, content, meta):
-    key_video = '/'.join([meta.get(k) or '-' for k in ['imdb', 'season', 'episode']])
+    imdb = meta['imdb']
+    key_video = '/'.join([imdb] + [meta.get(k) or '-' for k in ['season', 'episode']])
 
-    log.notice('{m}.{f}(%s, %s, title=%s, year=%s): key_video=%s',
-               provider, content, meta.get('title'), meta.get('year'), key_video)
+    log.debug('{m}.{f}(%s, %s, title=%s, year=%s): key_video=%s',
+              provider, content, meta.get('title'), meta.get('year'), key_video)
 
     video_ref = None
     if key_video == '-/-/-':
@@ -152,7 +152,7 @@ def _sources_worker(channel, mod, provider, content, meta):
             now_ts = int(datetime.datetime.now().strftime("%Y%m%d%H%M"))
             if now_ts - sql_ts < _SOURCE_CACHE_LIFETIME:
                 sources = json.loads(sqlrow['sources'])
-                log.notice('{m}.{f}(%s, ...): %d sources found in the cache', provider, len(sources))
+                log.debug('{m}.{f}.%s: %d sources found in the cache', provider, len(sources))
                 return sources
         except Exception:
             pass
@@ -169,7 +169,7 @@ def _sources_worker(channel, mod, provider, content, meta):
     if not video_ref:
         get_function_name = 'get_movie' if content == 'movie' else 'get_episode'
         if 'abort' in channel:
-            log.notice('{m}.{f}(%s): aborted at %s', provider, get_function_name)
+            log.debug('{m}.{f}.%s: aborted at %s', provider, get_function_name)
             return []
 
         try:
@@ -177,11 +177,11 @@ def _sources_worker(channel, mod, provider, content, meta):
             video_matches = getattr(mod, get_function_name)(provider.split('.'), **meta)
         except Exception as ex:
             # get functions might fail because of no title/episode found
-            log.notice('{m}.{f}.%s.%s(...): %s', provider, get_function_name, ex, trace=True)
+            log.notice('{m}.{f}.%s.%s: %s', provider, get_function_name, repr(ex), trace=True)
             video_matches = None
 
         if not video_matches:
-            log.notice('{m}.{f}(%s): no matches found', provider)
+            log.debug('{m}.{f}.%s: no matches found', provider)
         else:
             def cleantitle(title):
                 if title:
@@ -194,8 +194,8 @@ def _sources_worker(channel, mod, provider, content, meta):
             confidence = fuzz.token_sort_ratio(cleantitle(video_best_match[1]), title)
             if confidence >= _MIN_FUZZINESS_VALUE:
                 video_ref = video_best_match
-            log.notice('{m}.{f}(%s): %d matches found; best has confidence %d (%s)',
-                       provider, len(video_matches), confidence, video_best_match[1])
+            log.debug('{m}.{f}.%s: %d matches found; best has confidence %d (%s)',
+                      provider, len(video_matches), confidence, video_best_match[1])
 
         if video_ref and dbcon:
             try:
@@ -205,19 +205,18 @@ def _sources_worker(channel, mod, provider, content, meta):
                     dbcon.execute("INSERT INTO rel_url Values (?, ?, ?)",
                                   (provider, key_video, json.dumps(video_ref)))
             except Exception as ex:
-                log.notice('{m}.{f}(%s): %s', provider, ex)
+                log.notice('{m}.{f}.%s: %s: %s', provider, key_video, ex)
 
     if 'abort' in channel:
-        log.notice('{m}.{f}(%s): aborted at get_sources', provider)
+        log.debug('{m}.{f}.%s: aborted at get_sources', provider)
         return []
 
     sources = []
     if video_ref:
-        log.notice('{m}.{f}(%s).video_ref(%s)', provider, video_ref)
         try:
             sources = mod.get_sources(provider.split('.'), video_ref)
         except Exception as ex:
-            log.debug('{m}.{f}: %s(%s): %s', provider, video_ref, repr(ex))
+            log.debug('{m}.{f}.%s: %s: %s', provider, video_ref, repr(ex), trace=True)
 
         if not sources:
             sources = []
@@ -227,20 +226,38 @@ def _sources_worker(channel, mod, provider, content, meta):
             'provider': provider,
         })
 
-    if dbcon:
-        try:
-            # Cache the sources (also in the fail scenario)
-            with dbcon:
-                dbcon.execute("DELETE FROM rel_src WHERE provider = ? AND key_video = ?",
-                              (provider, key_video))
-                dbcon.execute("INSERT INTO rel_src Values (?, ?, ?, ?)",
-                              (provider, key_video, json.dumps(sources), datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
-        except Exception as ex:
-            log.error('{m}.{f}(%s): %s', provider, ex)
+    # NOTE: for episodes, the get_sources might returns additional series/episodes, which are saved as well
+    # However, only the sources for the requested season/episode are returned.
+    sources_groups = _sources_groups(imdb, sources).iteritems()
+    sources = []
+    for key, srcs in sources_groups:
+        if dbcon:
+            try:
+                with dbcon:
+                    log.debug('{m}.{f}.%s: %s: saving %d sources', provider, key, len(srcs))
+                    dbcon.execute("DELETE FROM rel_src WHERE provider = ? AND key_video = ?",
+                                  (provider, key))
+                    dbcon.execute("INSERT INTO rel_src Values (?, ?, ?, ?)",
+                                  (provider, key, json.dumps(srcs), datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
+            except Exception as ex:
+                log.notice('{m}.{f}.%s: %s: %s', provider, key, ex)
+        if key == key_video:
+            sources = srcs
 
-    log.notice('{m}.{f}(%s): %d sources found', provider, len(sources))
+    log.debug('{m}.{f}.%s: %s: %d sources found', provider, key_video, len(sources))
 
     return sources
+
+
+def _sources_groups(imdb, sources):
+    groups = {}
+    for src in sources:
+        key_video = '/'.join([imdb] + [src.get(k) or '-' for k in ['season', 'episode']])
+        if key_video not in groups:
+            groups[key_video] = []
+        groups[key_video].append(src)
+
+    return groups
 
 
 def clear_sources_cache(**kwargs):
@@ -269,6 +286,17 @@ def get_movie(provider, **kwargs):
         return mod[0].get_movie(provider['name'].split('.'), **kwargs)
 
 
+def get_episode(provider, **kwargs):
+    try:
+        provider = info()[provider]
+    except:
+        raise Exception('Provider %s not available'%provider)
+
+    with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'],
+                     ignore_exc=False) as mod:
+        return mod[0].get_episode(provider['name'].split('.'), **kwargs)
+
+
 def get_sources(provider, url):
     if not url:
         return []
@@ -284,7 +312,7 @@ def get_sources(provider, url):
             src.update({
                 'provider': provider['name'],
             })
-        return sources
+    return sources
 
 
 def resolve(provider, url):

@@ -91,7 +91,7 @@ def dialog(name, content, imdb, meta):
             ui.resolvedPlugin()
             ui.execute('Action(Back,10025)')
 
-        # Move this into the dbs modules!!!
+        # (fixme) move this into the dbs modules!!!
         imdb = 'tt%07d'%int(str(imdb).translate(None, 't'))
 
         poster = meta.get('poster', '0')
