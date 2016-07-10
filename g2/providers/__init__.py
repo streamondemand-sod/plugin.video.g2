@@ -120,11 +120,10 @@ def content_sources(content, meta, ui_update=None):
 
 
 def _sources_worker(channel, mod, provider, content, meta):
-    imdb = meta['imdb']
-    key_video = '/'.join([imdb] + [meta.get(k) or '-' for k in ['season', 'episode']])
-
+    imdb = meta.get('imdb', '0')
+    key_video = _key_video(meta)
     video_ref = None
-    if key_video == '-/-/-':
+    if key_video == '0/0/0':
         dbcon = None
     else:
         try:
@@ -249,7 +248,7 @@ def _sources_worker(channel, mod, provider, content, meta):
 def _sources_groups(imdb, sources):
     groups = {}
     for src in sources:
-        key_video = '/'.join([imdb] + [src.get(k) or '-' for k in ['season', 'episode']])
+        key_video = _key_video(imdb=imdb, **src)
         if key_video not in groups:
             groups[key_video] = []
         groups[key_video].append(src)
@@ -259,8 +258,7 @@ def _sources_groups(imdb, sources):
 
 def clear_sources_cache(**kwargs):
     try:
-        key_video = '/'.join([kwargs.get(k) or '-' for k in ['imdb', 'season', 'episode']])
-        log.debug('{m}.{f}(...): key_video=%s', key_video)
+        key_video = _key_video(kwargs)
         fs.makeDir(fs.PROFILE_PATH)
         dbcon = database.connect(fs.CACHE_DB_FILENAME, timeout=10)
         with dbcon:
@@ -268,8 +266,12 @@ def clear_sources_cache(**kwargs):
             dbcon.execute("DELETE FROM rel_url WHERE key_video = ?", (key_video,))
         return key_video
     except Exception as ex:
-        log.error('{m}.{f}(...): %s', ex)
+        log.error('{m}.{f}: %s: %s', kwargs, repr(ex))
         return None
+
+
+def _key_video(kwargs):
+    return '/'.join([kwargs.get(k) or '0' for k in ['imdb', 'season', 'episode']])
 
 
 def get_movie(provider, **kwargs):

@@ -75,8 +75,22 @@ def playurl(name=None, url=None):
 
 @action
 def clearsourcescache(name, **kwargs):
-    if name and providers.clear_sources_cache(**kwargs):
-        ui.infoDialog(_('Cache cleared for {video}').format(video=name))
+    key_video = providers.clear_sources_cache(**kwargs)
+
+    log.debug('{m}.{f}: %s', key_video)
+
+    if not key_video:
+        return
+    dummy_imdb, season, episode = key_video.split('/')
+    if season != '0' and episode != '0':
+        ui.infoDialog(_('Cache cleared for {video}, episode {season}x{episode:02d}').format(
+            video=name, season=season, episode=int(episode)))
+    elif season != '0':
+        ui.infoDialog(_('Cache cleared for {video}, season {season}').format(
+            video=name, season=season))
+    else:
+        ui.infoDialog(_('Cache cleared for {video}').format(
+            video=name))
 
 
 @action

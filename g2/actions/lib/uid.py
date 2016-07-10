@@ -194,7 +194,7 @@ def addcontentitems(items, content='movies'):
                                                                          imdb=imdb, season=season, episode=episode)))
 
             cmds.append((_('Clear sources cache'), addon.pluginaction('sources.clearsourcescache',
-                                                                      name=urllib.quote_plus(label),
+                                                                      name=urllib.quote_plus(tvshowtitle or label),
                                                                       imdb=imdb, season=season, episode=episode)))
 
             item = ui.ListItem(label=label, iconImage=poster, thumbnailImage=poster)
