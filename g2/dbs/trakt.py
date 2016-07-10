@@ -360,15 +360,18 @@ def watched(kind, seen=None, **kwargs):
                 }
             }]
         }
-        if content == 'show':
+        if content == 'show' and int(season):
             post[content+'s'][0].update({
                 'seasons': [{
                     'number': int(season),
+                }]
+            })
+            if int(episode):
+                post[content+'s'][0]['seasons'][0].update({
                     'episodes': [{
                         'number': int(episode),
                     }]
-                }]
-            })
+                })
 
         log.debug('{m}.{f}: %s: %s', seen, post)
 

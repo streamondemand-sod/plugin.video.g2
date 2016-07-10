@@ -19,9 +19,6 @@
 """
 
 
-import json
-import urllib
-
 from g2.libraries import ui
 from g2.libraries import log
 from g2.libraries import addon
@@ -78,7 +75,7 @@ def seasons(tvdb, imdb):
     }
     dbs.meta([item], content='serie')
 
-    items = item['seasons']
+    items = item.get('seasons', [])
     if not items:
         ui.infoDialog(_('No seasons'))
     else:
@@ -100,12 +97,11 @@ def episodes(tvdb, imdb, season):
     }
     dbs.meta([item], content='serie')
 
-    items = [e for e in item['episodes'] if e['season'] == season]
+    items = [e for e in item.get('episodes', []) if e['season'] == season]
     if not items:
         ui.infoDialog(_('No episodes'))
     else:
         for i in items:
-            meta = dict((k, v) for k, v in i.iteritems() if v and v != '0')
             i['name'] = _('{season:2d}x{episode:02d} . {title}').format(
                 season=int(i['season']),
                 episode=int(i['episode']),
@@ -114,7 +110,7 @@ def episodes(tvdb, imdb, season):
                                            name=i['name'],
                                            content='episode',
                                            imdb=i['imdb'],
-                                           meta=urllib.quote_plus(json.dumps(meta)))
+                                           meta='@META@')
 
     uid.addcontentitems(items, content='episodes')
 

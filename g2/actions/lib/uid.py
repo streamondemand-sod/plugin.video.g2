@@ -20,6 +20,7 @@
 """
 
 
+import json
 import urllib
 
 from g2.libraries import ui
@@ -95,6 +96,10 @@ def addcontentitems(items, content='movies'):
             tmdb = i['tmdb']
             tvdb = i['tvdb']
             imdb = i['imdb']
+            title = i['title']
+            tvshowtitle = i.get('tvshowtitle')
+            season = i.get('season', 0)
+            episode = i.get('episode', 0)
 
             poster = i.get('poster', '0')
             if poster == '0':
@@ -106,30 +111,11 @@ def addcontentitems(items, content='movies'):
             if fanart == '0':
                 fanart = _FANART
 
-            meta = dict((k, v) for k, v in i.iteritems() if not v == '0')
+            meta = dict((k, v) for k, v in i.iteritems() if v and v != '0')
             try:
                 meta['duration'] = str(int(meta['duration']) * 60)
             except Exception:
                 pass
-
-            if imdb == '0':
-                is_watched = False
-            elif content == 'movies':
-                is_watched = dbs.watched('movie{imdb_id}',
-                                         imdb_id=imdb)
-            elif content == 'episodes' and i.get('season') and i.get('episode'):
-                is_watched = dbs.watched('episode{imdb_id}{season}{episode}',
-                                         imdb_id=imdb,
-                                         season=i['season'],
-                                         episode=i['episode'])
-            else:
-                is_watched = False
-
-            if is_watched:
-                meta.update({
-                    'playcount': 1,
-                    'overlay': 7
-                })
 
             cmds = []
 
@@ -144,6 +130,7 @@ def addcontentitems(items, content='movies'):
             if content_info_label:
                 cmds.append((content_info_label, 'Action(Info)'))
 
+            # Create the script.extendedinfo commands
             if content_info_label and addon.condition('System.HasAddon(script.extendedinfo)'):
                 # NOTE: for possible extendedinfo menu actions and the required parameters, see:
                 # https://github.com/phil65/script.extendedinfo/blob/master/resources/lib/process.py
@@ -162,19 +149,37 @@ def addcontentitems(items, content='movies'):
                                      addon.scriptaction('script.extendedinfo', info='extendedtvinfo',
                                                         tvdb_id=tvdb)))
                 elif content == 'seasons':
-                    if i.get('title') and i.get('season'):
+                    if title and season:
                         cmds.append((content_extinfo_label,
                                      addon.scriptaction('script.extendedinfo', info='seasoninfo',
-                                                        tvshow=i.get('title'), season=i.get('season'))))
+                                                        tvshow=title, season=season)))
                 elif content == 'episodes':
-                    if i.get('title') and i.get('season') and i.get('episode'):
+                    if tvshowtitle and season and episode:
                         cmds.append((content_extinfo_label,
                                      addon.scriptaction('script.extendedinfo', info='extendedepisodeinfo',
-                                                        tvshow=i.get('title'), season=i.get('season'), episode=i.get('episode'))))
+                                                        tvshow=tvshowtitle, season=season, episode=episode)))
 
-            if is_watched is False:
-                pass
+            # Check if the video has been aleady watched:
+            # - Set the corresponding flag in the directory item
+            # - create the watched/unwatched commands
+            if imdb == '0':
+                is_watched = None
+            elif content == 'movies':
+                is_watched = dbs.watched('movie{imdb_id}',
+                                         imdb_id=imdb) is True
+            elif content in ['tvshows', 'seasons', 'episodes']:
+                is_watched = dbs.watched('episode{imdb_id}{season}{episode}',
+                                         imdb_id=imdb, season=season, episode=episode) is True
             else:
+                is_watched = None
+
+            if is_watched:
+                meta.update({
+                    'playcount': 1,
+                    'overlay': 7
+                })
+
+            if is_watched is not None:
                 if is_watched:
                     watch_command_label = _('Mark as unwatched')
                     watch_command = 'unwatched'
@@ -184,15 +189,13 @@ def addcontentitems(items, content='movies'):
                 if content == 'movies':
                     cmds.append((watch_command_label, addon.pluginaction('movies.%s'%watch_command,
                                                                          imdb=imdb)))
-                elif content == 'episodes':
+                elif content in ['tvshows', 'seasons', 'episodes']:
                     cmds.append((watch_command_label, addon.pluginaction('tvshows.%s'%watch_command,
-                                                                         imdb=imdb,
-                                                                         season=i['season'],
-                                                                         episode=i['episode'])))
+                                                                         imdb=imdb, season=season, episode=episode)))
 
-            # (fixme) episode
-            cmds.append((_('Clear sources cache'),
-                         addon.pluginaction('sources.clearsourcescache', name=urllib.quote_plus(label), imdb=imdb)))
+            cmds.append((_('Clear sources cache'), addon.pluginaction('sources.clearsourcescache',
+                                                                      name=urllib.quote_plus(label),
+                                                                      imdb=imdb, season=season, episode=episode)))
 
             item = ui.ListItem(label=label, iconImage=poster, thumbnailImage=poster)
 
@@ -217,6 +220,8 @@ def addcontentitems(items, content='movies'):
             item.setInfo(type='Video', infoLabels=meta)
             item.setProperty('Video', 'true')
             item.addContextMenuItems(cmds, replaceItems=False)
+
+            url = url.replace('@META@', urllib.quote_plus(json.dumps(meta)))
             ui.additem(url, item, isFolder=True, totalItems=len(items))
         except Exception as ex:
             log.debug('{m}.{f}: %s: %s', i, repr(ex))

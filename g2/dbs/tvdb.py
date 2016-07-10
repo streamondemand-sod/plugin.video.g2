@@ -297,6 +297,8 @@ def _meta_worker(met):
 
     for i in results:
         episode = fields_mapping_xml(i, _EPISODE_MAPPINGS_XML_DESC)
+        if episode['season'] == '0':
+            continue
 
         episode['tvshowtitle'] = serie['title']
 

@@ -20,7 +20,6 @@
 """
 
 
-import json
 import urllib
 
 from g2.libraries import ui
@@ -137,7 +136,6 @@ def movielist(url):
         ui.infoDialog(_('No results'))
     else:
         for i in items:
-            meta = dict((k, v) for k, v in i.iteritems() if v and v != '0')
             # Movie directory item label when the year is kwnon
             i['name'] = _('{title} ({year})').format(
                 title=i['title'],
@@ -146,7 +144,7 @@ def movielist(url):
                                            name=urllib.quote_plus(i['name']),
                                            content='movie',
                                            imdb=i['imdb'],
-                                           meta=urllib.quote_plus(json.dumps(meta)))
+                                           meta='@META@')
             i['next_action'] = 'movies.movielist'
         dbs.meta(items)
     uid.addcontentitems(items, content='movies')
