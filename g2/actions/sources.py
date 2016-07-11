@@ -20,18 +20,13 @@
 
 
 import json
-import hashlib
 import urlparse
-try:
-    from sqlite3 import dbapi2 as database
-except:
-    from pysqlite2 import dbapi2 as database
 
-from g2.libraries import fs
 from g2.libraries import ui
 from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries import workers
+from g2.libraries import database
 from g2.libraries.language import _
 
 from g2 import pkg
@@ -161,8 +156,9 @@ def _play_source(name, imdb, meta, item):
     url = item.getProperty('url')
 
     auto_play = addon.setting('auto_play') == 'true'
+    bookmarks = database.Bookmarks()
     try:
-        offset = _get_bookmark(name, imdb)
+        offset = bookmarks.get(meta)
         if offset and not auto_play:
             minutes, seconds = divmod(int(offset), 60)
             hours, minutes = divmod(minutes, 60)
@@ -173,10 +169,10 @@ def _play_source(name, imdb, meta, item):
                     yeslabel=_('Resume'),
                     nolabel=_('Start from beginning')):
                 offset = 0
-        log.debug('{m}.{f}: %s %s: bookmark=%d', name, imdb, offset)
+        log.debug('{m}.{f}: %s: bookmark=%d', name, offset)
     except Exception as ex:
+        log.debug('{m}.{f}: %s: %s', name, repr(ex))
         offset = 0
-        log.debug('{m}.{f}: %s %s: %s', name, imdb, repr(ex))
 
     if auto_play:
         credits_message = []
@@ -208,7 +204,7 @@ def _play_source(name, imdb, meta, item):
         item.setProperty('url', '')
 
     elif player_status >= defs.WATCHED_THRESHOLD:
-        _del_bookmark(name, imdb)
+        bookmarks.delete(meta)
         watched = dbs.watched('movie{imdb_id}', imdb_id=imdb)
         if not watched:
             watched = True
@@ -217,7 +213,7 @@ def _play_source(name, imdb, meta, item):
         return True
 
     elif player_status >= defs.BOOKMARK_THRESHOLD:
-        _add_bookmark(player.elapsed(), name, imdb)
+        bookmarks.set(meta, player.elapsed())
 
     return False
 
@@ -370,47 +366,3 @@ def _resolve(provider, url, ui_update=None):
     log.notice('{m}.{f}(%s, %s): %s %.3f secs%s'%(provider, url, what, thd.elapsed(), extrainfo))
 
     return None if ui_cancelled else thd
-
-
-def _add_bookmark(bookmarktime, name, imdb):
-    try:
-        idfile = _bookmark_id(name, imdb)
-        fs.makeDir(fs.PROFILE_PATH)
-        dbcon = database.connect(fs.SETTINGS_DB_FILENAME)
-        with dbcon:
-            dbcon.execute("CREATE TABLE IF NOT EXISTS bookmark (idfile TEXT, bookmarktime INTEGER, UNIQUE(idfile))")
-            dbcon.execute("DELETE FROM bookmark WHERE idfile = ?", (idfile,))
-            dbcon.execute("INSERT INTO bookmark Values (?, ?)", (idfile, bookmarktime,))
-    except Exception as ex:
-        log.debug('{m}.{f}: %s: %s', name, repr(ex))
-
-
-def _get_bookmark(name, imdb):
-    try:
-        idfile = _bookmark_id(name, imdb)
-        dbcon = database.connect(fs.SETTINGS_DB_FILENAME)
-        dbcon.row_factory = database.Row
-        dbcur = dbcon.execute("SELECT * FROM bookmark WHERE idfile = ?", (idfile,))
-        match = dbcur.fetchone()
-        return match['bookmarktime'] if match else 0
-    except Exception as ex:
-        log.debug('{m}.{f}: %s: %s', name, repr(ex))
-        return 0
-
-
-def _del_bookmark(name, imdb):
-    try:
-        idfile = _bookmark_id(name, imdb)
-        dbcon = database.connect(fs.SETTINGS_DB_FILENAME)
-        dbcon.row_factory = database.Row
-        with dbcon:
-            dbcon.execute("DELETE FROM bookmark WHERE idfile = ?", (idfile,))
-    except Exception as ex:
-        log.debug('{m}.{f}: %s: %s', name, repr(ex))
-
-
-def _bookmark_id(name, imdb):
-    idfile = hashlib.md5()
-    idfile.update(name)
-    idfile.update(imdb)
-    return str(idfile.hexdigest())

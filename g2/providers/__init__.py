@@ -121,7 +121,7 @@ def content_sources(content, meta, ui_update=None):
 
 def _sources_worker(channel, mod, provider, content, meta):
     imdb = meta.get('imdb', '0')
-    key_video = _key_video(meta)
+    key_video = _key_video(**meta)
     video_ref = None
     if key_video == '0/0/0':
         dbcon = None
@@ -258,7 +258,7 @@ def _sources_groups(imdb, sources):
 
 def clear_sources_cache(**kwargs):
     try:
-        key_video = _key_video(kwargs)
+        key_video = _key_video(**kwargs)
         fs.makeDir(fs.PROFILE_PATH)
         dbcon = database.connect(fs.CACHE_DB_FILENAME, timeout=10)
         with dbcon:
@@ -270,7 +270,7 @@ def clear_sources_cache(**kwargs):
         return None
 
 
-def _key_video(kwargs):
+def _key_video(**kwargs):
     return '/'.join([kwargs.get(k) or '0' for k in ['imdb', 'season', 'episode']])
 
 
