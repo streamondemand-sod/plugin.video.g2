@@ -187,13 +187,14 @@ def abortRequested(timeout=None):
 
 
 def keyboard(heading):
-    default = addon.prop('ui', name=heading)
+    # default = addon.prop('ui', name=heading)
+    default = None
     k = xbmc.Keyboard(default or '', heading)
     k.doModal()
     if not k.isConfirmed():
         return None
     default = k.getText()
-    addon.prop('ui', default, name=heading)
+    # addon.prop('ui', default, name=heading)
     return default
 
 
