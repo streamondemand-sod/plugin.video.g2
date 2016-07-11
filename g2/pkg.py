@@ -133,16 +133,17 @@ class Context:
         self.modules = modules
         self.search_paths = list(search_paths)
         self.ignore_exc = ignore_exc
+        self.sys_path = None
         self.stdout = None
         self.stderr = None
         self.urllib2_opener = None
 
     def __enter__(self):
         """Build the right context for executing the package methods"""
-        for path in self.search_paths:
-            sys.path.insert(0, path)
+        self.sys_path = sys.path
         self.stdout = sys.stdout
         self.stderr = sys.stderr
+        sys.path = self.search_paths + sys.path
         sys.stdout = open(os.devnull, 'w')
         sys.stderr = sys.stdout
         self.urllib2_opener = urllib2._opener #pylint: disable=W0212
@@ -174,8 +175,7 @@ class Context:
         sys.stdout.close()
         sys.stdout = self.stdout
         sys.stderr = self.stderr
-        for dummy_path in self.search_paths:
-            sys.path.pop(0)
+        sys.path = self.sys_path
         if not self.ignore_exc and exc_value:
             log.error('%s: %s', self.fullname, exc_value, trace=True)
         return True
