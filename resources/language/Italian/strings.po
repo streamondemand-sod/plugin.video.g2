@@ -368,6 +368,7 @@ msgctxt "#30071"
 msgid "Mark as watched"
 msgstr "Segna come guardato"
 
+#. (fixme) add support for entire tvshow/season cache clearing
 #: g2/actions/movies.py:250
 msgctxt "#30072"
 msgid "Clear sources cache"
@@ -771,11 +772,6 @@ msgctxt "#30148"
 msgid "{title} ({year})"
 msgstr "{title} ({year})"
 
-#: g2/actions/tvshows.py:44
-msgctxt "#30149"
-msgid "TV series search"
-msgstr "TV series search"
-
 #: g2/actions/tvshows.py:83
 msgctxt "#30150"
 msgid "No seasons"
@@ -799,17 +795,22 @@ msgctxt "#30153"
 msgid "{season:2d}x{episode:02d} . {title}"
 msgstr "{season:2d}x{episode:02d} . {title}"
 
-#: g2/actions/sources.py:81
-#, python-brace-format
-msgctxt "#30154"
-msgid "Cache cleared for {video}, episode {season}x{episode:02d}"
-msgstr "Cache cleared for {video}, episode {season}x{episode:02d}"
+#: g2/actions/tvshows.py:41
+msgctxt "#30156"
+msgid "TV show search"
+msgstr "TV show search"
 
-#: g2/actions/sources.py:84
-#, python-brace-format
-msgctxt "#30155"
-msgid "Cache cleared for {video}, season {season}"
-msgstr "Cache cleared for {video}, season {season}"
+#~ msgctxt ""
+#~ msgid "TV series search"
+#~ msgstr "TV series search"
+
+#~ msgctxt ""
+#~ msgid "Cache cleared for {video}, episode {season}x{episode:02d}"
+#~ msgstr "Cache cleared for {video}, episode {season}x{episode:02d}"
+
+#~ msgctxt ""
+#~ msgid "Cache cleared for {video}, season {season}"
+#~ msgstr "Cache cleared for {video}, season {season}"
 
 #~ msgctxt ""
 #~ msgid "Title to search"
@@ -822,6 +823,18 @@ msgstr "Cache cleared for {video}, season {season}"
 #~ msgctxt ""
 #~ msgid "Year"
 #~ msgstr "Anno da ricercare"
+
+#~ msgctxt ""
+#~ msgid "Year"
+#~ msgstr "Year"
+
+#~ msgctxt ""
+#~ msgid "Person to search"
+#~ msgstr "Person to search"
+
+#~ msgctxt ""
+#~ msgid "Title to search"
+#~ msgstr "Title to search"
 
 #~ msgctxt ""
 #~ msgid "Year"
