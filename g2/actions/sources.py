@@ -115,7 +115,7 @@ def dialog(name, content, meta):
             providers.content_sources(content, meta=meta, ui_update=ui_update)
 
         win = SourcesDialog('SourcesDialog.xml', addon.PATH, 'Default', '720p',
-                            sourceName=name,
+                            sourceName=name if content == 'episode' or poster == ui.addon_poster() else '',
                             sourcesGenerator=sources_generator,
                             sourcePriority=_source_priority,
                             sourceResolve=_resolve,

@@ -89,9 +89,9 @@
 		<!-- Left side label (in case the poster is missing) -->
 		<control type="label" id="12">
 			<left>60</left>
-			<top>90</top>
+			<top>390</top>
 			<width>410</width>
-			<height>580</height>
+			<height>280</height>
 			<font>font48</font>
 			<align>center</align>
 			<aligny>center</aligny>

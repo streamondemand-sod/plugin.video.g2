@@ -120,12 +120,8 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         self.left_image = self.getControl(self.left_image_id)
         self.left_label = self.getControl(self.left_label_id)
 
-        if self.poster_image:
-            self.left_image.setImage(self.poster_image)
-            self.left_label.setLabel('')
-        else:
-            self.left_image.setImage(ui.addon_poster())
-            self.left_label.setLabel(self.source_name)
+        self.left_image.setImage(self.poster_image or ui.addon_poster())
+        self.left_label.setLabel(self.source_name or '')
 
         if not self.thread and self.sources_generator:
             self.thread = workers.Thread(self.sources_worker)
