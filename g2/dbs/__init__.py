@@ -70,9 +70,9 @@ def movies(url, **kwargs):
     return _alldbs_method('movies', url, url)
 
 
-def series(url, **kwargs):
+def tvshows(url, **kwargs):
     url = resolve(url, **kwargs) or url
-    return _alldbs_method('series', url, url)
+    return _alldbs_method('tvshows', url, url)
 
 
 def meta(items, content='movie', lang=_INFO_LANG):

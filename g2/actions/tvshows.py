@@ -38,27 +38,27 @@ def menu():
 
 @action
 def searchbytitle():
-    query = ui.keyboard(_('TV series search'))
+    query = ui.keyboard(_('TV show search'))
     if query:
-        url = dbs.resolve('series{title}', title=query, quote_plus=True)
-        ui.refresh('tvshows.serieslist', url=url)
+        url = dbs.resolve('tvshows{title}', title=query, quote_plus=True)
+        ui.refresh('tvshows.tvshowslist', url=url)
 
 
 @action
-def serieslist(url):
+def tvshowslist(url):
     log.debug('{m}.{f}: %s', url)
-    items = dbs.series(url)
+    items = dbs.tvshows(url)
     if not items:
         ui.infoDialog(_('No results'))
     else:
-        dbs.meta(items, content='serie')
+        dbs.meta(items, content='tvshow')
         for i in items:
             # TV show directory item label when the year is kwnon
             i['name'] = _('{title} ({year})').format(
                 title=i['title'],
                 year=i['year']) if i.get('year') else i['title']
             i['action'] = addon.itemaction('tvshows.seasons', tvdb=i['tvdb'], imdb=i['imdb'])
-            i['next_action'] = 'tvshows.serieslist'
+            i['next_action'] = 'tvshows.tvshowslist'
             # Deleting all this info otherwise the Kodi listitem chokes! :)
             for nfo in ['seasons', 'episodes']:
                 if nfo in i:
@@ -73,7 +73,7 @@ def seasons(tvdb, imdb):
         'tvdb': tvdb,
         'imdb': imdb,
     }
-    dbs.meta([item], content='serie')
+    dbs.meta([item], content='tvshow')
 
     items = item.get('seasons', [])
     if not items:
@@ -95,7 +95,7 @@ def episodes(tvdb, imdb, season):
         'tvdb': tvdb,
         'imdb': imdb,
     }
-    dbs.meta([item], content='serie')
+    dbs.meta([item], content='tvshow')
 
     items = [e for e in item.get('episodes', []) if e['season'] == season]
     if not items:

@@ -222,7 +222,7 @@ def _sources_worker(channel, mod, provider, content, meta):
             'provider': provider,
         })
 
-    # NOTE: for episodes, the get_sources might returns additional series/episodes, which are saved as well
+    # NOTE: for episodes, the get_sources might returns additional seasons/episodes, which are saved as well
     # However, only the sources for the requested season/episode are returned.
     sources_groups = _sources_groups(imdb, sources).iteritems()
     sources = []

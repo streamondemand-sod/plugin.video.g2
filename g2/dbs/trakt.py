@@ -38,7 +38,7 @@ from . import normalize_imdb
 
 info = {
     'domains': ['api-v2launch.trakt.tv'],
-    'methods': ['resolve', 'movies', 'series', 'lists', 'watched'],
+    'methods': ['resolve', 'movies', 'tvshows', 'lists', 'watched'],
 }
 
 _TRAKT_USER = addon.setting('trakt_user')
@@ -59,7 +59,7 @@ _BASE_URL = 'https://api-v2launch.trakt.tv'
 _URLS = {
     # Public query
     'movies_trending{}': '/movies/trending?limit=20|168',
-    # 'series{title}': '/search?type=show&query={title}&limit=20', # -- tv series query is implemented using tvdb
+    # 'tvshows{title}': '/search?type=show&query={title}&limit=20', # -- tv shows query is implemented using tvdb
 
     # For the below urls trakt must be enabled and with a valid user id
     'lists{trakt_user_id}': '/users/{trakt_user_id}/lists -- {trakt_enabled}',
@@ -104,7 +104,7 @@ def movies(url):
     return _content(url, 'movie')
 
 
-def series(url):
+def tvshows(url):
     return _content(url, 'show')
 
 

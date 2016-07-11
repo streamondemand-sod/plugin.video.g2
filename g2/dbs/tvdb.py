@@ -36,7 +36,7 @@ from . import fields_mapping_xml
 
 info = {
     'domains': ['thetvdb.com'],
-    'methods': ['resolve', 'series', 'meta'],
+    'methods': ['resolve', 'tvshows', 'meta'],
 }
 
 _INFO_LANG = addon.language('infoLang')
@@ -48,9 +48,9 @@ _TVDB_POSTER = 'http://thetvdb.com/banners/_cache/'
 
 _BASE_URL = 'http://thetvdb.com/api'
 _URLS = {
-    'series{title}': '/GetSeries.php?seriesname={title}&language={info_lang}',
-    # 'serie_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.xml',
-    'serie_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.zip',
+    'tvshows{title}': '/GetSeries.php?seriesname={title}&language={info_lang}',
+    # 'tvshow_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.xml',
+    'tvshow_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.zip',
 }
 
 _SERIE_MAPPINGS_XML_DESC = [
@@ -223,15 +223,14 @@ def resolve(kind=None, **kwargs):
     return _BASE_URL+_URLS[kind].format(**kwargs)
 
 
-def series(url):
+def tvshows(url):
     url = url.split('|')[0]
     result = client.get(url).content
-    # result = result.decode('iso-8859-1').encode('utf-8')
 
     results = client.parseDOM(result, 'Series')
     results = [s for s in results if client.parseDOM(s, 'language') == [_INFO_LANG]]
 
-    log.debug('{m}.{f}: %s: %d series', url.replace(_BASE_URL, ''), len(results))
+    log.debug('{m}.{f}: %s: %d tvshows', url.replace(_BASE_URL, ''), len(results))
 
     items = []
     for i in results:
@@ -266,16 +265,16 @@ def _meta_worker(met):
     results = client.parseDOM(meta_xml, 'Series')
     results = [s for s in results if client.parseDOM(s, 'Language') == [lang]]
 
-    log.debug('{m}.{f}: %s: %d series meta for %s lang', url.replace(_BASE_URL, ''), len(results), lang)
+    log.debug('{m}.{f}: %s: %d tvshows meta for %s lang', url.replace(_BASE_URL, ''), len(results), lang)
 
     if not results:
         return
 
-    serie = fields_mapping_xml(results[0], _SERIE_MAPPINGS_XML_DESC)
+    tvshow = fields_mapping_xml(results[0], _SERIE_MAPPINGS_XML_DESC)
 
-    serie['seasons'] = []
-    serie['episodes'] = []
-    met['item'] = serie
+    tvshow['seasons'] = []
+    tvshow['episodes'] = []
+    met['item'] = tvshow
 
     results = client.parseDOM(meta_xml, 'Episode')
 
@@ -293,27 +292,27 @@ def _meta_worker(met):
 
     log.debug('{m}.{f}: %s: %d banners (en)', url.replace(_BASE_URL, ''), len(season_banners.keys()))
 
-    serie_poster = serie['poster'] if serie['poster'] != '0' else serie['fanart'].replace(_TVDB_IMAGE, _TVDB_POSTER)
+    tvshow_poster = tvshow['poster'] if tvshow['poster'] != '0' else tvshow['fanart'].replace(_TVDB_IMAGE, _TVDB_POSTER)
 
     for i in results:
         episode = fields_mapping_xml(i, _EPISODE_MAPPINGS_XML_DESC)
         if episode['season'] == '0':
             continue
 
-        episode['tvshowtitle'] = serie['title']
+        episode['tvshowtitle'] = tvshow['title']
 
         if int(episode['episode']) == 1:
             try:
                 season_poster = _TVDB_IMAGE + season_banners[episode['season']][0]['path']
             except Exception:
-                season_poster = serie_poster
+                season_poster = tvshow_poster
 
             season = {
-                'title': serie['title'],
+                'title': tvshow['title'],
                 'season': episode['season'],
                 'premiered': episode['premiered'],
                 'poster': season_poster,
-                'fanart': serie['fanart'],
+                'fanart': tvshow['fanart'],
             }
             for dbid in ['tvdb', 'imdb', 'tmdb']:
                 season[dbid] = met[dbid]
