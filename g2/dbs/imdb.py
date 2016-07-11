@@ -26,12 +26,13 @@ import urlparse
 from g2.libraries import log
 from g2.libraries import client
 
+from . import normalize_imdb
+
 
 info = {
     'domains': ['www.imdb.com'],
     'methods': ['resolve', 'movies', 'lists'],
 }
-
 
 _IMDB_PAGE_COUNT = 20
 
@@ -128,15 +129,8 @@ def movies(url):
             year = re.compile(r'(\d{4})').findall(year)[-1]
             year = year.encode('utf-8')
 
-            name = '%s (%s)' % (title, year)
-            try:
-                name = name.encode('utf-8')
-            except Exception:
-                pass
-
             imdb = client.parseDOM(item, 'a', ret='href')[0]
-            imdb = 'tt' + re.sub('[^0-9]', '', imdb.rsplit('tt', 1)[-1])
-            imdb = imdb.encode('utf-8')
+            imdb = normalize_imdb(imdb)
 
             poster = '0'
             try: poster = client.parseDOM(item, 'img', ret='src')[0]
@@ -236,7 +230,6 @@ def movies(url):
                 'cast': cast,
                 'plot': plot,
                 'tagline': tagline,
-                'name': name,
                 'code': imdb,
                 'imdb': imdb,
                 'tmdb': '0',

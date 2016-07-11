@@ -30,7 +30,6 @@ from g2.libraries import database
 from g2.libraries.language import _
 
 from g2 import pkg
-from g2 import dbs
 from g2 import defs
 from g2 import providers
 from g2 import resolvers
@@ -100,9 +99,6 @@ def dialog(name, content, meta):
         if ui.isfolderaction():
             ui.resolvedPlugin()
             ui.execute('Action(Back,10025)')
-
-        # # (fixme) move this into the dbs modules!!!
-        # imdb = 'tt%07d'%int(str(imdb).translate(None, 't'))
 
         poster = meta.get('poster', '0')
         if poster == '0':

@@ -251,6 +251,13 @@ def _save_meta(metas):
                     log.error('{m}.{f}: %s: %s', i, repr(ex))
 
 
+def normalize_imdb(imdb):
+    if not imdb or imdb == '0':
+        raise Exception('Missing imdb')
+    imdb = 'tt%07d'%int(str(imdb).translate(None, 't'))
+    return imdb.encode('utf-8')
+
+
 def fields_mapping_xml(src, mappings_desc):
     item = {}
     for desc in mappings_desc:

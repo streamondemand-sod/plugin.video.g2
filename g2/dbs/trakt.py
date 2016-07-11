@@ -33,12 +33,13 @@ from g2.libraries.language import _
 
 from g2 import defs
 
+from . import normalize_imdb
+
 
 info = {
     'domains': ['api-v2launch.trakt.tv'],
     'methods': ['resolve', 'movies', 'series', 'lists', 'watched'],
 }
-
 
 _TRAKT_USER = addon.setting('trakt_user')
 
@@ -166,17 +167,14 @@ def _content(url, content='movie'):
             year = re.sub('[^0-9]', '', str(year))
             year = year.encode('utf-8')
 
+            imdb = item['ids'].get('imdb')
+            imdb = normalize_imdb(imdb)
+
             tmdb = item['ids'].get('tmdb')
             if tmdb == None or tmdb == '':
                 tmdb = '0'
             tmdb = re.sub('[^0-9]', '', str(tmdb))
             tmdb = tmdb.encode('utf-8')
-
-            imdb = item['ids'].get('imdb')
-            if imdb == None or imdb == '':
-                imdb = '0'
-            imdb = 'tt' + re.sub('[^0-9]', '', str(imdb))
-            imdb = imdb.encode('utf-8')
 
             tvdb = item['ids'].get('tvdb')
             if tvdb == None or tvdb == '':
@@ -189,9 +187,6 @@ def _content(url, content='movie'):
                 tvrage = '0'
             tvrage = re.sub('[^0-9]', '', str(tvrage))
             tvrage = tvrage.encode('utf-8')
-
-            if imdb == '0' and tvdb == '0':
-                raise Exception('Missing both imdb and tvdb ids')
 
             poster = '0'
             try: poster = item['images']['poster']['medium']

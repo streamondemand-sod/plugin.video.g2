@@ -30,6 +30,8 @@ from g2.libraries import workers
 
 from g2 import defs
 
+from . import normalize_imdb
+
 
 info = {
     'domains': ['api.themoviedb.org'],
@@ -250,13 +252,8 @@ def _meta_worker(meta):
         item.update({'tmdb': tmdb})
 
     imdb = result.get('imdb_id')
-    if not imdb:
-        imdb = '0'
-    if imdb != '0':
-        imdb = 'tt%07d'%int(str(imdb).translate(None, 't'))
-    imdb = imdb.encode('utf-8')
-    if imdb != '0':
-        item.update({'imdb': imdb, 'code': imdb})
+    imdb = normalize_imdb(imdb)
+    item.update({'imdb': imdb, 'code': imdb})
 
     poster = result.get('poster_path')
     if not poster:
