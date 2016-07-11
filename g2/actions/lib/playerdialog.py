@@ -41,7 +41,7 @@ class PlayerDialog(xbmc.Player):
         self.play_stopped = False
         xbmc.Player.__init__(self)
 
-    def run(self, name, meta, url, offset=0, info=None):
+    def run(self, name, url, meta=None, offset=0, info=None):
         self.loading_time = time.time()
 
         self.name = name

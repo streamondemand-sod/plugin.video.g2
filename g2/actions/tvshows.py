@@ -109,7 +109,6 @@ def episodes(tvdb, imdb, season):
             i['action'] = addon.itemaction('sources.dialog',
                                            name=i['name'],
                                            content='episode',
-                                           imdb=i['imdb'],
                                            meta='@META@')
 
     uid.addcontentitems(items, content='episodes')

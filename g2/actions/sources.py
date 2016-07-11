@@ -36,13 +36,14 @@ from g2 import providers
 from g2 import resolvers
 
 from . import action
+from .lib import uid
 from .lib import downloader
 from .lib.sourcesdialog import SourcesDialog
 from .lib.playerdialog import PlayerDialog
 
 
 @action
-def playurl(name=None, url=None):
+def playurl(name, url):
     try:
         if not url:
             return
@@ -61,7 +62,7 @@ def playurl(name=None, url=None):
             return
 
         url = thd.result
-        PlayerDialog().run(name, None, url)
+        PlayerDialog().run(name, url)
 
     except Exception as ex:
         log.error('{m}.{f}: %s: %s', url, repr(ex))
@@ -89,7 +90,7 @@ def clearsourcescache(name, **kwargs):
 
 
 @action
-def dialog(name, content, imdb, meta):
+def dialog(name, content, meta):
     try:
         meta = {} if not meta else json.loads(meta)
 
@@ -100,14 +101,12 @@ def dialog(name, content, imdb, meta):
             ui.resolvedPlugin()
             ui.execute('Action(Back,10025)')
 
-        # (fixme) move this into the dbs modules!!!
-        imdb = 'tt%07d'%int(str(imdb).translate(None, 't'))
+        # # (fixme) move this into the dbs modules!!!
+        # imdb = 'tt%07d'%int(str(imdb).translate(None, 't'))
 
         poster = meta.get('poster', '0')
         if poster == '0':
             poster = ui.addon_poster()
-
-        log.debug('{m}.{f}: %s %s: meta:%s', name, imdb, meta)
 
         def sources_generator(self):
             def ui_update(progress, total, new_results):
@@ -137,11 +136,11 @@ def dialog(name, content, imdb, meta):
                 break
 
             if win.action == 'play':
-                if _play_source(name, imdb, meta, item):
+                if _play_source(name, content, item, meta):
                     break
 
             elif win.action == 'download':
-                _download_source(name, poster, item)
+                _download_source(name, item, poster)
 
             win.show()
 
@@ -152,13 +151,13 @@ def dialog(name, content, imdb, meta):
         ui.infoDialog(_('No stream available'))
 
 
-def _play_source(name, imdb, meta, item):
+def _play_source(name, content, item, meta):
     url = item.getProperty('url')
 
     auto_play = addon.setting('auto_play') == 'true'
     bookmarks = database.Bookmarks()
     try:
-        offset = bookmarks.get(meta)
+        offset = bookmarks.get(meta, 0)
         if offset and not auto_play:
             minutes, seconds = divmod(int(offset), 60)
             hours, minutes = divmod(minutes, 60)
@@ -193,32 +192,29 @@ def _play_source(name, imdb, meta, item):
             ]]
 
     player = PlayerDialog()
-    player_status = player.run(name, meta, url, offset=offset, info=credits_message)
+    player_status = player.run(name, url, meta, offset=offset, info=credits_message)
 
     if player_status < 0:
         log.notice('{m}.{f}: %s: %s: invalid source', name, url)
-        source = item.getLabel()
-        ui.infoDialog(_('Not a valid stream'), heading=source)
+        ui.infoDialog(_('Not a valid stream'), heading=item.getLabel())
         ui.sleep(2000)
         item.setProperty('source_url', '')
         item.setProperty('url', '')
 
     elif player_status >= defs.WATCHED_THRESHOLD:
-        bookmarks.delete(meta)
-        watched = dbs.watched('movie{imdb_id}', imdb_id=imdb)
-        if not watched:
-            watched = True
-            dbs.watched('movie{imdb_id}', watched, imdb_id=imdb)
+        del bookmarks[meta]
+        if not uid.is_watcheditem(content, meta):
+            uid.watcheditem(content, meta, True)
             ui.refresh()
         return True
 
     elif player_status >= defs.BOOKMARK_THRESHOLD:
-        bookmarks.set(meta, player.elapsed())
+        bookmarks[meta] = player.elapsed()
 
     return False
 
 
-def _download_source(name, poster, item):
+def _download_source(name, item, poster):
     url = item.getProperty('url')
 
     media_format = item.getProperty('type')

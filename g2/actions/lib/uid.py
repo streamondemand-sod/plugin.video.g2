@@ -35,6 +35,40 @@ _FANART = ui.addon_fanart()
 _ICON_NEXT = ui.addon_next()
 
 
+def is_watcheditem(content, item):
+    imdb = item['imdb']
+    season = item.get('season', 0)
+    episode = item.get('episode', 0)
+
+    if imdb == '0':
+        is_watched = None
+    elif content == 'movies':
+        is_watched = dbs.watched('movie{imdb_id}',
+                                 imdb_id=imdb) is True
+    elif content in ['tvshows', 'seasons', 'episodes']:
+        is_watched = dbs.watched('episode{imdb_id}{season}{episode}',
+                                 imdb_id=imdb, season=season, episode=episode) is True
+    else:
+        is_watched = None
+
+    return is_watched
+
+
+def watcheditem(content, item, watched):
+    imdb = item['imdb']
+    season = item.get('season', 0)
+    episode = item.get('episode', 0)
+
+    if imdb == '0':
+        pass
+    elif content == 'movies':
+        dbs.watched('movie{imdb_id}', watched is True,
+                    imdb_id=imdb)
+    elif content in ['tvshows', 'seasons', 'episodes']:
+        dbs.watched('episode{imdb_id}{season}{episode}', watched is True,
+                    imdb_id=imdb, season=season, episode=episode)
+
+
 def additems(items, show_genre_as=False, is_person=False):
     if not items:
         items = []
@@ -162,17 +196,7 @@ def addcontentitems(items, content='movies'):
             # Check if the video has been aleady watched:
             # - Set the corresponding flag in the directory item
             # - create the watched/unwatched commands
-            if imdb == '0':
-                is_watched = None
-            elif content == 'movies':
-                is_watched = dbs.watched('movie{imdb_id}',
-                                         imdb_id=imdb) is True
-            elif content in ['tvshows', 'seasons', 'episodes']:
-                is_watched = dbs.watched('episode{imdb_id}{season}{episode}',
-                                         imdb_id=imdb, season=season, episode=episode) is True
-            else:
-                is_watched = None
-
+            is_watched = is_watcheditem(content, i)
             if is_watched:
                 meta.update({
                     'playcount': 1,

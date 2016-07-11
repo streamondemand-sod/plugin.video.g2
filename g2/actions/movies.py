@@ -142,7 +142,6 @@ def movielist(url):
             i['action'] = addon.itemaction('sources.dialog',
                                            name=urllib.quote_plus(i['name']),
                                            content='movie',
-                                           imdb=i['imdb'],
                                            meta='@META@')
             i['next_action'] = 'movies.movielist'
         dbs.meta(items)

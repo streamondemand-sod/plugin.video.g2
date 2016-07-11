@@ -99,7 +99,6 @@ def new(notifier, iden, title, body, url):
             addon.runplugin('sources.dialog',
                             name=urllib.quote_plus(name),
                             content='movie',
-                            imdb=meta['imdb'],
                             meta=urllib.quote_plus(json.dumps(meta)))
         else:
             raise Exception('unknown site type: %s'%sites[netloc])
