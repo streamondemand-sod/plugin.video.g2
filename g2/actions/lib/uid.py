@@ -37,17 +37,15 @@ _ICON_NEXT = ui.addon_next()
 
 def is_watcheditem(content, item):
     imdb = item['imdb']
-    season = item.get('season', 0)
-    episode = item.get('episode', 0)
-
     if imdb == '0':
         is_watched = None
     elif content == 'movies':
         is_watched = dbs.watched('movie{imdb_id}',
                                  imdb_id=imdb) is True
-    elif content in ['tvshows', 'seasons', 'episodes']:
+    elif content == 'episodes':
+        # (fixme) add support to check if the entire tvshow/season has been watched
         is_watched = dbs.watched('episode{imdb_id}{season}{episode}',
-                                 imdb_id=imdb, season=season, episode=episode) is True
+                                 imdb_id=imdb, season=item['season'], episode=item['episode']) is True
     else:
         is_watched = None
 
@@ -56,17 +54,15 @@ def is_watcheditem(content, item):
 
 def watcheditem(content, item, watched):
     imdb = item['imdb']
-    season = item.get('season', 0)
-    episode = item.get('episode', 0)
-
     if imdb == '0':
         pass
     elif content == 'movies':
         dbs.watched('movie{imdb_id}', watched is True,
                     imdb_id=imdb)
-    elif content in ['tvshows', 'seasons', 'episodes']:
+    elif content == 'episodes':
+        # (fixme) add support to set if the entire tvshow/season has been watched/unwatched
         dbs.watched('episode{imdb_id}{season}{episode}', watched is True,
-                    imdb_id=imdb, season=season, episode=episode)
+                    imdb_id=imdb, season=item['season'], episode=item['episode'])
 
 
 def additems(items, show_genre_as=False, is_person=False):
@@ -213,13 +209,16 @@ def addcontentitems(items, content='movies'):
                 if content == 'movies':
                     cmds.append((watch_command_label, addon.pluginaction('movies.%s'%watch_command,
                                                                          imdb=imdb)))
-                elif content in ['tvshows', 'seasons', 'episodes']:
+                elif content == 'episodes':
+                    # (fixme) add support to set if the entire tvshow/season has been watched/unwatched
                     cmds.append((watch_command_label, addon.pluginaction('tvshows.%s'%watch_command,
                                                                          imdb=imdb, season=season, episode=episode)))
 
-            cmds.append((_('Clear sources cache'), addon.pluginaction('sources.clearsourcescache',
-                                                                      name=urllib.quote_plus(tvshowtitle or label),
-                                                                      imdb=imdb, season=season, episode=episode)))
+            if content in ['movies', 'episodes']:
+                # (fixme) add support for entire tvshow/season cache clearing
+                cmds.append((_('Clear sources cache'), addon.pluginaction('sources.clearsourcescache',
+                                                                          name=urllib.quote_plus(label),
+                                                                          imdb=imdb, season=season, episode=episode)))
 
             item = ui.ListItem(label=label, iconImage=poster, thumbnailImage=poster)
 

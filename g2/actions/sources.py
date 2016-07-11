@@ -71,21 +71,8 @@ def playurl(name, url):
 @action
 def clearsourcescache(name, **kwargs):
     key_video = providers.clear_sources_cache(**kwargs)
-
-    log.debug('{m}.{f}: %s', key_video)
-
-    if not key_video:
-        return
-    dummy_imdb, season, episode = key_video.split('/')
-    if season != '0' and episode != '0':
-        ui.infoDialog(_('Cache cleared for {video}, episode {season}x{episode:02d}').format(
-            video=name, season=season, episode=int(episode)))
-    elif season != '0':
-        ui.infoDialog(_('Cache cleared for {video}, season {season}').format(
-            video=name, season=season))
-    else:
-        ui.infoDialog(_('Cache cleared for {video}').format(
-            video=name))
+    if key_video:
+        ui.infoDialog(_('Cache cleared for {video}').format(video=name))
 
 
 @action
@@ -114,8 +101,15 @@ def dialog(name, content, meta):
 
             providers.content_sources(content, meta=meta, ui_update=ui_update)
 
+        if content == 'episode':
+            dialog_content_name = [meta['tvshowtitle'], name]
+        elif poster == ui.addon_poster():
+            dialog_content_name = [meta['title']]
+        else:
+            dialog_content_name = None
+
         win = SourcesDialog('SourcesDialog.xml', addon.PATH, 'Default', '720p',
-                            sourceName=name if content == 'episode' or poster == ui.addon_poster() else '',
+                            contentName=dialog_content_name,
                             sourcesGenerator=sources_generator,
                             sourcePriority=_source_priority,
                             sourceResolve=_resolve,

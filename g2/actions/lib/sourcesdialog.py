@@ -48,7 +48,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
     cancel_button_id = 33
 
     def __init__(self, strXMLname, strFallbackPath, strDefaultName, forceFallback,
-                 sourceName=None, sourcesGenerator=None, sourcePriority=None, sourceResolve=None, posterImage=None,
+                 contentName=None, sourcesGenerator=None, sourcePriority=None, sourceResolve=None, posterImage=None,
                  autoPlay=False):
         self.title_label = None
         self.progress = None
@@ -74,7 +74,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         self.action = None
 
         self.thread = None
-        self.source_name = sourceName
+        self.content_name = contentName
         self.sources_generator = sourcesGenerator
         self.source_priority = sourcePriority
         self.source_resolve = sourceResolve
@@ -121,7 +121,9 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         self.left_label = self.getControl(self.left_label_id)
 
         self.left_image.setImage(self.poster_image or ui.addon_poster())
-        self.left_label.setLabel(self.source_name or '')
+        self.left_label.setLabel('' if not self.content_name else
+                                 self.content_name if isinstance(self.content_name, basestring) else
+                                 '[CR]'.join(self.content_name))
 
         if not self.thread and self.sources_generator:
             self.thread = workers.Thread(self.sources_worker)
