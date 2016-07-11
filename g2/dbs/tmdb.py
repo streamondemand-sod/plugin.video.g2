@@ -252,8 +252,9 @@ def _meta_worker(meta):
         item.update({'tmdb': tmdb})
 
     imdb = result.get('imdb_id')
-    imdb = normalize_imdb(imdb)
-    item.update({'imdb': imdb, 'code': imdb})
+    if imdb:
+        imdb = normalize_imdb(imdb)
+        item.update({'imdb': imdb, 'code': imdb})
 
     poster = result.get('poster_path')
     if not poster:

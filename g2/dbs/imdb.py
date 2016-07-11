@@ -130,7 +130,7 @@ def movies(url):
             year = year.encode('utf-8')
 
             imdb = client.parseDOM(item, 'a', ret='href')[0]
-            imdb = normalize_imdb(imdb)
+            imdb = normalize_imdb(re.search(r'(tt\d+)', imdb).group(1))
 
             poster = '0'
             try: poster = client.parseDOM(item, 'img', ret='src')[0]
