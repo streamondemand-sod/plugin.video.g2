@@ -37,4 +37,3 @@ removeFile = xbmcvfs.delete
 PROFILE_PATH = addon.PROFILE_PATH
 META_DB_FILENAME = os.path.join(PROFILE_PATH, 'meta.db')
 CACHE_DB_FILENAME = os.path.join(PROFILE_PATH, 'cache.db')
-SETTINGS_DB_FILENAME = os.path.join(PROFILE_PATH, 'settings.db')

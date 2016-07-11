@@ -33,13 +33,19 @@ from g2.libraries import addon
 _SETTINGS_DB_FILENAME = os.path.join(addon.PROFILE_PATH, 'settings.db')
 
 
-def video_key(meta):
+def video_key(keydict):
     """Unique identifier for videos in database records"""
-    return '/'.join([meta.get(k) or '0' for k in ['imdb', 'season', 'episode']])
+    if type(keydict) != dict:
+        raise KeyError
+    keys = [keydict.get(k) or '0' for k in ['imdb', 'season', 'episode']]
+    if not keys[0] or keys[0] == '0':
+        raise KeyError
+    return '/'.join(keys)
 
 
-class Database(object):
+class Database(dict):
     def __init__(self, path, create_cmd, insert_cmd, select_cmd, delete_cmd):
+        dict.__init__(self)
         self.path = path
         self.create_cmd = create_cmd
         self.insert_cmd = insert_cmd
@@ -49,21 +55,20 @@ class Database(object):
 
     def _dbconnect(self):
         if not self.dbcon:
-            fs.makeDir(os.path.dirname(self.path))
+            fs.makeDir(os.path.dirname(self.path), timeout=10)
             self.dbcon = database.connect(self.path)
             self.dbcon.row_factory = database.Row
 
-    def get(self, key):
+    def _get(self, key):
         try:
             self._dbconnect()
             dbcur = self.dbcon.execute(self.select_cmd, (key,))
-            row = dbcur.fetchone()
-            return row
+            return dbcur.fetchone()
         except Exception as ex:
             log.debug('{m}.{f}: %s: %s', key, repr(ex))
             return {}
 
-    def set(self, key, fields):
+    def _set(self, key, fields):
         try:
             self._dbconnect()
             with self.dbcon:
@@ -73,13 +78,19 @@ class Database(object):
         except Exception as ex:
             log.debug('{m}.{f}: %s, %s: %s', key, fields, repr(ex))
 
-    def delete(self, key):
+    def _del(self, key):
         try:
             self._dbconnect()
             with self.dbcon:
                 self.dbcon.execute(self.delete_cmd, (key,))
         except Exception as ex:
             log.debug('{m}.{f}: %s: %s', key, repr(ex))
+
+    def get(self, key, default=None):
+        try:
+            return self.__getitem__(key)
+        except KeyError:
+            return default
 
 
 class Bookmarks(Database):
@@ -91,12 +102,14 @@ class Bookmarks(Database):
                           "SELECT * FROM bookmarks WHERE video_key = ?",
                           "DELETE FROM bookmarks WHERE video_key = ?")
 
-    def get(self, meta):
-        row = Database.get(self, video_key(meta))
-        return row and row['bookmarktime']
+    def __getitem__(self, keydict):
+        row = Database._get(self, video_key(keydict))
+        if not row:
+            raise KeyError
+        return row['bookmarktime']
 
-    def set(self, meta, bookmarktime):
-        Database.set(self, video_key(meta), (int(bookmarktime),))
+    def __setitem__(self, keydict, bookmarktime):
+        Database._set(self, video_key(keydict), (int(bookmarktime),))
 
-    def delete(self, meta):
-        Database.delete(self, video_key(meta))
+    def __delitem__(self, keydict):
+        Database._del(self, video_key(keydict))
