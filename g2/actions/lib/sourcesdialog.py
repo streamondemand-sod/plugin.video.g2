@@ -172,7 +172,9 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
     def onAction(self, action):
         focus_id = self.getFocusId()
         if focus_id == self.sources_list_id:
-            self.info_label.setLabel(self.sources_list.getSelectedItem().getProperty('source_info'))
+            selected_item = self.sources_list.getSelectedItem()
+            if selected_item:
+                self.info_label.setLabel(selected_item.getProperty('source_info'))
         elif focus_id == self.select_button_id:
             if action.getId() == 10:
                 return

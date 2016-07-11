@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <window>
-	<defaultcontrol always="true">33</defaultcontrol>
+<!-- 	<defaultcontrol always="true">32</defaultcontrol> -->
 	<animation type="WindowOpen">
 		<effect type="zoom" start="70" end="100" center="auto" tween="back" easing="inout" time="300" />
 		<effect type="fade" start="0" end="100" time="300" />
@@ -104,10 +104,10 @@
 			<top>90</top>
 			<width>740</width>
 			<height>460</height>
-			<onup>noop</onup>
-			<ondown>31</ondown>
-			<onleft>31</onleft>
-			<onright>31</onright>
+			<onup>32</onup>
+			<ondown>32</ondown>
+			<onleft>32</onleft>
+			<onright>32</onright>
 			<orientation>vertical</orientation>
 			<pagecontrol>201</pagecontrol>
 			<scrolltime tween="sine" easing="out">240</scrolltime>
