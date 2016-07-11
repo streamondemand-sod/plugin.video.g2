@@ -55,8 +55,8 @@ class Database(dict):
 
     def _dbconnect(self):
         if not self.dbcon:
-            fs.makeDir(os.path.dirname(self.path), timeout=10)
-            self.dbcon = database.connect(self.path)
+            fs.makeDir(os.path.dirname(self.path))
+            self.dbcon = database.connect(self.path, timeout=10)
             self.dbcon.row_factory = database.Row
 
     def _get(self, key):
