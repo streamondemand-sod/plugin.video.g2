@@ -171,6 +171,8 @@ def _sources_worker(channel, mod, provider, content, meta):
         try:
             # (fixme) replace **meta w/ meta or explicit meta[] args (API change)
             video_matches = getattr(mod, get_function_name)(provider.split('.'), **meta)
+            if video_matches:
+                video_matches = [m for m in video_matches if m[1].strip()]
         except Exception as ex:
             # get functions might fail because of no title/episode found
             log.notice('{m}.{f}.%s.%s: %s', provider, get_function_name, repr(ex), trace=True)
@@ -181,8 +183,10 @@ def _sources_worker(channel, mod, provider, content, meta):
         else:
             def cleantitle(title):
                 if title:
-                    title = re.sub(r'\(.*\)', '', title) # Anything within ()
-                    title = re.sub(r'\[.*\]', '', title) # Anything within []
+                    # Anything within () if preceded/followed by spaces
+                    title = re.sub(r'(^|\s)\(.*\)(\s|$)', r'\1\2', title)
+                    # Anything within [] if preceded/followed by spaces
+                    title = re.sub(r'(^|\s)\[.*\](\s|$)', r'\1\2', title)
                 return title
 
             title = meta['tvshowtitle'] if 'tvshowtitle' in meta else meta['title']
