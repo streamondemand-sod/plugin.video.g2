@@ -799,6 +799,18 @@ msgctxt "#30153"
 msgid "{season:2d}x{episode:02d} . {title}"
 msgstr "{season:2d}x{episode:02d} . {title}"
 
+#: g2/actions/sources.py:81
+#, python-brace-format
+msgctxt "#30154"
+msgid "Cache cleared for {video}, episode {season}x{episode:02d}"
+msgstr "Cache cleared for {video}, episode {season}x{episode:02d}"
+
+#: g2/actions/sources.py:84
+#, python-brace-format
+msgctxt "#30155"
+msgid "Cache cleared for {video}, season {season}"
+msgstr "Cache cleared for {video}, season {season}"
+
 #~ msgctxt ""
 #~ msgid "Year"
 #~ msgstr "Year"
