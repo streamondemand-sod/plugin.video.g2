@@ -39,10 +39,10 @@ def is_watcheditem(content, item):
     imdb = item['imdb']
     if imdb == '0':
         is_watched = None
-    elif content == 'movies':
+    elif content.startswith('movie'):
         is_watched = dbs.watched('movie{imdb_id}',
                                  imdb_id=imdb) is True
-    elif content == 'episodes':
+    elif content.startswith('episode'):
         # (fixme) add support to check if the entire tvshow/season has been watched
         is_watched = dbs.watched('episode{imdb_id}{season}{episode}',
                                  imdb_id=imdb, season=item['season'], episode=item['episode']) is True
@@ -56,10 +56,10 @@ def watcheditem(content, item, watched):
     imdb = item['imdb']
     if imdb == '0':
         pass
-    elif content == 'movies':
+    elif content.startswith('movie'):
         dbs.watched('movie{imdb_id}', watched is True,
                     imdb_id=imdb)
-    elif content == 'episodes':
+    elif content.startswith('episode'):
         # (fixme) add support to set if the entire tvshow/season has been watched/unwatched
         dbs.watched('episode{imdb_id}{season}{episode}', watched is True,
                     imdb_id=imdb, season=item['season'], episode=item['episode'])
