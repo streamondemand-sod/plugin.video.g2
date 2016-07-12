@@ -46,12 +46,11 @@ def searchbytitle():
 
 @action
 def tvshowslist(url):
-    log.debug('{m}.{f}: %s', url)
     items = dbs.tvshows(url)
     if not items:
         ui.infoDialog(_('No results'))
     else:
-        dbs.meta(items, content='tvshow')
+        # dbs.meta(items, content='tvshow')
         for i in items:
             # TV show directory item label when the year is kwnon
             i['name'] = _('{title} ({year})').format(
@@ -60,9 +59,9 @@ def tvshowslist(url):
             i['action'] = addon.itemaction('tvshows.seasons', tvdb=i['tvdb'], imdb=i['imdb'])
             i['next_action'] = 'tvshows.tvshowslist'
             # Deleting all this info otherwise the Kodi listitem chokes! :)
-            for nfo in ['seasons', 'episodes']:
-                if nfo in i:
-                    del i[nfo]
+            # for nfo in ['seasons', 'episodes']:
+            #     if nfo in i:
+            #         del i[nfo]
 
     uid.addcontentitems(items, content='tvshows')
 

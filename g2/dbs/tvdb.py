@@ -141,6 +141,7 @@ _SERIE_MAPPINGS_XML_DESC = [
 _EPISODE_MAPPINGS_XML_DESC = [
     {'name': 'title',
      'tag': 'EpisodeName',
+     'optional': True,
     },
     {'name': 'premiered',
      'tag': 'FirstAired',
