@@ -90,17 +90,7 @@ def request(url, debug=None, data=None, json=None, **kwargs):
 
 
 def get(url, debug=None, **kwargs):
-    # (fixme) also on other public methods: request, post...
-    logperf = log.perfactive()
-    if logperf:
-        started = time.time()
-
-    res = _request(requests.get, url, debug=_set_debug(debug), **kwargs)
-
-    if logperf:
-        log.debug('{m}.{f}: {cf}.{m}.{f}: %s: completed in %.2f seconds', url, time.time()-started, debug=True)
-
-    return res
+    return _request(requests.get, url, debug=_set_debug(debug), **kwargs)
 
 
 def post(url, debug=None, **kwargs):
@@ -108,6 +98,10 @@ def post(url, debug=None, **kwargs):
 
 
 def _request(method, url, raise_error=None, debug=None, **kwargs):
+    logperf = log.perfactive()
+    if logperf:
+        started = time.time()
+
     if _debug(debug, 'request'):
         log.debug('{m}.{f}: request.method: %s', method, debug=True)
         log.debug('{m}.{f}: request.url: %s', url, debug=True)
@@ -137,6 +131,9 @@ def _request(method, url, raise_error=None, debug=None, **kwargs):
             log.debug('{m}.{f}: response.content[%s]: not logged because of stream mode', res.encoding, debug=True)
         else:
             log.debug('{m}.{f}: response.content[%s]: %s', res.encoding, res.content, debug=True)
+
+    if logperf:
+        log.debug('{m}.{f}: {cf}.{m}.{f}: %s: completed in %.2f seconds', url, time.time()-started, debug=True)
 
     if raise_error:
         res.raise_for_status()
