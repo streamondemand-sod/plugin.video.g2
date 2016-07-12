@@ -254,7 +254,8 @@ def _best_match(provider, matches, meta):
     if not matches:
         return None
 
-    matches = [[0, m] for m in matches if m[1].strip()]
+    # Filter the matches with non empty url and titles
+    matches = [[0, m] for m in matches if m[0] and m[1].strip()]
     if not matches:
         return None
 
