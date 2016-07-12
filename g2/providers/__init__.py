@@ -171,31 +171,13 @@ def _sources_worker(channel, mod, provider, content, meta):
         try:
             # (fixme) replace **meta w/ meta or explicit meta[] args (API change)
             video_matches = getattr(mod, get_function_name)(provider.split('.'), **meta)
-            if video_matches:
-                video_matches = [m for m in video_matches if m[1].strip()]
         except Exception as ex:
-            # get functions might fail because of no title/episode found
             log.notice('{m}.{f}.%s.%s: %s', provider, get_function_name, repr(ex), trace=True)
             video_matches = None
 
-        if not video_matches:
-            log.debug('{m}.{f}.%s: no matches found', provider)
-        else:
-            def cleantitle(title):
-                if title:
-                    # Anything within () if preceded/followed by spaces
-                    title = re.sub(r'(^|\s)\(.*\)(\s|$)', r'\1\2', title)
-                    # Anything within [] if preceded/followed by spaces
-                    title = re.sub(r'(^|\s)\[.*\](\s|$)', r'\1\2', title)
-                return title
-
-            title = meta['tvshowtitle'] if 'tvshowtitle' in meta else meta['title']
-            video_best_match = max(video_matches, key=lambda m: fuzz.token_sort_ratio(cleantitle(m[1]), title))
-            confidence = fuzz.token_sort_ratio(cleantitle(video_best_match[1]), title)
-            if confidence >= _MIN_FUZZINESS_VALUE:
-                video_ref = video_best_match
-            log.debug('{m}.{f}.%s: %d matches found; best has confidence %d (%s)',
-                      provider, len(video_matches), confidence, video_best_match[1])
+        video_ref = _best_match(provider, video_matches, meta)
+        if not video_ref:
+            log.debug('{m}.{f}.%s: no valid match found', provider)
 
         if video_ref and dbcon:
             try:
@@ -247,6 +229,43 @@ def _sources_worker(channel, mod, provider, content, meta):
     log.debug('{m}.{f}.%s: %s: %d sources found', provider, key_video, len(sources))
 
     return sources
+
+
+def _best_match(provider, matches, meta):
+    def cleantitle(title):
+        if title:
+            # Anything within () if preceded/followed by spaces
+            title = re.sub(r'(^|\s)\(.*\)(\s|$)', r'\1\2', title)
+            # Anything within []
+            title = re.sub(r'\[.*\]', '', title)
+        return title
+
+    title = meta['tvshowtitle'] if 'tvshowtitle' in meta else meta['title']
+
+    def match_confidence(match):
+        mtitle = cleantitle(match[1][1])
+        ftsr = fuzz.token_sort_ratio(mtitle, title)
+        if ftsr < _MIN_FUZZINESS_VALUE and '-' in mtitle and '-' not in title:
+            ftsr = max(fuzz.token_sort_ratio(mtitle.split('-')[0], title),
+                       fuzz.token_sort_ratio(mtitle.split('-')[1], title))
+        match[0] = ftsr
+        return ftsr
+
+    if not matches:
+        return None
+
+    matches = [[0, m] for m in matches if m[1].strip()]
+    if not matches:
+        return None
+
+    best_match = max(matches, key=match_confidence)
+    confidence = best_match[0]
+    best_match = best_match[1]
+
+    log.debug('{m}.{f}.%s: %d matches found; best has confidence %d ("%s" vs "%s")',
+              provider, len(matches), confidence, best_match[1], title)
+
+    return None if confidence < _MIN_FUZZINESS_VALUE else best_match
 
 
 def _sources_groups(imdb, sources):
