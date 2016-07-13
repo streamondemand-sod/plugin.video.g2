@@ -86,12 +86,12 @@
 			<aspectratio aligny="center">keep</aspectratio>
 		</control>
 
-		<!-- Left side label (in case the poster is missing) -->
+		<!-- Left side label (in case the poster is missing or for episodes) -->
 		<control type="label" id="12">
 			<left>60</left>
-			<top>420</top>
+			<top>470</top>
 			<width>410</width>
-			<height>250</height>
+			<height>200</height>
 			<font>font48</font>
 			<align>center</align>
 			<aligny>center</aligny>
