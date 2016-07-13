@@ -62,6 +62,14 @@ class PackagesDialog(xbmcgui.WindowXMLDialog):
             self._update_package_item(i)
         self._update_packages_list('providers')
 
+    def onAction(self, action):
+        focus_id = self.getFocusId()
+        if focus_id == self.kinds_listid:
+            selected_item = self.kinds_lst.getSelectedItem()
+            if selected_item:
+                self._update_packages_list(selected_item.getLabel().lower())
+        xbmcgui.WindowXMLDialog.onAction(self, action)
+
     def onClick(self, controlID):
         log.debug('{m}.{f}: %s', controlID)
         if controlID == self.kinds_listid:
