@@ -139,6 +139,14 @@ _SERIE_MAPPINGS_XML_DESC = [
 ]
 
 _EPISODE_MAPPINGS_XML_DESC = [
+    {'name': 'tvdb_episode_id',
+     'tag': 'id',
+     'optional': True,
+    },
+    {'name': 'tvdb_season_id',
+     'tag': 'seasonid',
+     'optional': True,
+    },
     {'name': 'title',
      'tag': 'EpisodeName',
      'optional': True,
