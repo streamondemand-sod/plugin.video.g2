@@ -42,6 +42,7 @@ class Monitor(xbmc.Monitor):
 
     def onSettingsChanged(self):
         _check_changes('setting')
+        _check_changes('settings')
 
 
 _MONITOR_OBJECTS = {}
@@ -50,7 +51,7 @@ _PLAYER = ui.Player()
 
 
 def monitor(monitorid, kind, callback, *args, **kwargs):
-    if kind not in ['setting', 'property', 'player', 'service', 'cron']:
+    if kind not in ['setting', 'settings', 'property', 'player', 'service', 'cron']:
         log.error('{m}.{f}(%s): monitor object %s not implemented!', monitorid, kind)
         return
 
@@ -88,6 +89,8 @@ def monitor(monitorid, kind, callback, *args, **kwargs):
 def _get_objectvalue(monitorid, kind):
     if kind == 'setting':
         return addon.freshsetting(monitorid)
+    elif kind == 'settings':
+        return [addon.freshsetting(s) for s in addon.settings(monitorid)]
     elif kind == 'property':
         return addon.prop(monitorid)
     elif kind == 'player':
@@ -118,7 +121,7 @@ def _check_changes(kind):
         new_value = _get_objectvalue(moid, kind)
         if mobj['value'] == new_value:
             continue
-        
+
         log.debug('service[{t}]: monitored object %s %s changed: %s -> %s',
                   moid, mobj['kind'], mobj['value'], new_value)
 

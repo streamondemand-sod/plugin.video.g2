@@ -64,6 +64,10 @@ def service_monitor_setup():
 
     service.monitor('imdb_user', 'setting', addon.runplugin, 'auth.imdb')
 
+    from g2 import pkg
+    service.monitor('providers:.*', 'settings', pkg.kindinfo, 'providers')
+    service.monitor('resolvers:.*', 'settings', pkg.kindinfo, 'resolvers')
+
     from g2.libraries import workers
     from g2.actions.lib import downloader
     service.monitor('downloader', 'property', workers.Thread, downloader.worker)
