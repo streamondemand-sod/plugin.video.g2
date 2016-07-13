@@ -382,16 +382,19 @@ def _sync(content, timeout=0):
         return _traktreq(url).content
 
     try:
-        if time.time() - _sync.cache_time > timeout * 60:
+        if time.time() - _sync.cache_time[content] > timeout * 60:
             raise Exception('in memory cache expired')
+    except AttributeError:
+        _sync.cache_history = {}
+        _sync.cache_time = {}
     except Exception as ex:
-        log.debug('{m}.{f}: timeout=%d: %s', timeout, repr(ex))
+        log.debug('{m}.{f}: %s (timeout=%d): %s', content, timeout, repr(ex))
 
-        movies_history = cache.get(traktreq, timeout, '/users/%s/watched/%ss'%(_TRAKT_USER, content), table='rel_trakt')
-        _sync.cache = json.loads(movies_history)
-        _sync.cache_time = time.time()
+    content_history = cache.get(traktreq, timeout, '/users/%s/watched/%ss'%(_TRAKT_USER, content), table='rel_trakt')
+    _sync.cache_history[content] = json.loads(content_history)
+    _sync.cache_time[content] = time.time()
 
-    return _sync.cache
+    return _sync.cache_history[content]
 
 
 def authDevice(ui_update):
