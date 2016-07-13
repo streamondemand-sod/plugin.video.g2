@@ -83,13 +83,11 @@ def meta(items, content='movie', lang=_INFO_LANG):
         if met['item']:
             continue
         if met.get('tmdb', '0') != '0':
-            # (fixme) add {lang} like tvshows
-            met['url'] = resolve('%s_meta{tmdb_id}'%content, tmdb_id=met['tmdb'])
+            met['url'] = resolve('%s_meta{tmdb_id}{lang}'%content, tmdb_id=met['tmdb'], lang=lang)
         elif met.get('tvdb', '0') != '0':
             met['url'] = resolve('%s_meta{tvdb_id}{lang}'%content, tvdb_id=met['tvdb'], lang=lang)
         elif met.get('imdb', '0') != '0':
-            # (fixme) add {lang} like tvshows
-            met['url'] = resolve('%s_meta{imdb_id}'%content, imdb_id=met['imdb'])
+            met['url'] = resolve('%s_meta{imdb_id}{lang}'%content, imdb_id=met['imdb'], lang=lang)
         if met.get('url'):
             work_items.append(met)
 

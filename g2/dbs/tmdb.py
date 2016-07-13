@@ -54,8 +54,8 @@ _URLS = {
     'movies{genre_id}': '/discover/movie?with_genres={genre_id}&language={info_lang}|168',
     'movies{certification}': '/discover/movie?certification={certification}&certification_country=US&language={info_lang}|168',
     'movies{title}{year}': '/search/movie?query={title}&year={year}&language={info_lang}|24',
-    'movie_meta{tmdb_id}': '/movie/{tmdb_id}?append_to_response=credits,releases&language={info_lang}|168',
-    'movie_meta{imdb_id}': '/movie/{imdb_id}?append_to_response=credits,releases&language={info_lang}|168',
+    'movie_meta{tmdb_id}{lang}': '/movie/{tmdb_id}?append_to_response=credits,releases&language={lang}|168',
+    'movie_meta{imdb_id}{lang}': '/movie/{imdb_id}?append_to_response=credits,releases&language={lang}|168',
     'persons{name}': '/search/person?query={name}&language={info_lang}|720',
     'movies_featured{}': ('/discover/movie?'
                           'primary_release_date.gte={one_year_ago}&primary_release_date.lte={two_months_ago}&'
