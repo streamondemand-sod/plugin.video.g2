@@ -20,6 +20,7 @@
 
 
 import os
+import re
 import ast
 import sys
 
@@ -30,7 +31,12 @@ import xbmcvfs
 
 _ADDON = xbmcaddon.Addon()
 
+PATH = xbmc.translatePath(_ADDON.getAddonInfo('path')).decode('utf-8')
+PROFILE_PATH = xbmc.translatePath(_ADDON.getAddonInfo('profile')).decode('utf-8')
+
+
 addonInfo = _ADDON.getAddonInfo
+
 setting = _ADDON.getSetting
 
 setSetting = _ADDON.setSetting
@@ -55,6 +61,14 @@ def addonSetting(addon, setid):
 def addonInfo2(addon, info):
     addon = xbmcaddon.Addon(addon)
     return addon.getAddonInfo(info)
+
+
+def settings(setidpat):
+    if not hasattr(settings, 'settings'):
+        with open(os.path.join(PROFILE_PATH, 'settings.xml')) as fil:
+            settings.settings = re.compile(r'<setting.*?id="([^"]+)"').findall(fil.read())
+
+    return [s for s in settings.settings if re.match(setidpat, s)]
 
 
 def prop(module='', value=None, name='status', addon=addonInfo('id')):
@@ -119,7 +133,3 @@ def _action(action, args_sep='&', **kwargs):
 #     result = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "%s", "params": %s, "id": 1}'%(method, params))
 #     result = unicode(result, 'utf-8', errors='ignore')
 #     return json.loads(result)
-
-
-PATH = xbmc.translatePath(addonInfo('path')).decode('utf-8')
-PROFILE_PATH = xbmc.translatePath(addonInfo('profile')).decode('utf-8')
