@@ -32,6 +32,8 @@ from g2.libraries.language import _
 from g2 import dbs
 from g2 import notifiers
 
+from .lib import uid
+
 
 _PLAYER = ui.Player()
 
@@ -52,13 +54,20 @@ def new(notifier, iden, title, body, url):
                 'type': 'db',
                 'id_name': 'imdb',
                 'id_value': r'/title/(tt[\d]+)',
-                'db_query': 'movie_meta{imdb_id}',
             },
             'themoviedb.org': {
                 'type': 'db',
                 'id_name': 'tmdb',
                 'id_value': r'/movie/([\d]+)',
-                'db_query': 'movie_meta{tmdb_id}',
+            },
+            # http://thetvdb.com/?tab=episode&seriesid=79349&seasonid=16279&id=307473&lid=15
+            'thetvdb.com': {
+                'type': 'db',
+                'id_name': 'tvdb',
+                'id_value': r'seriesid=(\d+)',
+                'ids_episode': r'seasonid=(\d+).*?id=(\d+)',
+                'id_name_season': 'tvdb_season_id',
+                'id_name_episode': 'tvdb_episode_id',
             },
             # This is a folder plugin, so it cannot be hooked in this way.
             # A specific resolver has to be created.
@@ -68,7 +77,8 @@ def new(notifier, iden, title, body, url):
             #     'addon_query': 'page={url}&id=v',
             # },
         }
-        netloc, path = urlparse.urlparse(url)[1:3]
+        netloc, path, dummy, query = urlparse.urlparse(url)[1:5]
+        path += '?' + query
         netloc = '.'.join(netloc.split('.')[-2:])
         if netloc not in sites:
             title = title or body
@@ -91,14 +101,23 @@ def new(notifier, iden, title, body, url):
             meta = {
                 site['id_name']: re.search(site['id_value'], path).group(1),
             }
-            dbs.meta([meta])
+            dbs.meta([meta], 'movie' if 'ids_episode' not in site else 'tvshow')
+            if 'episodes' not in meta:
+                content = 'movie'
+            else:
+                content = 'episode'
+                season_id, episode_id = re.search(site['ids_episode'], path).groups()
+                meta = [e for e in meta['episodes']
+                        if e[site['id_name_season']] == season_id
+                        and e[site['id_name_episode']] == episode_id][0]
 
-            log.debug('{m}.{f}: meta=%s', meta)
+            name = uid.nameitem(content, meta)
 
-            name = '%s (%s)'%(meta['title'], meta['year']) if meta.get('year') else meta['title']
+            log.debug('{m}.{f}: %s: %s', name, meta)
+
             addon.runplugin('sources.dialog',
                             name=urllib.quote_plus(name),
-                            content='movie',
+                            content=content,
                             meta=urllib.quote_plus(json.dumps(meta)))
         else:
             raise Exception('unknown site type: %s'%sites[netloc])

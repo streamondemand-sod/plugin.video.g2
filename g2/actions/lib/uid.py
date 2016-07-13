@@ -35,6 +35,38 @@ _FANART = ui.addon_fanart()
 _ICON_NEXT = ui.addon_next()
 
 
+def nameitem(content, meta):
+    """Return the item label"""
+
+    if content.startswith('movie'):
+        # Directory label for movie
+        return (_('{movie_title} ({year})') if meta.get('year') else _('{movie_title}')).format(
+            movie_title=meta['title'],
+            year=meta['year'])
+
+    elif content.startswith('episode'):
+        # Directory label for episode
+        return _('{season:2d}x{episode:02d} . {episode_title}').format(
+            season=int(meta['season']),
+            episode=int(meta['episode']),
+            episode_title=meta['title'])
+
+    elif content.startswith('season'):
+        # Directory label for season
+        return _('Season {season} ({year})').format(
+            season=meta['season'],
+            year=meta['premiered'][0:4])
+
+    elif content.startswith('tvshow'):
+        # Directory label for tvshow
+        return (_('{tvshow_title} ({year})') if meta.get('year') else _('{tvshow_title}')).format(
+            tvshow_title=meta['title'],
+            year=meta['year'])
+
+    else:
+        return meta.get('name', '???')
+
+
 def is_watcheditem(content, item):
     imdb = item['imdb']
     if imdb == '0':
@@ -73,10 +105,7 @@ def additems(items, show_genre_as=False, is_person=False):
 
     for i in items:
         try:
-            try:
-                name = _(i['name'])
-            except Exception:
-                name = i['name']
+            label = i['name']
 
             url = addon.itemaction(i['action'], url=urllib.quote_plus(i['url']))
 
@@ -86,7 +115,7 @@ def additems(items, show_genre_as=False, is_person=False):
                              addon.scriptaction('script.extendedinfo', info='extendedactorinfo', id=i['id'])))
 
             thumb = ui.media(i['image'])
-            item = ui.ListItem(label=name, iconImage=thumb, thumbnailImage=thumb)
+            item = ui.ListItem(label=label, iconImage=thumb, thumbnailImage=thumb)
 
             if show_genre_as:
                 if show_genre_as in i:

@@ -50,18 +50,10 @@ def tvshowslist(url):
     if not items:
         ui.infoDialog(_('No results'))
     else:
-        # dbs.meta(items, content='tvshow')
         for i in items:
-            # TV show directory item label when the year is kwnon
-            i['name'] = _('{title} ({year})').format(
-                title=i['title'],
-                year=i['year']) if i.get('year') else i['title']
+            i['name'] = uid.nameitem('tvshow', i)
             i['action'] = addon.itemaction('tvshows.seasons', tvdb=i['tvdb'], imdb=i['imdb'])
             i['next_action'] = 'tvshows.tvshowslist'
-            # Deleting all this info otherwise the Kodi listitem chokes! :)
-            # for nfo in ['seasons', 'episodes']:
-            #     if nfo in i:
-            #         del i[nfo]
 
     uid.addcontentitems(items, content='tvshows')
 
@@ -79,10 +71,7 @@ def seasons(tvdb, imdb):
         ui.infoDialog(_('No seasons'))
     else:
         for i in items:
-            # Season directory item label 
-            i['name'] = _('Season {season} ({year})').format(
-                season=i['season'],
-                year=i['premiered'][0:4])
+            i['name'] = uid.nameitem('season', i)
             i['action'] = addon.itemaction('tvshows.episodes', tvdb=i['tvdb'], imdb=i['imdb'], season=i['season'])
 
     uid.addcontentitems(items, content='seasons')
@@ -101,10 +90,7 @@ def episodes(tvdb, imdb, season):
         ui.infoDialog(_('No episodes'))
     else:
         for i in items:
-            i['name'] = _('{season:2d}x{episode:02d} . {title}').format(
-                season=int(i['season']),
-                episode=int(i['episode']),
-                title=i['title'])
+            i['name'] = uid.nameitem('episode', i)
             i['action'] = addon.itemaction('sources.dialog',
                                            name=i['name'],
                                            content='episode',

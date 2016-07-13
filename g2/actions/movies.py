@@ -107,6 +107,7 @@ def genres():
             'url': dbs.resolve('movies{genre_id}', genre_id=i['id']),
             'image': image,
         })
+
     # (fixme) Use addcontentitems(..., content='genres')
     uid.additems(items)
 
@@ -125,6 +126,7 @@ def certifications():
             'url': dbs.resolve('movies{certification}', certification=i['name']),
             'image': image,
         })
+
     uid.additems(items)
 
 
@@ -136,15 +138,14 @@ def movielist(url):
     else:
         for i in items:
             # Movie directory item label when the year is kwnon
-            i['name'] = _('{title} ({year})').format(
-                title=i['title'],
-                year=i['year']) if i.get('year') else i['title']
+            i['name'] = uid.nameitem('movie', i)
             i['action'] = addon.itemaction('sources.dialog',
                                            name=urllib.quote_plus(i['name']),
                                            content='movie',
                                            meta='@META@')
             i['next_action'] = 'movies.movielist'
         dbs.meta(items)
+
     uid.addcontentitems(items, content='movies')
 
 
@@ -160,6 +161,7 @@ def personlist(url):
                 'url': dbs.resolve('movies{person_id}', person_id=i['id']),
                 'next_action': 'movies.personlist',
             })
+
     uid.additems(items, is_person=True)
 
 
