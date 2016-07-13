@@ -763,9 +763,7 @@ msgctxt "#30147"
 msgid "Year search"
 msgstr "Year search"
 
-#. Movie directory item label when the year is kwnon
 #. Movie label in case the year is known
-#. TV show directory item label when the year is kwnon
 #: g2/actions/movies.py:142 g2/actions/player.py:80 g2/actions/tvshows.py:60
 #, python-brace-format
 msgctxt "#30148"
@@ -777,7 +775,7 @@ msgctxt "#30150"
 msgid "No seasons"
 msgstr "No seasons"
 
-#. Season directory item label
+#. Directory label for season
 #: g2/actions/tvshows.py:87
 #, python-brace-format
 msgctxt "#30151"
@@ -789,13 +787,52 @@ msgctxt "#30152"
 msgid "No episodes"
 msgstr "No episodes"
 
-#: g2/actions/tvshows.py:110
-#, python-brace-format
-msgctxt "#30153"
-msgid "{season:2d}x{episode:02d} . {title}"
-msgstr "{season:2d}x{episode:02d} . {title}"
-
 #: g2/actions/tvshows.py:41
 msgctxt "#30156"
 msgid "TV show search"
 msgstr "TV show search"
+
+#. Indicator in the Package Manager that the package has raised some exceptions
+#: g2/actions/lib/packagesdialog.py:103
+msgctxt "#30157"
+msgid "[COLOR red]ERR[/COLOR]"
+msgstr "[COLOR red]ERR[/COLOR]"
+
+#. Indicator in the Package Manager that the package has been disabled by the user
+#: g2/actions/lib/packagesdialog.py:105
+msgctxt "#30158"
+msgid "[COLOR orange]DIS[/COLOR]"
+msgstr "[COLOR orange]DIS[/COLOR]"
+
+#. Directory label for movie
+#: g2/actions/lib/uid.py:43
+#, python-brace-format
+msgctxt "#30159"
+msgid "{movie_title} ({year})"
+msgstr "{movie_title} ({year})"
+
+#: g2/actions/lib/uid.py:43
+#, python-brace-format
+msgctxt "#30160"
+msgid "{movie_title}"
+msgstr "{movie_title}"
+
+#. Directory label for episode
+#: g2/actions/lib/uid.py:49
+#, python-brace-format
+msgctxt "#30161"
+msgid "{season:2d}x{episode:02d} . {episode_title}"
+msgstr "{season:2d}x{episode:02d} . {episode_title}"
+
+#. Directory label for tvshow
+#: g2/actions/lib/uid.py:62
+#, python-brace-format
+msgctxt "#30162"
+msgid "{tvshow_title} ({year})"
+msgstr "{tvshow_title} ({year})"
+
+#: g2/actions/lib/uid.py:62
+#, python-brace-format
+msgctxt "#30163"
+msgid "{tvshow_title}"
+msgstr "{tvshow_title}"

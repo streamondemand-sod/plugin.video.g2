@@ -22,6 +22,7 @@
 import xbmcgui
 
 from g2.libraries import log
+from g2.libraries.language import _
 
 
 class PackagesDialog(xbmcgui.WindowXMLDialog):
@@ -90,12 +91,16 @@ class PackagesDialog(xbmcgui.WindowXMLDialog):
             self.packages_lst.addItems([i for i in self.packages
                                         if i.getProperty('kind') == kind and
                                         (i.getProperty('site') or
-                                         self.pkgInstalledStatus(i.getProperty('kind'), i.getProperty('name')))])
+                                         self.pkgInstalledStatus(i.getProperty('kind'), i.getProperty('name')) != 'NotInstalled')])
             self.displayed_kind = kind
 
     def _update_package_item(self, item):
-        modules = self.pkgInstalledStatus(item.getProperty('kind'), item.getProperty('name'))
+        status = self.pkgInstalledStatus(item.getProperty('kind'), item.getProperty('name'))
         item.setInfo('video', {
-            'overlay': 5 if modules else 4,
+            'overlay': 5 if status != 'NotInstalled' else 4,
         })
-        item.setLabel2(str(modules) if modules else '')
+        # Indicator in the Package Manager that the package has raised some exceptions
+        item.setLabel2(_('[COLOR red]ERR[/COLOR]') if status == 'RaiseException' else
+                       # Indicator in the Package Manager that the package has been disabled by the user
+                       _('[COLOR orange]DIS[/COLOR]') if status == 'Disabled' else
+                       '' if status == 'NotInstalled' else str(status))

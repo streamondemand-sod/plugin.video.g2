@@ -38,7 +38,7 @@ from .lib.packagesdialog import PackagesDialog
 def dialog():
     win = PackagesDialog('PackagesDialog.xml', addon.PATH, 'Default', '720p',
                          onPackageSelected=_manage_package,
-                         pkgInstalledStatus=pkg.is_installed)
+                         pkgInstalledStatus=pkg.status)
 
     listed = {}
     kinds = {}
@@ -118,7 +118,6 @@ def updatemedia():
 
 def check_upgrades():
     log.debug('{m}.{f}: called')
-
     # (fixme) excludive lock with the main thread:
     # - actions threads locks in read mode (multiple)
     # - this thread locks in write mode (only one and no active read)
@@ -130,7 +129,7 @@ def check_upgrades():
 
 
 def _manage_package(kind, name, site):
-    if not pkg.is_installed(kind, name):
+    if pkg.status(kind, name) == 'NotInstalled':
         _install_package(site)
     else:
         _uninstall_package(kind, name, site)

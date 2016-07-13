@@ -202,13 +202,18 @@ def packages(kinds_=kinds()):
                 yield kind, name
 
 
-def is_installed(kind, name):
+def status(kind, name):
     if not os.path.exists(os.path.join(_path(kind, name), '')):
-        return 0
+        return 'NotInstalled'
 
-    nfos = kindinfo(kind, refresh=None)
+    try:
+        nfos = kindinfo(kind, refresh=None)
+    except Exception as ex:
+        log.notice('{p}: %s.%s: %s', kind, name, repr(ex))
+        return 'RaiseException'
+
     modules = [m for m in nfos.itervalues() if m.get('package') == name]
-    return len(modules) or -1
+    return len(modules) or 'Disabled'
 
 
 def _path(kind, name):
@@ -498,7 +503,7 @@ def update_settings_skema():
     defaults = {}
     def add_setting(name, default, kind, package='', module='', template=None):
         setid = _setting_id(kind, package, module, name)
-        settings[setid] = addon.setting(setid)
+        settings[setid] = addon.freshsetting(setid)
         if settings[setid] == '':
             settings[setid] = default
             addon.setSetting(setid, default)
@@ -643,7 +648,7 @@ def setting(kind, package='', module='', name='enabled'):
     if not _PACKAGES_KINDS[kind]['settings_category']:
         # Implicit setting values for kind packages missing user settings
         return 'true' if name == 'enabled' else str(defs.DEFAULT_PACKAGE_PRIORITY) if name == 'priority' else 'false'
-    return addon.setting(_setting_id(kind, package, module, name))
+    return addon.freshsetting(_setting_id(kind, package, module, name))
 
 
 def _setting_id(kind, package, module='', name='enabled'):
