@@ -28,6 +28,7 @@ import HTMLParser
 
 import requests
 from requests.packages import urllib3
+from requests.structures import CaseInsensitiveDict
 
 from g2.libraries import log
 
@@ -110,8 +111,13 @@ def _request(method, url, raise_error=None, debug=None, **kwargs):
                 log.debug('{m}.{f}: request.data: %s=%s', var, val, debug=True)
         if kwargs.get('json'):
             log.debug('{m}.{f}: request.json: %s', kwargs.get('json'), debug=True)
-        if type(kwargs.get('headers')) == dict:
-            for hdr, val in kwargs.get('headers').iteritems():
+        headers = CaseInsensitiveDict(kwargs.get('headers', {}))
+        if hasattr(method, 'im_self') and isinstance(method.im_self, Session):
+            for hdr, val in method.im_self.headers.iteritems():
+                if hdr not in headers:
+                    log.debug('{m}.{f}: session.headers: %s=%s', hdr, val, debug=True)
+        if headers == dict:
+            for hdr, val in headers.iteritems():
                 log.debug('{m}.{f}: request.headers: %s=%s', hdr, val, debug=True)
 
     res = method(url, **kwargs)
