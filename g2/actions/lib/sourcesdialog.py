@@ -345,7 +345,6 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
 
         items_active = [i for i in self.items if i.getProperty('source_url')]
         last_selected_position = self.sources_list.getSelectedPosition()
-        self.sources_list.reset()
         if callable(self.source_priority):
             items_active = sorted(items_active,
                                   key=lambda i:
@@ -354,6 +353,7 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
                                                        i.getProperty('source_quality'),
                                                        int(i.getProperty('resolution'))),
                                   reverse=True)
+        self.sources_list.reset()
         self.sources_list.addItems(items_active)
         if last_selected_position >= 0:
             self.sources_list.selectItem(last_selected_position)
