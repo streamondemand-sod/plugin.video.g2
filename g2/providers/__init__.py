@@ -287,7 +287,7 @@ def _best_match(provider, matches, meta):
     best_match = best_match[1]
 
     log.debug('{m}.{f}.%s: %d matches found; best has confidence %d ("%s" vs "%s")',
-              provider, len(matches), confidence, best_match[1], title)
+              provider, len(matches), confidence, best_match[1].decode('utf-8'), title)
 
     return None if confidence < _MIN_FUZZINESS_VALUE else best_match
 
