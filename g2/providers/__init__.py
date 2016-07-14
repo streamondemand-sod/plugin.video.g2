@@ -34,12 +34,12 @@ from g2.libraries import log
 from g2.libraries import workers
 
 from g2 import pkg
+from g2 import defs
 from g2 import resolvers
 
 from .lib.fuzzywuzzy import fuzz
 
 
-_SOURCE_CACHE_LIFETIME = 3600 # secs
 _MIN_FUZZINESS_VALUE = 84
 _IGNORE_BODY_EXCEPTIONS = True
 
@@ -68,6 +68,7 @@ def info(force_refresh=False):
 
 
 def content_sources(content, meta, ui_update=None):
+    # Collect all sources providers across all packages
     providers = {}
     for dummy_kind, package in pkg.packages([__name__]):
         providers[package] = [mi for mi in info().itervalues() if mi['package'] == package and content in mi['content']]
@@ -87,34 +88,51 @@ def content_sources(content, meta, ui_update=None):
             threads = []
             channel = []
             for mod, module in zip(mods, modules):
-                sub_modules = [mi['name'] for mi in modulesinfo if mi['module'] == module]
-                threads.extend([workers.Thread(_sources_worker, channel, mod, smodule, content, meta)
-                                for smodule in sub_modules])
+                # threads is a list of tuples: module_name, thread, heavy_methods_list
+                threads.extend([(sm['name'],
+                                 workers.Thread(_sources_worker, channel, mod, sm['name'], content, meta),
+                                 sm.get('heavy', [])) for sm in modulesinfo if sm['module'] == module])
 
-            dummy = [t.start() for t in threads]
+            log.debug('{m}.{f}: scheduling %s threads: %s', len(threads), threads)
 
-            completed_threads = []
-            while len(completed_threads) < len(threads):
-                completed_threads = sorted([t for t in threads if not t.is_alive()], key=lambda t: t.elapsed)
-                new_sources = []
-                for thd in completed_threads:
-                    if thd.result is not None:
-                        for src in thd.result:
-                            if src['url'] not in sources:
-                                new_sources.append(src)
-                                sources[src['url']] = src
-                        all_completed_providers += 1
-                        thd.result = None
-                if not ui_update:
-                    time.sleep(1)
-                    continue
-                try:
-                    if not ui_update(all_completed_providers, all_providers, new_sources):
-                        # Inform all threads to abort ASAP
-                        channel.append('abort')
+            thd_i = 0
+            while True:
+                threads_chunk = []
+                while thd_i < len(threads) and len(threads_chunk) < defs.MAX_CONCURRENT_THREADS:
+                    thread_info = threads[thd_i]
+                    thd_i += 1
+                    threads_chunk.append(thread_info[1])
+                    # if this is an heavy method, do not add any more threads
+                    if content in thread_info[2]:
                         break
-                except Exception as ex:
-                    log.notice('{m}.{f}(%s): %s', content, ex)
+
+                if not threads_chunk:
+                    break
+
+                dummy = [t.start() for t in threads_chunk]
+
+                completed_threads = []
+                while len(completed_threads) < len(threads_chunk):
+                    completed_threads = sorted([t for t in threads_chunk if not t.is_alive()], key=lambda t: t.elapsed)
+                    new_sources = []
+                    for thd in completed_threads:
+                        if thd.result is not None:
+                            for src in thd.result:
+                                if src['url'] not in sources:
+                                    new_sources.append(src)
+                                    sources[src['url']] = src
+                            all_completed_providers += 1
+                            thd.result = None
+                    if not ui_update:
+                        time.sleep(1)
+                        continue
+                    try:
+                        if not ui_update(all_completed_providers, all_providers, new_sources):
+                            # Inform all threads to abort ASAP
+                            channel.append('abort')
+                            break
+                    except Exception as ex:
+                        log.notice('{m}.{f}(%s): %s', content, ex)
 
     return sources.values()
 
@@ -123,10 +141,11 @@ def _sources_worker(channel, mod, provider, content, meta):
     imdb = meta.get('imdb', '0')
     key_video = _key_video(**meta)
     video_ref = None
-    if key_video == '0/0/0':
+    if imdb == '0':
         dbcon = None
     else:
         try:
+            # (fixme) move the db handling into libraries.database
             fs.makeDir(fs.PROFILE_PATH)
             dbcon = database.connect(fs.CACHE_DB_FILENAME, timeout=10)
             dbcon.row_factory = database.Row
@@ -140,13 +159,14 @@ def _sources_worker(channel, mod, provider, content, meta):
 
         try:
             # Check if the sources are already cached and still valid
+            # (fixme) move the db handling into libraries.database
             dbcur = dbcon.execute("SELECT * FROM rel_src WHERE provider = ? AND key_video = ?",
                                   (provider, key_video))
             sqlrow = dbcur.fetchone()
 
             sql_ts = int(str(sqlrow['timestamp']).translate(None, '- :'))
             now_ts = int(datetime.datetime.now().strftime("%Y%m%d%H%M"))
-            if now_ts - sql_ts < _SOURCE_CACHE_LIFETIME:
+            if (now_ts - sql_ts) / 3600 < defs.SOURCE_CACHE_LIFETIME:
                 sources = json.loads(sqlrow['sources'])
                 log.debug('{m}.{f}.%s: %d sources found in the cache', provider, len(sources))
                 return sources
@@ -155,6 +175,7 @@ def _sources_worker(channel, mod, provider, content, meta):
 
         try:
             # Check if the video url is already cached [fixme) no expiration?]
+            # (fixme) move the db handling into libraries.database
             dbcur = dbcon.execute("SELECT * FROM rel_url WHERE provider = ? AND key_video = ?",
                                   (provider, key_video))
             sqlrow = dbcur.fetchone()
@@ -180,6 +201,7 @@ def _sources_worker(channel, mod, provider, content, meta):
             log.debug('{m}.{f}.%s: no valid match found', provider)
 
         if video_ref and dbcon:
+            # (fixme) move the db handling into libraries.database
             try:
                 with dbcon:
                     dbcon.execute("DELETE FROM rel_url WHERE provider = ? AND key_video = ?",
@@ -214,6 +236,7 @@ def _sources_worker(channel, mod, provider, content, meta):
     sources = []
     for key, srcs in sources_groups:
         if dbcon:
+            # (fixme) move the db handling into libraries.database
             try:
                 with dbcon:
                     log.debug('{m}.{f}.%s: %s: saving %d sources', provider, key, len(srcs))
@@ -232,11 +255,19 @@ def _sources_worker(channel, mod, provider, content, meta):
 
 
 def _best_match(provider, matches, meta):
+    if not matches:
+        return None
+
+    # Remove the matches with empty url and/or titles
+    matches = [[0, m] for m in matches if m[0] and m[1].strip()]
+    if not matches:
+        return None
+
     def cleantitle(title):
         if title:
-            # Anything within () if preceded/followed by spaces
+            # Remove from the title anything within () if preceded/followed by spaces
             title = re.sub(r'(^|\s)\(.*\)(\s|$)', r'\1\2', title)
-            # Anything within []
+            # Remove from the title anything within []
             title = re.sub(r'\[.*\]', '', title)
         return title
 
@@ -250,14 +281,6 @@ def _best_match(provider, matches, meta):
                        fuzz.token_sort_ratio(mtitle.split('-')[1], title))
         match[0] = ftsr
         return ftsr
-
-    if not matches:
-        return None
-
-    # Filter the matches with non empty url and titles
-    matches = [[0, m] for m in matches if m[0] and m[1].strip()]
-    if not matches:
-        return None
 
     best_match = max(matches, key=match_confidence)
     confidence = best_match[0]
@@ -281,6 +304,7 @@ def _sources_groups(imdb, sources):
 
 
 def clear_sources_cache(**kwargs):
+    # (fixme) move the db handling into libraries.database
     try:
         key_video = _key_video(**kwargs)
         fs.makeDir(fs.PROFILE_PATH)
@@ -295,6 +319,7 @@ def clear_sources_cache(**kwargs):
 
 
 def _key_video(**kwargs):
+    # (fixme) move the db handling into libraries.database
     return '/'.join([kwargs.get(k) or '0' for k in ['imdb', 'season', 'episode']])
 
 
