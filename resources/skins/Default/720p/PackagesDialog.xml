@@ -23,8 +23,7 @@
 			<width>960</width>
 			<height>20</height>
 			<align>center</align>
-			<textcolor>grey2</textcolor>
-			<!-- fixme: translate -->
+			<!-- fixme: translate w/ $LOCALIZE(nnnn) -->
 			<label>G2 - PACKAGE MANAGER</label>
 			<font>font15_title</font>
 		</control>
@@ -53,26 +52,30 @@
 		        <texture border="5">inner.png</texture>
 				<itemlayout width="190" height="30">
 					<control type="label">
+	                    <left>0</left>
+	                    <top>0</top>
 						<align>right</align>
-						<aligny>center</aligny>
+						<aligny>top</aligny>
 						<width>180</width>
-						<textcolor>grey2</textcolor>
 						<font>font14</font>
 						<label>[CAPITALIZE]$INFO[ListItem.Label][/CAPITALIZE]</label>
 					</control>
 				</itemlayout>
 				<focusedlayout width="190" height="30">
 					<control type="label">
+	                    <left>0</left>
+	                    <top>0</top>
 						<align>right</align>
-						<aligny>center</aligny>
+						<aligny>top</aligny>
 						<width>180</width>
-						<textcolor>white</textcolor>
 						<font>font14</font>
 						<label>[CAPITALIZE]$INFO[ListItem.Label][/CAPITALIZE]</label>
 					</control>
 	                <control type="image">
 	                    <left>0</left>
 	                    <top>0</top>
+                        <width>190</width>
+                        <height>30</height>
 	                    <texture border="4">listselect_fo.png</texture>
 	                    <visible>Control.HasFocus(101)</visible>
 					</control>
@@ -109,7 +112,6 @@
 						<top>0</top>
 						<width>620</width>
 						<height>30</height>
-						<textcolor>grey2</textcolor>
 						<font>font14</font>
 						<label>$INFO[ListItem.Label]</label>
 					</control>
@@ -119,7 +121,6 @@
 						<width>50</width>
 						<height>30</height>
 						<align>right</align>
-						<textcolor>grey2</textcolor>
 						<font>font14</font>
 						<label>$INFO[ListItem.Label2]</label>
 					</control>
@@ -128,7 +129,14 @@
 						<top>0</top>
 			            <width>30</width>
 			            <height>30</height>
-	                    <texture>$INFO[ListItem.Overlay,overlays/list/]</texture>
+	                    <texture>$VAR[ListItem.Overlay]</texture>
+					</control>
+					<control type="image">
+						<left>680</left>
+						<top>0</top>
+			            <width>30</width>
+			            <height>30</height>
+	                    <texture>$INFO[ListItem.Overlay]</texture>
 					</control>
 				</itemlayout>
 				<focusedlayout width="720" height="30">
@@ -145,7 +153,6 @@
 						<top>0</top>
 						<width>620</width>
 						<height>30</height>
-						<textcolor>white</textcolor>
 						<font>font14</font>
 						<label>$INFO[ListItem.Label]</label>
 					</control>
@@ -155,7 +162,6 @@
 						<width>50</width>
 						<height>30</height>
 						<align>right</align>
-						<textcolor>white</textcolor>
 						<font>font14</font>
 						<label>$INFO[ListItem.Label2]</label>
 					</control>
@@ -164,7 +170,14 @@
 						<top>0</top>
 			            <width>30</width>
 			            <height>30</height>
-	                    <texture>$INFO[ListItem.Overlay,overlays/list/]</texture>
+	                    <texture>$VAR[ListItem.Overlay]</texture>
+					</control>
+					<control type="image">
+						<left>680</left>
+						<top>0</top>
+			            <width>30</width>
+			            <height>30</height>
+	                    <texture>$INFO[ListItem.Overlay]</texture>
 					</control>
 				</focusedlayout>
 			</control>
