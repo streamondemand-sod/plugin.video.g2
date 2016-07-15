@@ -384,6 +384,7 @@ def _sync(content, timeout=0):
     try:
         if time.time() - _sync.cache_time[content] > timeout * 60:
             raise Exception('in memory cache expired')
+        return _sync.cache_history[content]
     except AttributeError:
         _sync.cache_history = {}
         _sync.cache_time = {}
