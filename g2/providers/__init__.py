@@ -130,9 +130,10 @@ def content_sources(content, meta, ui_update=None):
                         if not ui_update(all_completed_providers, all_providers, new_sources):
                             # Inform all threads to abort ASAP
                             channel.append('abort')
-                            break
+                            log.notice('{m}.{f}: %s: aborted', content)
+                            return sources.values()
                     except Exception as ex:
-                        log.notice('{m}.{f}(%s): %s', content, ex)
+                        log.notice('{m}.{f}: %s: %s', content, ex)
 
     return sources.values()
 
