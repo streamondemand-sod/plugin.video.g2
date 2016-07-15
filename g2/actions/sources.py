@@ -234,7 +234,8 @@ def _download_source(name, item, poster):
 def _sources_label(sources):
     hosts = [h.split('.')[-1].lower() for h in resolvers.info(force_refresh=None)]
     def known_host(host):
-        return len([h for h in hosts if h in host.lower()])
+        host = host.strip().lower()
+        return len([h for h in hosts if h in host or host in h])
 
     provider_index = -1
     provider_label = ''
@@ -247,7 +248,7 @@ def _sources_label(sources):
         label = ''
         label += ('[B][I]%s [/I][/B]' if source['quality'] in ['1080p', 'HD'] else '[I]%s[/I]')%source['quality']
         label += ' | [B]%s #%s[/B]'%(provider, i-provider_index+1)
-        label += ' | %s'%(source['source'] if known_host(source['source']) else '???')
+        label += ' | %s%s'%('' if known_host(source['source']) else '???', source['source'])
 
         source['label'] = label
     return sources
