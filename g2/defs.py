@@ -31,7 +31,7 @@ METADATA_CACHE_LIFETIME = (30*24)
 SOURCE_CACHE_LIFETIME = 24
 """Cache lifetime in hours for the video sources"""
 
-RESOLVER_TIMEOUT = 10
+RESOLVER_TIMEOUT = 20
 """Maximum time in seconds to wait for a resolver to provide a result"""
 
 MIN_STREAM_SIZE = 1024 * 1024
