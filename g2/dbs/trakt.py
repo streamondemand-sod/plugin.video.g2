@@ -41,6 +41,7 @@ info = {
     'methods': ['resolve', 'movies', 'tvshows', 'lists', 'watched'],
 }
 
+_INFO_LANG = addon.language('infoLang')
 _TRAKT_USER = addon.setting('trakt_user')
 
 _COMMON_POST_VARS = {
@@ -59,6 +60,8 @@ _BASE_URL = 'https://api-v2launch.trakt.tv'
 _URLS = {
     # Public query
     'movies_trending{}': '/movies/trending?limit=20|168',
+    'tvshows_trending{}': '/shows/trending?limit=20|168',
+
     # 'tvshows{title}': '/search?type=show&query={title}&limit=20', # -- tv shows query is implemented using tvdb
 
     # For the below urls trakt must be enabled and with a valid user id
@@ -85,6 +88,7 @@ def resolve(kind=None, **kwargs):
     for key, val in {
             'trakt_enabled': False if addon.setting('trakt_enabled') == 'false' else True,
             'trakt_token': addon.setting('trakt.token'),
+            'info_lang': _INFO_LANG,
         }.iteritems():
         if key not in kwargs and val:
             kwargs[key] = val
