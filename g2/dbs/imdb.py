@@ -24,6 +24,7 @@ import urllib
 import urlparse
 
 from g2.libraries import log
+from g2.libraries import addon
 from g2.libraries import client
 
 from . import normalize_imdb
@@ -31,8 +32,11 @@ from . import normalize_imdb
 
 info = {
     'domains': ['www.imdb.com'],
-    'methods': ['resolve', 'movies', 'lists'],
+    'methods': ['resolve', 'movies', 'tvshows', 'lists'],
 }
+
+_INFO_LANG = addon.language('infoLang')
+_KODI_LANG = addon.language(None)
 
 _IMDB_PAGE_COUNT = 20
 
@@ -45,6 +49,9 @@ _URLS = {
                            _IMDB_PAGE_COUNT),
     'movies_oscar{}': ('/search/title?title_type=feature,tv_movie&groups=oscar_best_picture_winners&'
                        'sort=year,desc&start=1&count=100|720'),
+    'tvshows_popular{}': ('/search/title?title_type=tv_series,mini_series&num_votes=100,&'
+                          'release_date=,date[0]&sort=moviemeter,asc&count=%d&start=1'%
+                          _IMDB_PAGE_COUNT),
 }
 
 
@@ -54,6 +61,13 @@ def resolve(kind=None, **kwargs):
     if kind not in _URLS:
         return None
 
+    for key, val in {
+            'info_lang': _INFO_LANG,
+            'kodi_lang': _KODI_LANG,
+    }.iteritems():
+        if key not in kwargs:
+            kwargs[key] = val
+
     for key, val in kwargs.iteritems():
         kwargs[key] = urllib.quote_plus(str(val))
 
@@ -61,13 +75,24 @@ def resolve(kind=None, **kwargs):
 
 
 def movies(url):
-    url, timeout = url.split('|')[0:2]
+    return _content(url, 'movies')
+
+
+def tvshows(url):
+    return _content(url, 'tvshows')
+
+
+def _content(url, content):
+    if '|' not in url:
+        timeout = 0
+    else:
+        url, timeout = url.split('|')[0:2]
     result = client.get(url).content
     result = result.decode('iso-8859-1').encode('utf-8')
     results = client.parseDOM(result, 'tr', attrs={'class': '.+?'})
     results += client.parseDOM(result, 'div', attrs={'class': 'list_item.+?'})
 
-    log.debug('{m}.{f}: %s: %d movies', url.replace(_BASE_URL, ''), len(results))
+    log.debug('{m}.{f}: %s: %d %s', url.replace(_BASE_URL, ''), len(results), content)
 
     max_pages = 0
     try:
