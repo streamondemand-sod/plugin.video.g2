@@ -80,27 +80,28 @@ def meta(items, content='movie', lang=_INFO_LANG):
 
     work_items = []
     for met in metas:
-        if met['item']:
-            continue
+        url = None
         if met.get('tmdb', '0') != '0':
-            met['url'] = resolve('%s_meta{tmdb_id}{lang}'%content, tmdb_id=met['tmdb'], lang=lang)
-        elif met.get('tvdb', '0') != '0':
-            met['url'] = resolve('%s_meta{tvdb_id}{lang}'%content, tvdb_id=met['tvdb'], lang=lang)
-        elif met.get('imdb', '0') != '0':
-            met['url'] = resolve('%s_meta{imdb_id}{lang}'%content, imdb_id=met['imdb'], lang=lang)
-        if met.get('url'):
+            url = resolve('%s_meta{tmdb_id}{lang}'%content, tmdb_id=met['tmdb'], lang=lang)
+        if not url and  met.get('tvdb', '0') != '0':
+            url = resolve('%s_meta{tvdb_id}{lang}'%content, tvdb_id=met['tvdb'], lang=lang)
+        if not url and met.get('imdb', '0') != '0':
+            url = resolve('%s_meta{imdb_id}{lang}'%content, imdb_id=met['imdb'], lang=lang)
+        if url:
+            met['url'] = url
+            met['content'] = content
             work_items.append(met)
 
     started = time.time()
     dbmods = sorted([d for d in info().itervalues() if 'meta' in d.get('methods', [])], key=lambda d: d['priority'])
     for dbm in dbmods:
         package_work_items = [w for w in work_items
-                              if not w['item'] and urlparse.urlparse(w['url']).netloc.lower() in dbm['domains']]
+                              if w['url'] and urlparse.urlparse(w['url']).netloc.lower() in dbm['domains']]
         if package_work_items:
             _db_method(dbm, 'meta', package_work_items)
 
     log.notice('{m}.{f}: %d submitted, %d scheduled, %d completed in %.2f seconds',
-               len(items), len(work_items), len([w for w in work_items if w['item']]), time.time()-started)
+               len(items), len(work_items), len([w for w in work_items if not w['url']]), time.time()-started)
 
     # Update all item attributes except fanart and rating if present
     for met, item in zip(metas, items):

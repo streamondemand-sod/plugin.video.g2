@@ -50,8 +50,31 @@ _BASE_URL = 'http://thetvdb.com/api'
 _URLS = {
     'tvshows{title}': '/GetSeries.php?seriesname={title}&language={info_lang}',
     # 'tvshow_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.xml',
+    # 'tvshow_meta{imdb_id}{lang}': '/GetSeriesByRemoteID.php?imdbid={imdb_id}&language={lang}',
     'tvshow_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.zip',
+    'tvshow_seasons_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.zip',
+    'tvshow_episodes_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.zip',
 }
+
+
+def resolve(kind=None, **kwargs):
+    if not kind:
+        return _URLS.keys()
+    if kind not in _URLS:
+        return None
+
+    for key, val in {
+            'info_lang': _INFO_LANG,
+            'kodi_lang': _KODI_LANG,
+    }.iteritems():
+        if key not in kwargs:
+            kwargs[key] = val
+
+    for key, val in kwargs.iteritems():
+        kwargs[key] = urllib.quote_plus(str(val))
+
+    return _BASE_URL+_URLS[kind].format(**kwargs)
+
 
 _SERIE_MAPPINGS_XML_DESC = [
     {'name': 'title',
@@ -213,31 +236,13 @@ _BANNER_MAPPINGS_XML_DESC = [
 ]
 
 
-def resolve(kind=None, **kwargs):
-    if not kind:
-        return _URLS.keys()
-    if kind not in _URLS:
-        return None
-
-    for key, val in {
-            'info_lang': _INFO_LANG,
-            'kodi_lang': _KODI_LANG,
-    }.iteritems():
-        if key not in kwargs:
-            kwargs[key] = val
-
-    for key, val in kwargs.iteritems():
-        kwargs[key] = urllib.quote_plus(str(val))
-
-    return _BASE_URL+_URLS[kind].format(**kwargs)
-
-
 def tvshows(url):
     url = url.split('|')[0]
     result = client.get(url).content
 
     results = client.parseDOM(result, 'Series')
-    results = [s for s in results if client.parseDOM(s, 'language') == [_INFO_LANG]]
+    results = [s for s in results
+               if client.parseDOM(s, 'language') == [_INFO_LANG] or client.parseDOM(s, 'Language') == [_INFO_LANG]]
 
     log.debug('{m}.{f}: %s: %d tvshows', url.replace(_BASE_URL, ''), len(results))
 
@@ -260,6 +265,16 @@ def meta(metas):
 
 
 def _meta_worker(met):
+    log.debug('{m}.{f}: %s: item %s None', met['content'], 'is not' if met['item'] else 'is')
+
+    if not met['item']:
+        pass
+    elif (met['content'] == 'tvshow' or
+          (met['item']['seasons'] and met['content'] == 'tvshow_seasons') or
+          (met['item']['episodes'] and met['content'] == 'tvshow_episodes')):
+        met['url'] = None
+        return
+
     url = met['url'].split('|')[0]
     lang = met['lang']
 
@@ -272,7 +287,8 @@ def _meta_worker(met):
         zipdata.close()
 
     results = client.parseDOM(meta_xml, 'Series')
-    results = [s for s in results if client.parseDOM(s, 'Language') == [lang]]
+    results = [s for s in results
+               if client.parseDOM(s, 'Language') == [lang] or client.parseDOM(s, 'language') == [lang]]
 
     log.debug('{m}.{f}: %s: %d tvshows meta for %s lang', url.replace(_BASE_URL, ''), len(results), lang)
 
@@ -284,10 +300,10 @@ def _meta_worker(met):
     tvshow['seasons'] = []
     tvshow['episodes'] = []
     met['item'] = tvshow
+    met['url'] = None
 
-    results = client.parseDOM(meta_xml, 'Episode')
-
-    log.debug('{m}.{f}: %s: %d episodes', url.replace(_BASE_URL, ''), len(results))
+    if met['content'] == 'tvshow':
+        return
 
     season_banners = {}
     for i in client.parseDOM(banner_xml, 'Banner'):
@@ -302,6 +318,10 @@ def _meta_worker(met):
     log.debug('{m}.{f}: %s: %d banners (en)', url.replace(_BASE_URL, ''), len(season_banners.keys()))
 
     tvshow_poster = tvshow['poster'] if tvshow['poster'] != '0' else tvshow['fanart'].replace(_TVDB_IMAGE, _TVDB_POSTER)
+
+    results = client.parseDOM(meta_xml, 'Episode')
+
+    log.debug('{m}.{f}: %s: %d episodes', url.replace(_BASE_URL, ''), len(results))
 
     for i in results:
         episode = fields_mapping_xml(i, _EPISODE_MAPPINGS_XML_DESC)

@@ -202,6 +202,9 @@ def meta(metas):
 
 
 def _meta_worker(meta):
+    if meta['item']:
+        return
+
     url = meta['url'].split('|')[0]
     result = client.get(url.replace('@APIKEY@', _TMDB_APIKEY, 1), timeout=10).json()
 
@@ -409,6 +412,7 @@ def _meta_worker(meta):
         item.update({'tagline': tagline})
 
     meta['item'] = item
+    meta['url'] = None
 
 
 def persons(url):

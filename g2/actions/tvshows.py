@@ -20,7 +20,6 @@
 
 
 from g2.libraries import ui
-from g2.libraries import log
 from g2.libraries import addon
 from g2.libraries.language import _
 
@@ -32,7 +31,19 @@ from . import action, busyaction
 
 @action
 def menu():
-    uid.additem(_('Search by Title'), 'tvshows.searchbytitle', 'tvSearch', 'DefaultTVShows.png', isFolder=False)
+    uid.additem(_('Search by Title'), 'tvshows.searchbytitle',
+                'tvSearch', 'DefaultTVShows.png', isFolder=False)
+
+    url = dbs.resolve('tvshows_trending{}', quote_plus=True)
+    if url:
+        uid.additem(_('People Watching'), 'tvshows.tvshowlist&url='+url,
+                    'tvshowsTrending.jpg', 'DefaultRecentlyAddedEpisodes.png')
+
+    url = dbs.resolve('tvshows_popular{}', quote_plus=True)
+    if url:
+        uid.additem(_('Most Popular'), 'tvshows.tvshowlist&url='+url,
+                    'tvshowsPopular', 'DefaultTVShows.png')
+
     uid.finish()
 
 
@@ -41,19 +52,20 @@ def searchbytitle():
     query = ui.keyboard(_('TV show search'))
     if query:
         url = dbs.resolve('tvshows{title}', title=query, quote_plus=True)
-        ui.refresh('tvshows.tvshowslist', url=url)
+        ui.refresh('tvshows.tvshowlist', url=url)
 
 
 @action
-def tvshowslist(url):
+def tvshowlist(url):
     items = dbs.tvshows(url)
     if not items:
         ui.infoDialog(_('No results'))
     else:
+        dbs.meta(items, content='tvshow')
         for i in items:
             i['name'] = uid.nameitem('tvshow', i)
             i['action'] = addon.itemaction('tvshows.seasons', tvdb=i['tvdb'], imdb=i['imdb'])
-            i['next_action'] = 'tvshows.tvshowslist'
+            i['next_action'] = 'tvshows.tvshowlist'
 
     uid.addcontentitems(items, content='tvshows')
 
@@ -64,7 +76,7 @@ def seasons(tvdb, imdb):
         'tvdb': tvdb,
         'imdb': imdb,
     }
-    dbs.meta([item], content='tvshow')
+    dbs.meta([item], content='tvshow_seasons')
 
     items = item.get('seasons', [])
     if not items:
@@ -83,7 +95,7 @@ def episodes(tvdb, imdb, season):
         'tvdb': tvdb,
         'imdb': imdb,
     }
-    dbs.meta([item], content='tvshow')
+    dbs.meta([item], content='tvshow_episodes')
 
     items = [e for e in item.get('episodes', []) if e['season'] == season]
     if not items:
