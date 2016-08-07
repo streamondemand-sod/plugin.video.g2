@@ -40,8 +40,9 @@ _PLAYER = ui.Player()
 
 def new(notifier, iden, title, body, url):
     """Find a movie in the url pushed and schedule the sources dialog or playurl action"""
-    log.debug('{m}.{f}: %s, %s, "%s", "%s", "%s"', notifier, iden, title, body, url)
+    log.debug('{m}.{f}: %s: iden=%s, title=%s, body=%s, url=%s', notifier, iden, title, body, url)
 
+    url = url or body
     if not url:
         return
 
