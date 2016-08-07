@@ -49,8 +49,7 @@ _TVDB_POSTER = 'http://thetvdb.com/banners/_cache/'
 _BASE_URL = 'http://thetvdb.com/api'
 _URLS = {
     'tvshows{title}': '/GetSeries.php?seriesname={title}&language={info_lang}',
-    # 'tvshow_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.xml',
-    # 'tvshow_meta{imdb_id}{lang}': '/GetSeriesByRemoteID.php?imdbid={imdb_id}&language={lang}',
+    'tvshow_meta{imdb_id}{lang}': '/GetSeriesByRemoteID.php?imdbid={imdb_id}',
     'tvshow_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.zip',
     'tvshow_seasons_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.zip',
     'tvshow_episodes_meta{tvdb_id}{lang}': '/@APIKEY@/series/{tvdb_id}/all/{lang}.zip',
@@ -265,18 +264,29 @@ def meta(metas):
 
 
 def _meta_worker(met):
-    log.debug('{m}.{f}: %s: item %s None', met['content'], 'is not' if met['item'] else 'is')
-
+    content = met['content']
     if not met['item']:
         pass
-    elif (met['content'] == 'tvshow' or
-          (met['item']['seasons'] and met['content'] == 'tvshow_seasons') or
-          (met['item']['episodes'] and met['content'] == 'tvshow_episodes')):
+    elif (content == 'tvshow' or
+          (met['item']['seasons'] and content == 'tvshow_seasons') or
+          (met['item']['episodes'] and content == 'tvshow_episodes')):
         met['url'] = None
         return
 
     url = met['url'].split('|')[0]
     lang = met['lang']
+
+    if not url.endswith('.xml') and not url.endswith('.zip'):
+        serie_xml = client.get(url.replace('@APIKEY@', _TVDB_APIKEY, 1)).content
+        tvdb_ids = client.parseDOM(serie_xml, 'id')
+        if not tvdb_ids:
+            return
+        url = resolve('%s_meta{tvdb_id}{lang}'%content, tvdb_id=tvdb_ids[0], lang=lang)
+        if not url:
+            return
+        url = url.split('|')[0]
+
+    log.debug('{m}.{f}: %s: lang=%s, content=%s', url.replace(_BASE_URL, ''), lang, content)
 
     meta_xml = client.get(url.replace('@APIKEY@', _TVDB_APIKEY, 1)).content
     banner_xml = None
