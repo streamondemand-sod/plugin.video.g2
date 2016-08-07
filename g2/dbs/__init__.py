@@ -81,10 +81,12 @@ def meta(items, content='movie', lang=_INFO_LANG):
     work_items = []
     for met in metas:
         url = None
-        if met.get('tmdb', '0') != '0':
-            url = resolve('%s_meta{tmdb_id}{lang}'%content, tmdb_id=met['tmdb'], lang=lang)
-        if not url and  met.get('tvdb', '0') != '0':
-            url = resolve('%s_meta{tvdb_id}{lang}'%content, tvdb_id=met['tvdb'], lang=lang)
+        if content == 'movie':
+            if met.get('tmdb', '0') != '0':
+                url = resolve('%s_meta{tmdb_id}{lang}'%content, tmdb_id=met['tmdb'], lang=lang)
+        else:
+            if met.get('tvdb', '0') != '0':
+                url = resolve('%s_meta{tvdb_id}{lang}'%content, tvdb_id=met['tvdb'], lang=lang)
         if not url and met.get('imdb', '0') != '0':
             url = resolve('%s_meta{imdb_id}{lang}'%content, imdb_id=met['imdb'], lang=lang)
         if url:
@@ -103,11 +105,15 @@ def meta(items, content='movie', lang=_INFO_LANG):
     log.notice('{m}.{f}: %d submitted, %d scheduled, %d completed in %.2f seconds',
                len(items), len(work_items), len([w for w in work_items if not w['url']]), time.time()-started)
 
-    # Update all item attributes except fanart and rating if present
+    dont_update = [
+        'fanart',
+        'rating',
+        'votes',
+    ]
     for met, item in zip(metas, items):
         if met['item']:
             item.update(dict((k, v) for k, v in met['item'].iteritems()
-                             if k not in ['fanart', 'rating'] or (k in ['fanart', 'rating'] and item.get(k, '0') == '0')))
+                             if v != '0' and (k not in dont_update or item.get(k, '0') == '0')))
 
     _save_meta(metas)
 
