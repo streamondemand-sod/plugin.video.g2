@@ -666,8 +666,8 @@ def _get_addon_paths(addon_id):
 
 
 def _get_addon_details(addon_id):
-    path = addon.addonInfo2(addon_id, 'path')
     try:
+        path = addon.addonInfo2(addon_id, 'path')
         with open(os.path.join(path, 'addon.xml')) as fil:
             addon_xml = fil.read()
     except Exception:
