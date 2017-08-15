@@ -89,7 +89,11 @@ class SourcesDialog(xbmcgui.WindowXMLDialog):
         for source in items:
             item = xbmcgui.ListItem()
             item.setLabel(source['label'])
-            item.setIconImage(defs.HOST_IMAGES+source['source'].lower()+'.png')
+            if source['source']:
+                if defs.HOST_IMAGES:
+                    item.setIconImage(defs.HOST_IMAGES+source['source'].lower()+'.png')
+                else:
+                    item.setLabel2(source['source'])
             item.setProperty('source_provider', source['provider'])
             item.setProperty('source_quality', source['quality'])
             item.setProperty('source_host', source['source'])

@@ -122,13 +122,22 @@
 					<aspectratio aligny="center">keep</aspectratio>
 				</control>
 				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>90</width>
+					<height>46</height>
+					<font>font14</font>
+					<align>center</align>
+					<label>$INFO[ListItem.Label2]</label>
+					<scroll>true</scroll>
+				</control>
+				<control type="label">
 					<left>110</left>
 					<top>8</top>
 					<aligny>center</aligny>
 					<width>630</width>
 					<height>30</height>
 					<font>font30</font>
-<!-- 					<textcolor>grey2</textcolor> -->
 					<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
 				</control>
 			</itemlayout>
@@ -143,13 +152,22 @@
 					<aspectratio aligny="center">keep</aspectratio>
 				</control>
 				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>90</width>
+					<height>46</height>
+					<font>font14</font>
+					<align>center</align>
+					<label>$INFO[ListItem.Label2]</label>
+					<scroll>true</scroll>
+				</control>
+				<control type="label">
 					<left>110</left>
 					<top>8</top>
 					<aligny>center</aligny>
 					<width>630</width>
 					<height>30</height>
 					<font>font30</font>
-<!-- 					<textcolor>grey2</textcolor> -->
 					<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
 				</control>
 				<control type="image">
@@ -199,7 +217,6 @@
 			<align>left</align>
 			<aligny>center</aligny>
             <font>font16</font>
-<!-- 			<textcolor>grey2</textcolor> -->
 			<scroll>true</scroll>
 		</control>
 

@@ -44,7 +44,9 @@ WATCHED_THRESHOLD = 90
 """Minimum percentage to pass to update the video watched status"""
 
 # (fixme) check w/ boogiepop the feasibility to use this
-HOST_IMAGES = "https://offshoregit.com/boogiepop/dataserver/ump/images/"
+#HOST_IMAGES = "https://offshoregit.com/boogiepop/dataserver/ump/images/"
+#HOST_IMAGES = "http://boogie.us.to/dataserver/ump/images/"
+HOST_IMAGES = None
 """Repository for the hosts icons"""
 
 TRAKT_CLIENT_ID = 'c67fa3018aa2867c183261f4b2bb12ebb606c2b3fbb1449e24f2fbdbc3a8ffdb'
