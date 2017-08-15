@@ -82,8 +82,8 @@ def new(notifier, iden, title, body, url):
         path += '?' + query
         netloc = '.'.join(netloc.split('.')[-2:])
         if netloc not in sites:
-            title = title or body
-            title = (title or '').encode('utf-8')
+            title = title or body or url
+            title = title.encode('utf-8')
             addon.runplugin('sources.playurl',
                             name=urllib.quote_plus(title),
                             url=urllib.quote_plus(url))
