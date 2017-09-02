@@ -33,8 +33,8 @@ Features at glance
 
 Attributions
 ---------------------
-- Original code by lambda | http://tvaddons.ag
-- Embossed theme by jokster | http://tvaddons.ag
+- Original code by lambda | http://tvaddons.co
+- Embossed theme by jokster | http://tvaddons.co
 - Italian translation by Frep | https://twitter.com/frep90
 
 License
