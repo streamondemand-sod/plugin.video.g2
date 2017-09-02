@@ -105,6 +105,7 @@ def additems(items, show_genre_as=False, is_person=False):
 
     for i in items:
         try:
+
             label = i['name']
 
             url = addon.itemaction(i['action'], url=urllib.quote_plus(i['url']))
@@ -269,6 +270,11 @@ def addcontentitems(items, content='movies'):
             if fanart_enabled:
                 item.setProperty('Fanart_Image', fanart)
 
+            # This metadata chokes kodi
+            for m in ['episodes', 'seasons']:
+                if m in meta:
+                    del meta[m]
+
             item.setInfo(type='Video', infoLabels=meta)
             item.setProperty('Video', 'true')
             item.addContextMenuItems(cmds, replaceItems=False)
@@ -276,7 +282,7 @@ def addcontentitems(items, content='movies'):
             url = url.replace('@META@', urllib.quote_plus(json.dumps(meta)))
             ui.additem(url, item, isFolder=True, totalItems=len(items))
         except Exception as ex:
-            log.debug('{m}.{f}: %s: %s', i, repr(ex))
+            log.notice('{m}.{f}: %s: %s', i, repr(ex), trace=True)
 
     if len(items) and 'next_action' in items[0]:
         finish(content=content, next_item=items[0], sort_methods=[17, 18, 23])
