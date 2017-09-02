@@ -58,7 +58,7 @@ TRAKT_MAX_RECOMMENDATIONS = 60
 TMDB_INCLUDE_ADULT = False
 """Self explaining, isn't? :)"""
 
-TMDB_APIKEY = 'f7f51775877e0bb6703520952b3c7840'
+TMDB_APIKEY = '6889f6089877fd092454d00edb44a84d'
 """This is the TMDB API key stolen from other addons.
 Actually each user should configure his own key.
 This policy might be enforced in the official releases."""
