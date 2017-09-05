@@ -53,4 +53,32 @@
             'moviesTheaters': 'in-theaters.png',
         },
     },
+
+    # Entry for the Covenant themes in the script.covenant.artwork addon
+    'Covenant': {
+        'addon_id': 'script.covenant.artwork',
+        'themes': 'folder',
+        'mappings': {
+            'settings': 'tools.png',
+            'cache': 'tools.png',
+            'moviesTraktcollection': 'trakt.png',
+            'moviesTraktwatchlist': 'trakt.png',
+            'moviesTraktrated': 'trakt.png',
+            'moviesTraktrecommendations': 'trakt.png',
+            'movieUserlists': 'userlists.png',
+            'mygenesis': 'userlists.png',
+            'moviesAdded': 'latest-movies.png',
+            'movieSearch': 'search.png',
+            'moviePerson': 'people-search.png',
+            'movieYears': 'years.png',
+            'movieGenres': 'genres.png',
+            'movieCertificates': 'certificates.png',
+            'moviesTrending': 'featured.png',
+            'moviesPopular': 'most-popular.png',
+            'moviesViews': 'most-voted.png',
+            'moviesBoxoffice': 'box-office.png',
+            'moviesOscars': 'oscar-winners.png',
+            'moviesTheaters': 'in-theaters.png',
+        },
+    },
 }
