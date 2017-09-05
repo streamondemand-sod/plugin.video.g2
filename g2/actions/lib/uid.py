@@ -61,7 +61,7 @@ def nameitem(content, meta):
         # Directory label for tvshow
         return (_('{tvshow_title} ({year})') if meta.get('year') else _('{tvshow_title}')).format(
             tvshow_title=meta['title'],
-            year=meta['year'])
+            year=meta.get('year'))
 
     else:
         return meta.get('name', '???')
@@ -270,16 +270,16 @@ def addcontentitems(items, content='movies'):
             if fanart_enabled:
                 item.setProperty('Fanart_Image', fanart)
 
-            # This metadata chokes kodi
+            url = url.replace('@META@', urllib.quote_plus(json.dumps(meta)))
+
+            # This metadata chokes kodi when set as infoLabels
             for m in ['episodes', 'seasons']:
                 if m in meta:
                     del meta[m]
-
             item.setInfo(type='Video', infoLabels=meta)
             item.setProperty('Video', 'true')
             item.addContextMenuItems(cmds, replaceItems=False)
 
-            url = url.replace('@META@', urllib.quote_plus(json.dumps(meta)))
             ui.additem(url, item, isFolder=True, totalItems=len(items))
         except Exception as ex:
             log.notice('{m}.{f}: %s: %s', i, repr(ex), trace=True)
