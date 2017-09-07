@@ -39,6 +39,8 @@ try:
     _THREAD_ID = int(sys.argv[1])
 except Exception:
     _THREAD_ID = -1
+_CONFIG_PATH = xbmc.translatePath(os.path.join(_ADDON.getAddonInfo('profile'), '.logconfig.py'))
+
 
 _SPECIAL_TAGS = [
     'p',    # package name
@@ -50,26 +52,6 @@ _SPECIAL_TAGS = [
 ]
 
 _CONFIG = {}
-
-
-def _config_setup():
-    global _CONFIG
-    try:
-        configpath = os.path.join(xbmcaddon.Addon().getAddonInfo('path'), '.logconfig.py')
-        with open(configpath) as fil:
-            config = fil.read().strip()
-            if config:
-                _CONFIG = ast.literal_eval(config)
-        if type(_CONFIG) != dict:
-            raise Exception('the log configuration file should contain a single python dictionary')
-    except IOError as ex:
-        if ex.errno != errno.ENOENT:
-            error('{m}.{f}: %s: %s', configpath, repr(ex))
-    except Exception as ex:
-        error('{m}.{f}: %s: %s', configpath, repr(ex))
-
-
-_config_setup()
 
 
 def debug(msg, *args, **kwargs):
@@ -199,3 +181,17 @@ def _fetch_ids(ids_level=2):
         })
 
     return ids
+
+
+try:
+    with open(_CONFIG_PATH) as fil:
+        _CONFIG = ast.literal_eval(fil.read().strip())
+    if type(_CONFIG) != dict:
+        raise Exception('the log configuration file should contain a single python dictionary')
+except IOError as ex:
+    if ex.errno != errno.ENOENT:
+        error('{m}.{f}: %s: %s', _CONFIG_PATH, repr(ex))
+except Exception as ex:
+    error('{m}.{f}: %s: %s', _CONFIG_PATH, repr(ex))
+
+notice('logging config: %s', _CONFIG)
