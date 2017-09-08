@@ -6,7 +6,7 @@
     Copyright (C) 2015 lambda
     Copyright (C) 2015 spoyser
     Copyright (C) 2015 crzen
-    Copyright (C) 2016 J0rdyZ65
+    Copyright (C) 2016-2017 J0rdyZ65
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

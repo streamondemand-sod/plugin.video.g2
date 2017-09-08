@@ -2,7 +2,7 @@
 
 """
     G2 Add-on
-    Copyright (C) 2016 J0rdyZ65
+    Copyright (C) 2016-2017 J0rdyZ65
 
     parseDOM
     Copyright (C) 2010-2011 Tobias Ussing And Henrik Mosgaard Jensen
