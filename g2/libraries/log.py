@@ -93,13 +93,13 @@ def debugactive(ids=None, calling_context=True):
 
 
 def _log(msg, level, *args, **kwargs):
-    debug = kwargs.get('debug')
-    trace = kwargs.get('trace')
+    debug_opt = kwargs.get('debug')
+    trace_opt = kwargs.get('trace')
     try:
         ids = {}
         orig_level = ''
         if level in [xbmc.LOGDEBUG, xbmc.LOGINFO]:
-            if debug or debugactive(ids, calling_context=False):
+            if debug_opt or debugactive(ids, calling_context=False):
                 orig_level = 'DEBUG' if level == xbmc.LOGDEBUG else 'INFO'
                 level = xbmc.LOGNOTICE
 
@@ -119,11 +119,11 @@ def _log(msg, level, *args, **kwargs):
         try:
             xbmc.log('log.%s("...", %s, %s): %s'%(orig_level.lower(), args, kwargs, traceback.format_exc()),
                      xbmc.LOGNOTICE)
-            trace = True
+            trace_opt = True
         except Exception:
             pass
 
-    if trace:
+    if trace_opt:
         try:
             stacktrace = traceback.format_exc()
             if stacktrace and not stacktrace.startswith('None'):
@@ -194,4 +194,4 @@ except IOError as ex:
 except Exception as ex:
     error('{m}.{f}: %s: %s', _CONFIG_PATH, repr(ex))
 
-notice('logging config: %s', _CONFIG)
+# debug('logging config: %s', _CONFIG)
