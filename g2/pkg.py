@@ -462,6 +462,8 @@ def _info_get_module(infofunc, infos, kind, module, package='', paths=None):
             nfo = []
 
         for i in nfo:
+            if not i.get('enabled', True):
+                continue
             fullname = ('' if not package else package+'.') + module + ('' if 'name' not in i else '.'+i['name'])
             infos[fullname] = dict(i)
             if package:
@@ -470,6 +472,7 @@ def _info_get_module(infofunc, infos, kind, module, package='', paths=None):
                 'search_paths': paths,
                 'module': module,
                 'name': fullname,
+                # (fixme) it seems redundant
                 'setting_enable': i.get('setting_enable', False),
             })
 
