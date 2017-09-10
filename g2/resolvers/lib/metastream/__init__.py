@@ -22,6 +22,7 @@
 
 import struct
 
+from g2.libraries import log
 
 # Do not read more that 100KB in the stream to look for the resolution
 _MAX_BYTE_READ_FOR_RESOLUTION = 100 * 1024
@@ -44,6 +45,10 @@ def video(fil):
         from . import flv as decoder
         fil.read(1)                # Skip to the first flv header packet
         meta['type'] = 'flv'
+
+    elif 'EXTM3U' in first8:
+        from . import m3u as decoder
+        meta['type'] = 'm3u'
 
     else:
         meta['firstbytes'] = first8
