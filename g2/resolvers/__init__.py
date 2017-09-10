@@ -42,7 +42,8 @@ class ResolverError(Exception):
 class ResolvedURL(unicode):
     def enrich(self, **kwargs):
         for key, val in kwargs.iteritems():
-            setattr(self, key, val)
+            if val is not None:
+                setattr(self, key, val)
         return self
 
 
@@ -75,6 +76,9 @@ def _top_domain(url):
     domain = elements.netloc or elements.path
     domain = domain.split('@')[-1].split(':')[0]
     try:
+        # (fixme) the first RE matches the entire www.rai.it as top domain which is not right
+        # perhaps the \w{2,3} should be replaced by an explicit list of three letters sub-domains,
+        # such as edu.uk, org.uk, etc.
         domain = re.search(r'(\w{2,}\.\w{2,3}\.\w{2}|\w{2,}\.\w{2,})$', domain).group(1)
     except Exception:
         pass
@@ -158,12 +162,15 @@ def resolve(url, checkonly=False):
                 collect_resolver_error(resolver, str(ex))
                 continue
 
-            content_lenght = int(resp.headers.get('Content-Length', '0'))
-            if content_lenght < defs.MIN_STREAM_SIZE:
-                collect_resolver_error(resolver, 'Stream too short')
-                continue
-
             meta = metastream.video(resp.raw)
+
+            if meta.get('type') == 'm3u':
+                content_lenght = None
+            else:
+                content_lenght = int(resp.headers.get('Content-Length', '0'))
+                if content_lenght < defs.MIN_STREAM_SIZE:
+                    collect_resolver_error(resolver, 'Stream too short')
+                    continue
 
             url = res.split('|')[0]
             return ResolvedURL('%s%s%s' % (url, '&' if '?' in url else '?', urllib.urlencode(headers))).enrich(
