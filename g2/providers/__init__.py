@@ -276,10 +276,15 @@ def _best_match(provider, matches, meta):
 
     def match_confidence(match):
         mtitle = cleantitle(match[1][1])
-        ftsr = fuzz.token_sort_ratio(mtitle, title)
-        if ftsr < _MIN_FUZZINESS_VALUE and '-' in mtitle and '-' not in title:
+        if ('-' in mtitle) == ('-' in title):
+            ftsr = fuzz.token_sort_ratio(mtitle, title)
+        elif '-' in title:
+            ftsr = max(fuzz.token_sort_ratio(mtitle, title.split('-')[0]),
+                       fuzz.token_sort_ratio(mtitle, title.split('-')[1]))
+        else:
             ftsr = max(fuzz.token_sort_ratio(mtitle.split('-')[0], title),
                        fuzz.token_sort_ratio(mtitle.split('-')[1], title))
+
         match[0] = ftsr
         return ftsr
 
@@ -383,7 +388,7 @@ def resolve(provider, url):
     if 'No resolver for' not in str(rurl):
         return rurl
 
-    # Otherwise, try with the source resolver and then give the url back to the resolvers again
+    # Otherwise, try with the source resolver
     try:
         with pkg.Context(__name__, provider['package'], [provider['module']], provider['search_paths'],
                          ignore_exc=_IGNORE_BODY_EXCEPTIONS) as mod:
