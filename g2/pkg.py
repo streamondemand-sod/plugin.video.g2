@@ -670,6 +670,9 @@ def _get_addon_paths(addon_id):
 
 def _get_addon_details(addon_id):
     try:
+        # If not checked in advance the presence of an addon, the getAddonInfo will log an exception even if catched
+        if not addon.condition('System.HasAddon(%s)'%addon_id):
+            raise Exception()
         path = addon.addonInfo2(addon_id, 'path')
         with open(os.path.join(path, 'addon.xml')) as fil:
             addon_xml = fil.read()
