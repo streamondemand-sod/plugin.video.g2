@@ -4,7 +4,7 @@
 		<setting id="appearance.upd" type="action" label="30139" option="close" action="RunPlugin(plugin://plugin.video.g2/?action=packages.updatemedia)" />
 		<setting id="appearance" type="select" label="30002" values="-|Embossed" default="-" />
 		<setting id="fanart" type="bool" label="30003" default="true" />
-		<setting id="infoLang" type="select" label="30004" values="AUTO|en|it" default="Auto" />
+		<setting id="infoLang" type="select" label="30004" values="AUTO|en|it" default="AUTO" />
 		<setting id="auto_play" type="bool" label="30136" default="false" />
 		<setting id="downloads" type="folder" label="30005" default="" />
 	</category>

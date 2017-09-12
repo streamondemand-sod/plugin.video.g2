@@ -46,7 +46,7 @@ condition = xbmc.getCondVisibility
 
 def language(settingid='infoLang'):
     lang = 'AUTO' if settingid is None else setting(settingid)
-    return xbmc.getLanguage(xbmc.ISO_639_1).lower() if lang == 'AUTO' else lang or 'en'
+    return xbmc.getLanguage(xbmc.ISO_639_1).lower() if lang == 'AUTO' else (lang or 'en')
 
 
 def freshsetting(setid):

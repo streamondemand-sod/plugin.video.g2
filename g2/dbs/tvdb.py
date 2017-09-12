@@ -40,7 +40,6 @@ info = {
 }
 
 _INFO_LANG = addon.language('infoLang')
-_KODI_LANG = addon.language(None)
 
 _TVDB_APIKEY = addon.setting('tvdb_apikey') or defs.TVDB_APIKEY
 _TVDB_IMAGE = 'http://thetvdb.com/banners/'
@@ -64,7 +63,6 @@ def resolve(kind=None, **kwargs):
 
     for key, val in {
             'info_lang': _INFO_LANG,
-            'kodi_lang': _KODI_LANG,
     }.iteritems():
         if key not in kwargs:
             kwargs[key] = val
